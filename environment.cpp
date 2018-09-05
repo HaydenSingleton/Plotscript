@@ -109,8 +109,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
-			result = args[0].head().asNumber();
-			result = std::sqrt(result);
+			result = std::sqrt(args[0].head().asNumber());
 		}
 		else {
 			throw SemanticError("Error in call to sqrt: negative argument.");
