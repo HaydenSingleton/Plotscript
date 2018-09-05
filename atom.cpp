@@ -12,8 +12,12 @@ Atom::Atom(double value){
   setNumber(value);
 }
 
+Atom::Atom(const std::complex<double> & value): Atom() {
+  setComplex(value);
+}
+
 Atom::Atom(const Token & token): Atom(){
-  
+
   // is token a number?
   double temp;
   std::istringstream iss(token.asString());
@@ -32,7 +36,6 @@ Atom::Atom(const Token & token): Atom(){
 }
 
 Atom::Atom(const std::string & value): Atom() {
-  
   setSymbol(value);
 }
 
@@ -42,6 +45,9 @@ Atom::Atom(const Atom & x): Atom(){
   }
   else if(x.isSymbol()){
     setSymbol(x.stringValue);
+  }
+  else if(x.isComplex()){
+    setComplex(x.complexValue);
   }
 }
 
@@ -60,7 +66,7 @@ Atom & Atom::operator=(const Atom & x){
   }
   return *this;
 }
-  
+
 Atom::~Atom(){
 
   // we need to ensure the destructor of the symbol string is called
@@ -79,7 +85,11 @@ bool Atom::isNumber() const noexcept{
 
 bool Atom::isSymbol() const noexcept{
   return m_type == SymbolKind;
-}  
+}
+
+bool Atom::isComplex() const noexcept{
+  return m_type == ComplexKind;
+}
 
 
 void Atom::setNumber(double value){
@@ -94,16 +104,22 @@ void Atom::setSymbol(const std::string & value){
   if(m_type == SymbolKind){
     stringValue.~basic_string();
   }
-    
+
   m_type = SymbolKind;
 
   // copy construct in place
   new (&stringValue) std::string(value);
 }
 
+void Atom::setComplex(const std::complex<double> & value){
+  m_type = ComplexKind;
+  complexValue = value;
+
+}
+
 double Atom::asNumber() const noexcept{
 
-  return (m_type == NumberKind) ? numberValue : 0.0;  
+  return (m_type == NumberKind) ? numberValue : 0.0;
 }
 
 
@@ -118,8 +134,13 @@ std::string Atom::asSymbol() const noexcept{
   return result;
 }
 
+std::complex<double> Atom::asComplex() const noexcept{
+  std::complex<double> defaultComplexValue;
+  return (m_type == ComplexKind) ? complexValue : defaultComplexValue;
+}
+
 bool Atom::operator==(const Atom & right) const noexcept{
-  
+
   if(m_type != right.m_type) return false;
 
   switch(m_type){
@@ -132,8 +153,8 @@ bool Atom::operator==(const Atom & right) const noexcept{
       double dleft = numberValue;
       double dright = right.numberValue;
       double diff = fabs(dleft - dright);
-      if(std::isnan(diff) ||
-	 (diff > std::numeric_limits<double>::epsilon())) return false;
+      if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
+        return false;
     }
     break;
   case SymbolKind:
@@ -143,6 +164,11 @@ bool Atom::operator==(const Atom & right) const noexcept{
       return stringValue == right.stringValue;
     }
     break;
+  case ComplexKind:
+  {
+    if(right.m_type != ComplexKind) return false;
+      return complexValue == right.complexValue;
+  }
   default:
     return false;
   }
@@ -151,7 +177,7 @@ bool Atom::operator==(const Atom & right) const noexcept{
 }
 
 bool operator!=(const Atom & left, const Atom & right) noexcept{
-  
+
   return !(left == right);
 }
 

@@ -160,11 +160,11 @@ Expression sin(const std::vector<Expression> & args) {
     double result = 0;
 
     if (nargs_equal(args, 1)) {
-        if (args[0].isHeadNumber() && args[0].head().asNumber() > 0) {
+        if (args[0].isHeadNumber()) {
             result = std::sin(args[0].head().asNumber());
         }
         else {
-            throw SemanticError("Error in call to sin: negative argument.");
+            throw SemanticError("Error in call to sin: invalid argument.");
         }
     }
     else {
@@ -177,11 +177,11 @@ Expression cos(const std::vector<Expression> & args) {
     double result = 0;
 
     if (nargs_equal(args, 1)) {
-        if (args[0].isHeadNumber() && args[0].head().asNumber() > 0) {
+        if (args[0].isHeadNumber()) {
             result = std::cos(args[0].head().asNumber());
         }
         else {
-            throw SemanticError("Error in call to cos: negative argument.");
+            throw SemanticError("Error in call to cos: invalid argument.");
         }
     }
     else {
@@ -194,7 +194,7 @@ Expression tan(const std::vector<Expression> & args) {
     double result = 0;
 
     if (nargs_equal(args, 1)) {
-        if (args[0].isHeadNumber() && args[0].head().asNumber() > 0) {
+        if (args[0].isHeadNumber()) {
             result = std::tan(args[0].head().asNumber());
         }
         else {
@@ -209,6 +209,8 @@ Expression tan(const std::vector<Expression> & args) {
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
+// #include <complex>
+// const std::complex<double> I(0.0, 1.0);
 
 Environment::Environment(){
 
@@ -291,6 +293,9 @@ void Environment::reset(){
   // Built-In value of e
   envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
 
+  // Built-In value of i
+  // envmap.emplace("I", EnvResult(ExpressionType, Expression(I)));
+
   // Procedure: add;
   envmap.emplace("+", EnvResult(ProcedureType, add));
 
@@ -307,7 +312,7 @@ void Environment::reset(){
   envmap.emplace("sqrt", EnvResult(ProcedureType, sqrt));
 
   // Procedure: pow;
-  envmap.emplace("pow", EnvResult(ProcedureType, pow));
+  envmap.emplace("^", EnvResult(ProcedureType, pow));
 
   // Procedure: ln;
   envmap.emplace("ln", EnvResult(ProcedureType, ln));
