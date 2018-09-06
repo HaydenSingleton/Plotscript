@@ -143,6 +143,10 @@ std::string Atom::asSymbol() const noexcept{
 }
 
 std::complex<double> Atom::asComplex() const noexcept{
+  if (m_type == NumberKind) {
+    std::complex<double> number2complex(numberValue, 0.0);
+    return number2complex;
+  }
   return (m_type == ComplexKind) ? complexValue : (std::complex<double>)(0,0);
 }
 

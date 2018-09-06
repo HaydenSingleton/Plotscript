@@ -28,9 +28,8 @@ Expression default_proc(const std::vector<Expression> & args){
 
 Expression add(const std::vector<Expression> & args){
 
-  // check all aruments are numbers, while adding
   std::complex<double> result;
-
+  // check all aruments are numbers, while adding
   for( auto & a :args){
     if(a.isHeadNumber()){
       result += a.head().asNumber();
@@ -78,20 +77,23 @@ Expression mul(const std::vector<Expression> & args){
 
 Expression subneg(const std::vector<Expression> & args){
 
-  double result = 0;
+  std::complex<double> result = 0;
 
   // preconditions
   if(nargs_equal(args,1)){
     if(args[0].isHeadNumber()){
       result = -args[0].head().asNumber();
     }
-    else{
+    else if (args[0].isHeadComplex()) {
+      result = -args[0].head().asComplex();
+    }
+    else {
       throw SemanticError("Error in call to negate: invalid argument.");
     }
   }
   else if(nargs_equal(args,2)){
-    if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
-      result = args[0].head().asNumber() - args[1].head().asNumber();
+    if((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+      result = args[0].head().asComplex() - args[1].head().asComplex();
     }
     else{
       throw SemanticError("Error in call to subtraction: invalid argument.");
@@ -101,12 +103,17 @@ Expression subneg(const std::vector<Expression> & args){
     throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
   }
 
-  return Expression(result);
+  if(result.imag() == 0){
+    return Expression(result.real());
+  }
+  else {
+    return Expression(result);
+  }
 };
 
 Expression div(const std::vector<Expression> & args){
 
-  double result = 0;
+  std::complex<double> result = 0;
 
   if(nargs_equal(args,2)){
     if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
@@ -119,6 +126,7 @@ Expression div(const std::vector<Expression> & args){
   else{
     throw SemanticError("Error in call to division: invalid number of arguments.");
   }
+
   return Expression(result);
 };
 
@@ -228,6 +236,7 @@ Expression tan(const std::vector<Expression> & args) {
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const std::complex<double> I (0.0,1.0);
+const std::complex<double> minusI (0.0,-1.0);
 
 Environment::Environment(){
 
@@ -312,6 +321,9 @@ void Environment::reset(){
 
   // Built-In value of i
   envmap.emplace("I", EnvResult(ExpressionType, Expression(I)));
+
+  // Built-In value of -i
+  envmap.emplace("-I", EnvResult(ExpressionType, Expression(minusI)));
 
   // Procedure: add;
   envmap.emplace("+", EnvResult(ProcedureType, add));
