@@ -137,28 +137,33 @@ Expression div(const std::vector<Expression> & args){
 
 Expression sqrt(const std::vector<Expression> & args) {
 	double result = 0;
+  std::complex<double> cresult;
 
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber() && args[0].head().asNumber() >= 0) {
 			result = std::sqrt(args[0].head().asNumber());
+      return Expression(result);
 		}
-		else {
-			throw SemanticError("Error in call to sqrt: negative argument.");
+		else if(args[0].isHeadComplex() || args[0].head().asNumber() < 0){
+			cresult = std::sqrt(std::complex<double>(args[0].head().asComplex()));
+      return Expression(cresult);
 		}
+    else {
+      throw SemanticError("Error in call to division: invalid argument(s)");
+    }
 	}
 	else {
 		throw SemanticError("Error in call to division: invalid number of arguments.");
 	}
-	return Expression(result);
 };
 
 Expression pow(const std::vector<Expression> & args) {
 
-	double result = 0;
+	std::complex<double> result;
 
 	if (nargs_equal(args, 2)) {
-		if ((args[0].isHeadNumber()) && (args[1].isHeadNumber())) {
-			result = std::pow(args[0].head().asNumber(), args[1].head().asNumber());
+		if ((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+			result = std::pow(args[0].head().asComplex(), args[1].head().asComplex());
 		}
 		else {
 			throw SemanticError("Error in call to power function: invalid argument.");
@@ -167,7 +172,13 @@ Expression pow(const std::vector<Expression> & args) {
 	else {
 		throw SemanticError("Error in call to power function: invalid number of arguments.");
 	}
-	return Expression(result);
+
+	if(result.imag() == 0){
+    return Expression(result.real());
+  }
+  else {
+    return Expression(result);
+  }
 };
 
 Expression ln(const std::vector<Expression> & args) {
@@ -257,7 +268,7 @@ Expression real(const std::vector<Expression> & args) {
 };
 
 Expression imag(const std::vector<Expression> & args) {
-  std::complex<double> result;
+  double result;
 
   if(nargs_equal(args, 1)) {
     if (args[0].isHeadComplex()) {
