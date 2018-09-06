@@ -34,6 +34,7 @@ Expression default_proc(const std::vector<Expression> & args){
 Expression add(const std::vector<Expression> & args){
 
   std::complex<double> result;
+  bool noComplexArgs = true;
   // check all aruments are numbers, while adding
   for( auto & a :args){
     if(a.isHeadNumber()){
@@ -41,13 +42,14 @@ Expression add(const std::vector<Expression> & args){
     }
     else if(a.isHeadComplex()){
       result += a.head().asComplex();
+      bool noComplexArgs = false;
     }
     else{
       throw SemanticError("Error in call to add, argument not a number");
     }
   }
 
-  if(result.imag() == 0){
+  if(noComplexArgs){
     return Expression(result.real());
   }
   else {
