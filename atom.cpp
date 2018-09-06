@@ -190,5 +190,8 @@ std::ostream & operator<<(std::ostream & out, const Atom & a){
   if(a.isSymbol()){
     out << a.asSymbol();
   }
+  if(a.isComplex()){
+    out << a.asComplex();
+  }
   return out;
 }

@@ -108,7 +108,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 	double result = 0;
 
 	if (nargs_equal(args, 1)) {
-		if (args[0].isHeadNumber() && args[0].head().asNumber() > 0) {
+		if (args[0].isHeadNumber() && args[0].head().asNumber() >= 0) {
 			result = std::sqrt(args[0].head().asNumber());
 		}
 		else {
@@ -147,7 +147,7 @@ Expression ln(const std::vector<Expression> & args) {
             result = std::log(args[0].head().asNumber());
         }
         else {
-            throw SemanticError("Error in call to ln: negative argument.");
+            throw SemanticError("Error in call to ln: invalid argument.");
         }
     }
     else {
@@ -209,8 +209,7 @@ Expression tan(const std::vector<Expression> & args) {
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
-// #include <complex>
-// const std::complex<double> I(0.0, 1.0);
+std::complex<double> I (0.0,1.0);
 
 Environment::Environment(){
 
@@ -294,7 +293,7 @@ void Environment::reset(){
   envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
 
   // Built-In value of i
-  // envmap.emplace("I", EnvResult(ExpressionType, Expression(I)));
+  envmap.emplace("I", EnvResult(ExpressionType, Expression(I)));
 
   // Procedure: add;
   envmap.emplace("+", EnvResult(ProcedureType, add));
