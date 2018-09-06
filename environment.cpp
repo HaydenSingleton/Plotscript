@@ -61,10 +61,7 @@ Expression mul(const std::vector<Expression> & args){
   // check all aruments are numbers, while multiplying
   std::complex<double> result = 1.0;
   for( auto & a :args){
-    if(a.isHeadNumber()){
-      result *= a.head().asNumber();
-    }
-    else if(a.isHeadComplex()){
+    if(is_num_type(a.head())) {
       result *= a.head().asComplex();
     }
     else{
