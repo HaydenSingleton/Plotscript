@@ -18,7 +18,7 @@ needed.
 #include "expression.hpp"
 
 /*! \typedef Procedure
-\brief A Procedure is a C++ function pointer taking a vector of 
+\brief A Procedure is a C++ function pointer taking a vector of
        Expressions as arguments and returning an Expression.
 */
 typedef Expression (*Procedure)(const std::vector<Expression> & args);
@@ -70,13 +70,13 @@ public:
 
   /*! Determine if a symbol has been defined as a procedure
     \param sym the symbol to lookup
-    \return true if thr symbol maps to a procedure
+    \return true if the symbol maps to a procedure
    */
   bool is_proc(const Atom &sym) const;
 
   /*! Get the Procedure the argument symbol maps to
     \param sym the symbol to lookup
-    \return the procedure it maps to 
+    \return the procedure it maps to
 
     Note: return the default procedure if argument is not a symbol
           or does not map to a known procedure.
@@ -87,7 +87,7 @@ public:
   void reset();
 
 private:
-  
+
   // Environment is a mapping from symbols to expressions or procedures
   enum EnvResultType { ExpressionType, ProcedureType };
 

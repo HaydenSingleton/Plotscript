@@ -116,8 +116,8 @@ Expression div(const std::vector<Expression> & args){
   std::complex<double> result = 0;
 
   if(nargs_equal(args,2)){
-    if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
-      result = args[0].head().asNumber() / args[1].head().asNumber();
+    if((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+      result = args[0].head().asComplex() / args[1].head().asComplex();
     }
     else{
       throw SemanticError("Error in call to division: invalid argument.");
@@ -127,7 +127,12 @@ Expression div(const std::vector<Expression> & args){
     throw SemanticError("Error in call to division: invalid number of arguments.");
   }
 
-  return Expression(result);
+  if(result.imag() == 0){
+    return Expression(result.real());
+  }
+  else {
+    return Expression(result);
+  }
 };
 
 Expression sqrt(const std::vector<Expression> & args) {
@@ -231,6 +236,97 @@ Expression tan(const std::vector<Expression> & args) {
         throw SemanticError("Error in call to tan: invalid number of arguments.");
     }
     return Expression(result);
+};
+
+Expression real(const std::vector<Expression> & args) {
+  double result = 0;
+
+  if(nargs_equal(args, 1)) {
+    if (args[0].isHeadComplex()) {
+      result = args[0].head().asComplex().real();
+    }
+    else {
+      throw SemanticError("Error in call to real: not a complex argument.");
+    }
+  }
+  else {
+    throw SemanticError("Error in call to tan: invalid number of arguments.");
+  }
+
+  return Expression(result);
+};
+
+Expression imag(const std::vector<Expression> & args) {
+  std::complex<double> result;
+
+  if(nargs_equal(args, 1)) {
+    if (args[0].isHeadComplex()) {
+      result = args[0].head().asComplex().imag();
+    }
+    else {
+      throw SemanticError("Error in call to real: not a complex argument.");
+    }
+  }
+  else {
+    throw SemanticError("Error in call to tan: invalid number of arguments.");
+  }
+
+  return Expression(result);
+};
+
+Expression mag(const std::vector<Expression> & args) {
+  double result = 0;
+
+  if(nargs_equal(args, 1)) {
+    if (args[0].isHeadComplex()) {
+      std::complex<double> n = args[0].head().asComplex();
+      result = std::abs(n);
+    }
+    else {
+      throw SemanticError("Error in call to real: not a complex argument.");
+    }
+  }
+  else {
+    throw SemanticError("Error in call to tan: invalid number of arguments.");
+  }
+
+  return Expression(result);
+};
+
+Expression arg(const std::vector<Expression> & args) {
+  double result = 0;
+
+  if(nargs_equal(args, 1)) {
+    if (args[0].isHeadComplex()) {
+      std::complex<double> n = args[0].head().asComplex();
+      result = std::arg(n);
+    }
+    else {
+      throw SemanticError("Error in call to real: not a complex argument.");
+    }
+  }
+  else {
+    throw SemanticError("Error in call to tan: invalid number of arguments.");
+  }
+  return Expression(result);
+};
+
+Expression conj(const std::vector<Expression> & args) {
+  std::complex<double> result = 0;
+
+  if(nargs_equal(args, 1)) {
+    if (args[0].isHeadComplex()) {
+      std::complex<double> n = args[0].head().asComplex();
+      result = std::conj(n);
+    }
+    else {
+      throw SemanticError("Error in call to real: not a complex argument.");
+    }
+  }
+  else {
+    throw SemanticError("Error in call to tan: invalid number of arguments.");
+  }
+  return Expression(result);
 };
 
 const double PI = std::atan2(0, -1);
@@ -354,4 +450,19 @@ void Environment::reset(){
 
   // Procedure: tan;
   envmap.emplace("tan", EnvResult(ProcedureType, tan));
+
+  // Procedure: real;
+  envmap.emplace("real", EnvResult(ProcedureType, real));
+
+  // Procedure: imag;
+  envmap.emplace("imag", EnvResult(ProcedureType, imag));
+
+  // Procedure: mag;
+  envmap.emplace("mag", EnvResult(ProcedureType, mag));
+
+  // Procedure: arg;
+  envmap.emplace("arg", EnvResult(ProcedureType, arg));
+
+  // Procedure: conj;
+  envmap.emplace("conj", EnvResult(ProcedureType, conj));
 }
