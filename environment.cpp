@@ -171,7 +171,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 
 Expression pow(const std::vector<Expression> & args) {
 
-	std::complex<double> result;
+	std::complex<double> result(0,0);
 
 	if (nargs_equal(args, 2)) {
 		if(is_num_type(args[0]) && is_num_type(args[1])) {
@@ -185,11 +185,11 @@ Expression pow(const std::vector<Expression> & args) {
 		throw SemanticError("Error in call to power function: invalid number of arguments.");
 	}
 
-	if(result.imag() == 0){
-    return Expression(result.real());
+	if(args[0].isHeadComplex()||args[1].isHeadComplex()){
+    return Expression(result);
   }
   else {
-    return Expression(result);
+    return Expression(result.real());
   }
 };
 

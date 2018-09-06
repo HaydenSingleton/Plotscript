@@ -88,7 +88,18 @@ TEST_CASE( "Test semeantic errors", "[environment]" ) {
 
   {
     Expression exp(Atom("begin"));
-    
+
+    REQUIRE_THROWS_AS(exp.eval(env), SemanticError);
+  }
+}
+
+TEST_CASE( "Test mul", "[environment]" ) {
+
+  Environment env;
+
+  {
+    Expression exp(Atom(""));
+
     REQUIRE_THROWS_AS(exp.eval(env), SemanticError);
   }
 }
