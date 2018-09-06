@@ -60,8 +60,14 @@ Expression mul(const std::vector<Expression> & args){
 
   // check all aruments are numbers, while multiplying
   std::complex<double> result = 1.0;
+  bool noComplexArgs = true;
+
   for( auto & a :args){
-    if(is_num_type(a.head())) {
+    if(a.isHeadNumber()) {
+      result *= a.head().asNumber();
+    }
+    else if(a.isHeadComplex()){
+      noComplexArgs = false;
       result *= a.head().asComplex();
     }
     else{
@@ -69,7 +75,8 @@ Expression mul(const std::vector<Expression> & args){
     }
   }
 
-  if(result.imag() == 0){
+  // Return a real number if all arguments are real, otherwise return a complex number
+  if(noComplexArgs){
     return Expression(result.real());
   }
   else {
@@ -129,11 +136,12 @@ Expression div(const std::vector<Expression> & args) {
     throw SemanticError("Error in call to division: invalid number of arguments.");
   }
 
-  if(result.imag() == 0){
-    return Expression(result.real());
+  // If either argument was a complex number leave the result, else return only the real part
+  if(args[0].isHeadComplex()||args[1].isHeadComplex()){
+    return Expression(result);
   }
   else {
-    return Expression(result);
+    return Expression(result.real());
   }
 };
 
@@ -263,7 +271,7 @@ Expression real(const std::vector<Expression> & args) {
     }
   }
   else {
-    throw SemanticError("Error in call to tan: invalid number of arguments.");
+    throw SemanticError("Error in call to real: invalid number of arguments.");
   }
 
   return Expression(result);
@@ -277,11 +285,11 @@ Expression imag(const std::vector<Expression> & args) {
       result = args[0].head().asComplex().imag();
     }
     else {
-      throw SemanticError("Error in call to real: not a complex argument.");
+      throw SemanticError("Error in call to imag: not a complex argument.");
     }
   }
   else {
-    throw SemanticError("Error in call to tan: invalid number of arguments.");
+    throw SemanticError("Error in call to imag: invalid number of arguments.");
   }
 
   return Expression(result);
@@ -296,11 +304,11 @@ Expression mag(const std::vector<Expression> & args) {
       result = std::abs(n);
     }
     else {
-      throw SemanticError("Error in call to real: not a complex argument.");
+      throw SemanticError("Error in call to mag: not a complex argument.");
     }
   }
   else {
-    throw SemanticError("Error in call to tan: invalid number of arguments.");
+    throw SemanticError("Error in call to mag: invalid number of arguments.");
   }
 
   return Expression(result);
@@ -315,11 +323,11 @@ Expression arg(const std::vector<Expression> & args) {
       result = std::arg(n);
     }
     else {
-      throw SemanticError("Error in call to real: not a complex argument.");
+      throw SemanticError("Error in call to arg: not a complex argument.");
     }
   }
   else {
-    throw SemanticError("Error in call to tan: invalid number of arguments.");
+    throw SemanticError("Error in call to arg: invalid number of arguments.");
   }
   return Expression(result);
 };
@@ -333,11 +341,11 @@ Expression conj(const std::vector<Expression> & args) {
       result = std::conj(n);
     }
     else {
-      throw SemanticError("Error in call to real: not a complex argument.");
+      throw SemanticError("Error in call to conj: not a complex argument.");
     }
   }
   else {
-    throw SemanticError("Error in call to tan: invalid number of arguments.");
+    throw SemanticError("Error in call to conj: invalid number of arguments.");
   }
   return Expression(result);
 };
