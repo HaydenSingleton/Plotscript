@@ -29,33 +29,51 @@ Expression default_proc(const std::vector<Expression> & args){
 Expression add(const std::vector<Expression> & args){
 
   // check all aruments are numbers, while adding
-  double result = 0;
+  std::complex<double> result;
+
   for( auto & a :args){
     if(a.isHeadNumber()){
       result += a.head().asNumber();
+    }
+    else if(a.isHeadComplex()){
+      result += a.head().asComplex();
     }
     else{
       throw SemanticError("Error in call to add, argument not a number");
     }
   }
 
-  return Expression(result);
+  if(result.imag() == 0){
+    return Expression(result.real());
+  }
+  else {
+    return Expression(result);
+  }
+
 };
 
 Expression mul(const std::vector<Expression> & args){
 
   // check all aruments are numbers, while multiplying
-  double result = 1;
+  std::complex<double> result(1.0, 0);
   for( auto & a :args){
     if(a.isHeadNumber()){
       result *= a.head().asNumber();
+    }
+    else if(a.isHeadComplex()){
+      result *= a.head().asComplex();
     }
     else{
       throw SemanticError("Error in call to mul, argument not a number");
     }
   }
 
-  return Expression(result);
+  if(result.imag() == 0){
+    return Expression(result.real());
+  }
+  else {
+    return Expression(result);
+  }
 };
 
 Expression subneg(const std::vector<Expression> & args){
@@ -209,7 +227,7 @@ Expression tan(const std::vector<Expression> & args) {
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
-std::complex<double> I (0.0,1.0);
+const std::complex<double> I (0.0,1.0);
 
 Environment::Environment(){
 

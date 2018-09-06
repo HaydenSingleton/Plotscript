@@ -29,10 +29,14 @@ Atom::Atom(const Token & token): Atom(){
   }
   else{ // else assume symbol
     // make sure does not start with number
-    if(!std::isdigit(token.asString()[0])){
+    if(!std::isdigit(token.asString()[0]) )//&& token.asString()[0] != 'I'){
       setSymbol(token.asString());
     }
-  }
+    // else {
+    //   std::complex<double> i;
+    //   setComplex(i);
+    // }
+  // }
 }
 
 Atom::Atom(const std::string & value): Atom() {
@@ -62,6 +66,9 @@ Atom & Atom::operator=(const Atom & x){
     }
     else if(x.m_type == SymbolKind){
       setSymbol(x.stringValue);
+    }
+    else if(x.m_type == ComplexKind){
+      setComplex(x.complexValue);
     }
   }
   return *this;
@@ -114,11 +121,12 @@ void Atom::setSymbol(const std::string & value){
 void Atom::setComplex(const std::complex<double> & value){
   m_type = ComplexKind;
   complexValue = value;
-
 }
 
 double Atom::asNumber() const noexcept{
-
+  if (m_type == ComplexKind) {
+    return complexValue.real();
+  }
   return (m_type == NumberKind) ? numberValue : 0.0;
 }
 
@@ -135,8 +143,7 @@ std::string Atom::asSymbol() const noexcept{
 }
 
 std::complex<double> Atom::asComplex() const noexcept{
-  std::complex<double> defaultComplexValue;
-  return (m_type == ComplexKind) ? complexValue : defaultComplexValue;
+  return (m_type == ComplexKind) ? complexValue : (std::complex<double>)(0,0);
 }
 
 bool Atom::operator==(const Atom & right) const noexcept{

@@ -16,7 +16,7 @@ class Environment;
 /*! \class Expression
 \brief An expression is a tree of Atoms.
 
-An expression is an atom called the head followed by a (possibly empty) 
+An expression is an atom called the head followed by a (possibly empty)
 list of expressions called the tail.
  */
 class Expression {
@@ -62,12 +62,15 @@ public:
   /// convienience member to determine if head atom is a symbol
   bool isHeadSymbol() const noexcept;
 
+  /// convenience member to determine if the head atom is a comlex number
+  bool isHeadComplex() const noexcept;
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
   /// equality comparison for two expressions (recursive)
   bool operator==(const Expression & exp) const noexcept;
-  
+
 private:
 
   // the head of the expression
@@ -79,7 +82,7 @@ private:
 
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;
-  
+
   // internal helper methods
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
@@ -91,5 +94,5 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp);
 
 /// inequality comparison for two expressions (recursive)
 bool operator!=(const Expression & left, const Expression & right) noexcept;
-  
+
 #endif
