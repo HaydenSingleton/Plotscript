@@ -15,6 +15,11 @@ bool nargs_equal(const std::vector<Expression> & args, unsigned nargs){
   return args.size() == nargs;
 }
 
+// check if the expression holds a real or imaginary number
+bool is_num_type(const Expression & a) {
+  return a.isHeadComplex() || a.isHeadNumber();
+}
+
 /***********************************************************************
 Each of the functions below have the signature that corresponds to the
 typedef'd Procedure function pointer.
@@ -54,7 +59,7 @@ Expression add(const std::vector<Expression> & args){
 Expression mul(const std::vector<Expression> & args){
 
   // check all aruments are numbers, while multiplying
-  std::complex<double> result(1.0, 0);
+  std::complex<double> result = 1.0;
   for( auto & a :args){
     if(a.isHeadNumber()){
       result *= a.head().asNumber();
@@ -111,12 +116,12 @@ Expression subneg(const std::vector<Expression> & args){
   }
 };
 
-Expression div(const std::vector<Expression> & args){
+Expression div(const std::vector<Expression> & args) {
 
   std::complex<double> result = 0;
 
   if(nargs_equal(args,2)){
-    if((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+    if(is_num_type(args[0]) && is_num_type(args[1])) {
       result = args[0].head().asComplex() / args[1].head().asComplex();
     }
     else{
@@ -162,7 +167,7 @@ Expression pow(const std::vector<Expression> & args) {
 	std::complex<double> result;
 
 	if (nargs_equal(args, 2)) {
-		if ((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+		if(is_num_type(args[0]) && is_num_type(args[1])) {
 			result = std::pow(args[0].head().asComplex(), args[1].head().asComplex());
 		}
 		else {
