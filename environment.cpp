@@ -42,7 +42,7 @@ Expression add(const std::vector<Expression> & args){
     }
     else if(a.isHeadComplex()){
       result += a.head().asComplex();
-      bool noComplexArgs = false;
+      noComplexArgs = false;
     }
     else{
       throw SemanticError("Error in call to add, argument not a number");
