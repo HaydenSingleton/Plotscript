@@ -92,16 +92,18 @@ Expression subneg(const std::vector<Expression> & args){
   if(nargs_equal(args,1)){
     if(args[0].isHeadNumber()){
       result = -args[0].head().asNumber();
+      return Expression(result.real());
     }
     else if (args[0].isHeadComplex()) {
       result = -args[0].head().asComplex();
+      return Expression(result);
     }
     else {
       throw SemanticError("Error in call to negate: invalid argument.");
     }
   }
   else if(nargs_equal(args,2)){
-    if((args[0].isHeadNumber()||args[0].isHeadComplex()) && ((args[1].isHeadNumber())||args[1].isHeadComplex())){
+    if(is_num_type(args[0]) && is_num_type(args[1])){
       result = args[0].head().asComplex() - args[1].head().asComplex();
     }
     else{
@@ -112,11 +114,11 @@ Expression subneg(const std::vector<Expression> & args){
     throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
   }
 
-  if(result.imag() == 0){
-    return Expression(result.real());
+  if(args[0].isHeadComplex()||args[1].isHeadComplex()){
+    return Expression(result);
   }
   else {
-    return Expression(result);
+    return Expression(result.real());
   }
 };
 
