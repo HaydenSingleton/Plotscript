@@ -101,7 +101,7 @@ Expression subneg(const std::vector<Expression> & args){
       return Expression(result);
     }
     else {
-      throw SemanticError("Error in call to negate: invalid argument.");
+      throw SemanticError("Error in call to negate: invalid argument type.");
     }
   }
   else if(nargs_equal(args,2)){
@@ -109,7 +109,7 @@ Expression subneg(const std::vector<Expression> & args){
       result = args[0].head().asComplex() - args[1].head().asComplex();
     }
     else{
-      throw SemanticError("Error in call to subtraction: invalid argument.");
+      throw SemanticError("Error in call to subtraction: invalid argument types.");
     }
   }
   else{
