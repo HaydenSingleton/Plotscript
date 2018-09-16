@@ -178,7 +178,9 @@ bool Atom::operator==(const Atom & right) const noexcept{
   case ComplexKind:
   {
     if(right.m_type != ComplexKind) return false;
-      return complexValue == right.complexValue;
+    double diff = fabs(std::abs(complexValue) - std::abs(right.complexValue));
+    if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
+      return false;
   }
   default:
     return false;
