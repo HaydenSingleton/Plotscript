@@ -69,7 +69,10 @@ TEST_CASE( "Test get built-in procedure", "[environment]" ) {
 	args.clear();
 	args.emplace_back(a);
 	args.emplace_back(b);
-	REQUIRE(padd(args) == Expression(c));
+	Expression result = padd(args);
+	REQUIRE(result.isHeadComplex());
+	REQUIRE(Expression(c).isHeadComplex());
+	REQUIRE(result == Expression(c));
 
 	INFO("add semantic error")
 	REQUIRE_THROWS_AS(padd(std::vector<Expression>{ Expression(std::string("not_valid_input")) }), SemanticError);
