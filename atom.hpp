@@ -89,6 +89,7 @@ private:
 
   // helper to set type and value of a Complex Number
   void setComplex(const std::complex<double> & value);
+
 };
 
 /// inequality comparison for Atom

@@ -97,7 +97,6 @@ bool Atom::isComplex() const noexcept{
   return m_type == ComplexKind;
 }
 
-
 void Atom::setNumber(double value){
 
   m_type = NumberKind;
