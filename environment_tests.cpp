@@ -203,7 +203,7 @@ TEST_CASE("Test power procedure", "[environment]") {
 
 	INFO("Pow with real argument");
 	std::vector<Expression> real_args = { Expression(2.0), Expression(3.0) };
-	// REQUIRE(ppow(real_args) == Expression(8.0));
+	REQUIRE(ppow(real_args) == Expression(8.0));
 
 	INFO("Pow with complex arguments");
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(0, 1)), Expression(5.0) };
