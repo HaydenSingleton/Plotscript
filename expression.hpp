@@ -23,7 +23,7 @@ class Expression {
 public:
 
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
-
+  
   /// Default construct and Expression, whose type in NoneType
   Expression();
 

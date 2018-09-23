@@ -22,7 +22,7 @@ Expression::Expression(const Expression & a){
   }
 }
 
-// get everything after the word "list"
+// Constructor to get everything after the word "list"
 Expression::Expression(const std::vector<Expression> & a){
   m_tail = a;
 }
@@ -61,7 +61,6 @@ bool Expression::isHeadSymbol() const noexcept{
 bool Expression::isHeadComplex() const noexcept{
   return m_head.isComplex();
 }
-
 
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
@@ -110,9 +109,6 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
       if(env.is_exp(head)) {
 	      return env.get_exp(head);
       }
-      else if (head.asSymbol() == "list") {
-        return Expression(m_tail);
-      }
       else {
 	      throw SemanticError("Error during handle lookup: unknown symbol");
       }
@@ -155,7 +151,7 @@ Expression Expression::handle_define(Environment & env){
 
   // but tail[0] must not be a special-form or procedure
   std::string s = m_tail[0].head().asSymbol();
-  if((s == "define") || (s == "begin")){
+  if((s == "define") || (s == "begin") || (s == "list")){
     throw SemanticError("Error during handle define: attempt to redefine a special-form");
   }
 
@@ -182,6 +178,9 @@ Expression Expression::handle_define(Environment & env){
 Expression Expression::eval(Environment & env){
 
   if(m_tail.empty()){
+	  if (m_head.isSymbol() && (m_head.asSymbol() == "list")) {
+		  return Expression();
+	  }
     return handle_lookup(m_head, env);
   }
   // handle begin special-form
