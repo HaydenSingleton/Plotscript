@@ -355,12 +355,19 @@ Expression conj(const std::vector<Expression> & args) {
 };
 
 Expression list(const std::vector<Expression> & args) {
-  return Expression(args);
+	std::vector<Expression> result = args;
+	return Expression(result);
 };
 
-// Expression first(const std::vector<Expression> & v) {
-
-// };
+Expression first(const std::vector<Expression> & args) {
+	if (nargs_equal(args, 1)) {
+		std::vector<Expression> result = args;
+		return Expression(*result[0].tailConstBegin());
+	}
+	else {
+		SemanticError("Error in call to first: invalid number of arguments.");
+	}
+};
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -499,6 +506,9 @@ void Environment::reset(){
   // Procedure: conj;
   envmap.emplace("conj", EnvResult(ProcedureType, conj));
 
-  // Procedure: list;
+  // Procedure: list as procedure;
   envmap.emplace("list", EnvResult(ProcedureType, list));
+
+  // Procedure: first
+  envmap.emplace("first", EnvResult(ProcedureType, first));
 }
