@@ -358,9 +358,9 @@ Expression list(const std::vector<Expression> & args) {
   return Expression(args);
 };
 
-Expression first(const std::std::vector<Expression> & v) {
+// Expression first(const std::vector<Expression> & v) {
 
-}
+// };
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
