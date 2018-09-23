@@ -6,6 +6,7 @@ Defines the Atom type and associated functions.
 
 #include "token.hpp"
 #include <complex>
+#include <limits>
 
 
 /*! \class Atom
@@ -26,7 +27,7 @@ public:
   Atom(const std::string & value);
 
   /// Construct an Atom of type Complex with value
-  Atom(const std::complex<double> & value);
+  Atom(std::complex<double> value);
 
   /// Construct an Atom directly from a Token
   Atom(const Token & token);

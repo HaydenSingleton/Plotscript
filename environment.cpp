@@ -354,6 +354,14 @@ Expression conj(const std::vector<Expression> & args) {
   return Expression(result);
 };
 
+Expression list(const std::vector<Expression> & args) {
+  return Expression(args);
+};
+
+Expression first(const std::std::vector<Expression> & v) {
+
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const std::complex<double> IMG (0.0,1.0);
@@ -490,4 +498,7 @@ void Environment::reset(){
 
   // Procedure: conj;
   envmap.emplace("conj", EnvResult(ProcedureType, conj));
+
+  // Procedure: list;
+  envmap.emplace("list", EnvResult(ProcedureType, list));
 }

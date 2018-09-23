@@ -22,6 +22,11 @@ Expression::Expression(const Expression & a){
   }
 }
 
+// get everything after the word "list"
+Expression::Expression(const std::vector<Expression> & a){
+  m_tail = a;
+}
+
 Expression & Expression::operator=(const Expression & a){
 
   // prevent self-assignment
@@ -105,22 +110,25 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
       if(env.is_exp(head)) {
 	      return env.get_exp(head);
       }
+      else if (head.asSymbol() == "list") {
+        return Expression(m_tail);
+      }
       else {
-	      throw SemanticError("Error during evaluation: unknown symbol");
+	      throw SemanticError("Error during handle lookup: unknown symbol");
       }
     }
     else if(head.isNumber() || head.isComplex()){
       return Expression(head);
     }
     else{
-      throw SemanticError("Error during evaluation: Invalid type in terminal expression");
+      throw SemanticError("Error during handle lookup: Invalid type in terminal expression");
     }
 }
 
 Expression Expression::handle_begin(Environment & env){
 
   if(m_tail.size() == 0){
-    throw SemanticError("Error during evaluation: zero arguments to begin");
+    throw SemanticError("Error during handle begin: zero arguments to begin");
   }
 
   // evaluate each arg from tail, return the last
@@ -137,29 +145,29 @@ Expression Expression::handle_define(Environment & env){
 
   // tail must have size 3 or error
   if(m_tail.size() != 2){
-    throw SemanticError("Error during evaluation: invalid number of arguments to define");
+    throw SemanticError("Error during handle define: invalid number of arguments to define");
   }
 
   // tail[0] must be symbol
   if(!m_tail[0].isHeadSymbol()){
-    throw SemanticError("Error during evaluation: first argument to define not symbol");
+    throw SemanticError("Error during handle define: first argument to define not symbol");
   }
 
   // but tail[0] must not be a special-form or procedure
   std::string s = m_tail[0].head().asSymbol();
   if((s == "define") || (s == "begin")){
-    throw SemanticError("Error during evaluation: attempt to redefine a special-form");
+    throw SemanticError("Error during handle define: attempt to redefine a special-form");
   }
 
   if(env.is_proc(m_head)){
-    throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
+    throw SemanticError("Error during handle define: attempt to redefine a built-in procedure");
   }
 
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
   if(env.is_exp(m_head)){
-    throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
+    throw SemanticError("Error during handle define: attempt to redefine a previously defined symbol");
   }
 
   //and add to env
@@ -203,6 +211,9 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
     out << *e;
+    if((e + 1) != exp.tailConstEnd()){
+      out << " ";
+    }
   }
   if(!exp.isHeadComplex()) {
     out << ")";

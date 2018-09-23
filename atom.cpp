@@ -3,7 +3,6 @@
 #include <sstream>
 #include <cctype>
 #include <cmath>
-#include <limits>
 
 Atom::Atom(): m_type(NoneKind) {}
 
@@ -12,7 +11,7 @@ Atom::Atom(double value){
   setNumber(value);
 }
 
-Atom::Atom(const std::complex<double> & value): Atom() {
+Atom::Atom(std::complex<double> value): Atom() {
   setComplex(value);
 }
 
@@ -171,19 +170,15 @@ bool Atom::operator==(const Atom & right) const noexcept{
   case SymbolKind:
     {
       if(right.m_type != SymbolKind) return false;
-
       return stringValue == right.stringValue;
     }
     break;
   case ComplexKind:
-  {
+	{
     if(right.m_type != ComplexKind) return false;
-	double lmag = std::abs(complexValue);
-	double rmag = std::abs(right.complexValue);
-    double diff = fabs(lmag - rmag);
-    if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
-      return false;
-  }
+    return complexValue == right.complexValue;
+	}
+	break;
   default:
     return false;
   }
