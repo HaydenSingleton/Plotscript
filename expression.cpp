@@ -25,6 +25,7 @@ Expression::Expression(const Expression & a){
 // Constructor to get everything after the word "list"
 Expression::Expression(const std::vector<Expression> & a){
   m_tail = a;
+  list_flag = true;
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -60,6 +61,14 @@ bool Expression::isHeadSymbol() const noexcept{
 
 bool Expression::isHeadComplex() const noexcept{
   return m_head.isComplex();
+}
+
+bool Expression::isList() const noexcept {
+	return list_flag;
+}
+
+void Expression::toggleListFlag() noexcept {
+	list_flag = !list_flag;
 }
 
 void Expression::append(const Atom & a){

@@ -68,6 +68,9 @@ public:
   /// convenience member to determine if the head atom is a comlex number
   bool isHeadComplex() const noexcept;
 
+  /// member when determines if the expression is a list
+  bool isList() const noexcept;
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -82,6 +85,12 @@ private:
   // the tail list is expressed as a vector for access efficiency
   // and cache coherence, at the cost of wasted memory.
   std::vector<Expression> m_tail;
+
+  // state variable
+  bool list_flag = false;
+
+  /// helper function to toggle list state variable
+  void toggleListFlag() noexcept;
 
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;
