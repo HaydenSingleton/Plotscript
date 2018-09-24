@@ -126,26 +126,38 @@ Expression subneg(const std::vector<Expression> & args){
 
 Expression div(const std::vector<Expression> & args) {
 
-  std::complex<double> result = 0;
+  std::complex<double> result;
+  bool noComplexArgs = true;
 
-  if(nargs_equal(args,2)){
-    if(is_num_type(args[0]) && is_num_type(args[1])) {
-      result = args[0].head().asComplex() / args[1].head().asComplex();
-    }
-    else{
-      throw SemanticError("Error in call to division: invalid argument.");
-    }
-  }
-  else{
-    throw SemanticError("Error in call to division: invalid number of arguments.");
-  }
+  if(nargs_equal(args,1)){
+	  result = 1.0;
+	  if (args[0].isHeadComplex())
+		  noComplexArgs = false;
+	  result /= args[0].head().asComplex();
 
-  // If either argument was a complex number leave the result, else return only the real part
-  if(args[0].isHeadComplex()||args[1].isHeadComplex()){
-    return Expression(result);
   }
   else {
-    return Expression(result.real());
+	  if(is_num_type(args[0]))
+		result = args[0].head().asComplex() * args[0].head().asComplex();
+	  for (auto & a : args) {
+		  if (a.isHeadNumber()) {
+			  result /= a.head().asNumber();
+		  }
+		  else if (a.isHeadComplex()) {
+			  noComplexArgs = false;
+			  result /= a.head().asComplex();
+		  }
+		  else {
+			  throw SemanticError("Error in call to division, argument not a number");
+		  }
+	  }
+  }
+
+  if (noComplexArgs) {
+	  return Expression(result.real());
+  }
+  else {
+	  return Expression(result);
   }
 };
 
@@ -361,24 +373,45 @@ Expression list(const std::vector<Expression> & args) {
 
 Expression first(const std::vector<Expression> & args) {
 	if (nargs_equal(args, 1)) {
-    if(args[0].isHeadComplex() || args[0].isHeadNumber() || args[0].isHeadSymbol()) {
-      throw SemanticError("Error in call to first: not a list argument.");
-    }
-    else {
-      std::vector<Expression> _r = args;
-      if(args[0] != Expression()) {
-        Expression result = *_r[0].tailConstBegin();
-  		  return Expression(result);
-      }
-      else {
-        throw SemanticError("Error argument to first is an empty list.");
-      }
-    }
+		if(args[0].isList()) {
+			if (args[0] != Expression()) {
+				//std::vector<Expression> _r = args;
+				Expression result = *args[0].tailConstBegin();
+				return Expression(result);
+			}
+			else
+				throw SemanticError("Error argument to first is an empty list.");
+		}
+		else
+			throw SemanticError("Error in call to first: not a list argument.");
 	}
 	else {
 		throw SemanticError("Error in call to first: invalid number of arguments.");
 	}
 };
+
+Expression rest(const std::vector<Expression> & args) {
+  if(nargs_equal(args, 1)) {
+    auto _r = args[0];
+    if(args[0].isList())
+      throw SemanticError("Error in call to rest: not a list argument.");
+    else {
+      if(_r != Expression()) {
+        std::vector<Expression> result;
+        auto e = _r.tailConstBegin();
+        e++;
+        while(e != _r.tailConstEnd()){
+          result.emplace_back(*e++);
+        }
+        return Expression(result);
+      }
+      else
+        throw SemanticError("Error argument to rest is an empty list.");
+    }
+  }
+    else
+      throw SemanticError("Error in call to rest: invalid number of arguments.");
+}
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -520,6 +553,10 @@ void Environment::reset(){
   // Procedure: list as procedure;
   envmap.emplace("list", EnvResult(ProcedureType, list));
 
-  // Procedure: first
+  // Procedure: first;
   envmap.emplace("first", EnvResult(ProcedureType, first));
+
+  // Procedure: rest;
+  envmap.emplace("rest", EnvResult(ProcedureType, rest));
+
 }
