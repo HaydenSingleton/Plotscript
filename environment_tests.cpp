@@ -158,6 +158,8 @@ TEST_CASE("Test division procedure", "[environment]") {
 	INFO("Div with real args");
 	std::vector<Expression> one_two = { Expression(1.0), Expression(2.0) };
 	REQUIRE(pdiv(one_two) == Expression(0.5));
+	std::vector<Expression> recip = { Expression(4.0) };
+	REQUIRE(pdiv(recip) == Expression(0.25));
 
 	INFO("Div with complex args");
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(1, 1)), Expression(std::complex<double>(2, 2)) };
@@ -166,8 +168,6 @@ TEST_CASE("Test division procedure", "[environment]") {
 	INFO("Div error messages");
 	std::vector<Expression> not_a_number = { Expression(std::string("F")), Expression(std::string("one")) };
 	REQUIRE_THROWS_AS(pdiv(not_a_number), SemanticError);
-	std::vector<Expression> too_many_args = { Expression(1.0), Expression(2.0), Expression(3.0) };
-	REQUIRE_THROWS_AS(pdiv(too_many_args), SemanticError);
 }
 
 TEST_CASE("Test square root procedure", "[environment]") {
