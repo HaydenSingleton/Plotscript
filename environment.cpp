@@ -361,11 +361,22 @@ Expression list(const std::vector<Expression> & args) {
 
 Expression first(const std::vector<Expression> & args) {
 	if (nargs_equal(args, 1)) {
-		std::vector<Expression> result = args;
-		return Expression(*result[0].tailConstBegin());
+    if(args[0].isHeadComplex() || args[0].isHeadNumber() || args[0].isHeadSymbol()) {
+      throw SemanticError("Error in call to first: not a list argument.");
+    }
+    else {
+      std::vector<Expression> _r = args;
+      if(args[0] != Expression()) {
+        Expression result = *_r[0].tailConstBegin();
+  		  return Expression(result);
+      }
+      else {
+        throw SemanticError("Error argument to first is an empty list.");
+      }
+    }
 	}
 	else {
-		SemanticError("Error in call to first: invalid number of arguments.");
+		throw SemanticError("Error in call to first: invalid number of arguments.");
 	}
 };
 
