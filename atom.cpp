@@ -162,7 +162,7 @@ bool Atom::operator==(const Atom & right) const noexcept{
       double dleft = numberValue;
       double dright = right.numberValue;
       double diff = fabs(dleft - dright);
-      if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
+      if(std::isnan(diff) || (diff > (std::numeric_limits<double>::epsilon()*2) ) )
         return false;
     }
     break;
@@ -175,7 +175,10 @@ bool Atom::operator==(const Atom & right) const noexcept{
   case ComplexKind:
 	{
     if(right.m_type != ComplexKind) return false;
-    return complexValue == right.complexValue;
+    std::complex<double> diff;
+    diff = complexValue - right.complexValue;
+    if(diff.real() > std::numeric_limits<double>::epsilon()*2 || diff.imag() > std::numeric_limits<double>::epsilon()*2)
+      return false;
 	}
 	break;
   default:
