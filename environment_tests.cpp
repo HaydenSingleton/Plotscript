@@ -198,13 +198,9 @@ TEST_CASE("Test power procedure", "[environment]") {
 	Environment env;
 	Procedure ppow = env.get_proc(Atom("^"));
 
-	std::complex<double> c_zero_one(0, 1);
-	std::vector<Expression> complex_one = { Expression(c_zero_one) };
-
-
 	INFO("Pow with real argument");
-	std::vector<Expression> real_args = { Expression(2.0), Expression(3.0) };
-	REQUIRE(ppow(real_args) == Expression(8.0));
+	std::vector<Expression> real_args = { Expression(4.0), Expression(4.0) };
+	REQUIRE(ppow(real_args) == Expression(256));
 
 	INFO("Pow with complex arguments");
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(0, 1)), Expression(5.0) };
