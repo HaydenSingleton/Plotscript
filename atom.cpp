@@ -176,8 +176,10 @@ bool Atom::operator==(const Atom & right) const noexcept{
 	{
     if(right.m_type != ComplexKind) return false;
     std::complex<double> diff;
-    diff = complexValue - right.complexValue;
-    if(diff.real() > std::numeric_limits<double>::epsilon()*2 || diff.imag() > std::numeric_limits<double>::epsilon()*2)
+    diff = (complexValue - right.complexValue);
+    double realPart = std::fabs(diff.real());
+    double imagPart = std::fabs(diff.imag());
+    if(realPart > std::numeric_limits<double>::epsilon()*2 || imagPart > std::numeric_limits<double>::epsilon()*2)
       return false;
 	}
 	break;
