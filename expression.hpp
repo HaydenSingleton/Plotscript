@@ -10,6 +10,9 @@ Defines the Expression type and assiciated functions.
 #include "token.hpp"
 #include "atom.hpp"
 
+#include <iostream>
+
+
 // forward declare Environment
 class Environment;
 
@@ -35,7 +38,7 @@ public:
   /// deep-copy construct an expression (recursive)
   Expression(const Expression & a);
 
-  /// deep-copy constructor for list
+  /// constructor for list
   Expression(const std::vector<Expression> & a);
 
   /// deep-copy assign an expression  (recursive)
@@ -53,7 +56,7 @@ public:
   /// return a pointer to the last expression in the tail, or nullptr
   Expression * tail();
 
-  /// return the number of items in the tail vector 
+  /// return the number of items in the tail vector
   size_t tailLength() const noexcept;
 
   /// return a const-iterator to the beginning of tail
