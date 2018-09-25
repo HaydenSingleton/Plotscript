@@ -373,6 +373,7 @@ Expression list(const std::vector<Expression> & args) {
 };
 
 Expression first(const std::vector<Expression> & args) {
+
 	if (nargs_equal(args, 1)) {
 		if(args[0].isList()) {
 			if (args[0] != Expression()) {
@@ -438,17 +439,24 @@ Expression append(const std::vector<Expression> & args) {
       return Expression(result);
     }
   }
-  else 
+  else
     throw SemanticError("Error invalid number of arguments for append.");
 };
 
 Expression join(const std::vector<Expression> & args) {
   if(nargs_equal(args, 2)) {
     if(!args[0].isList() || !args[1].isList())
-      throw SemanticError("Error: argument to join not a list.");
+      throw SemanticError("Error: an argument to join not a list.");
     else {
-      return Expression();
-    } 
+      std::vector<Expression> result;
+      for(auto e = args[0].tailConstBegin(); e != args[0].tailConstEnd(); e++){
+        result.emplace_back(*e);
+      }
+      for(auto e = args[1].tailConstBegin(); e != args[1].tailConstEnd(); e++){
+        result.emplace_back(*e);
+      }
+      return Expression(result);
+    }
   }
   else
     throw SemanticError("Error invalid number of arguments to join.");
@@ -458,9 +466,17 @@ Expression range(const std::vector<Expression> & args) {
   if(nargs_equal(args, 3)) {
     if(!args[0].isHeadNumber() || !args[1].isHeadNumber() || !args[2].isHeadNumber())
       throw SemanticError("Error an argument is not a number.");
+    else if (args[0].head().asNumber() > args[1].head().asNumber())
+      throw SemanticError("Error: begin greater than end in range");
+    else if (args[2].head().asNumber() <= 0)
+      throw SemanticError("Error: negative or zero increment in range");
     else {
-      return Expression();
-    }  
+      std::vector<Expression> result;
+      for(double i = args[0].head().asNumber(); i <= args[1].head().asNumber(); i += args[2].head().asNumber()){
+        result.emplace_back(Expression(Atom(i)));
+      }
+      return Expression(result);
+    }
   }
   else
     throw SemanticError("Error invalid number of arguments for range function.");
