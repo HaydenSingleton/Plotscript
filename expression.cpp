@@ -6,6 +6,9 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
+using std::cout;
+using std::endl;
+
 Expression::Expression():m_type(None) {}
 
 Expression::Expression(const Atom & a): Expression() {
@@ -17,13 +20,13 @@ Expression::Expression(const Atom & a): Expression() {
 Expression::Expression(const Expression & a) {
 
   m_head = a.m_head;
-  m_type = a.m_type ;
+  m_type = a.m_type;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
   }
 }
 
-// Constructor to get everything after the word "list"
+// Constructor for lists
 Expression::Expression(const std::vector<Expression> & a){
   m_type = List;
   m_tail = a;
@@ -38,6 +41,7 @@ Expression & Expression::operator=(const Expression & a){
 
   // prevent self-assignment
   if(this != &a){
+      m_type = a.m_type;
       m_head = a.m_head;
       m_tail.clear();
       for(auto e : a.m_tail)
@@ -115,12 +119,7 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
   Procedure proc = env.get_proc(op);
 
   // call proc with args
-  Expression a;
-  a = proc(args);
-
-  if(op.asSymbol() == "list")
-    a.makeList();
-  return a;
+  return proc(args);
 }
 
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
