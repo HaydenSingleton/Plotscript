@@ -368,6 +368,7 @@ Expression conj(const std::vector<Expression> & args) {
 
 Expression list(const std::vector<Expression> & args) {
 	std::vector<Expression> result = args;
+  assert(Expression(result).isList());
 	return Expression(result);
 };
 
@@ -375,32 +376,30 @@ Expression first(const std::vector<Expression> & args) {
 	if (nargs_equal(args, 1)) {
 		if(args[0].isList()) {
 			if (args[0] != Expression()) {
-				//std::vector<Expression> _r = args;
 				Expression result = *args[0].tailConstBegin();
 				return Expression(result);
 			}
 			else
-				throw SemanticError("Error argument to first is an empty list.");
+				throw SemanticError("Error: argument to first is an empty list.");
 		}
 		else
-			throw SemanticError("Error in call to first: not a list argument.");
+			throw SemanticError("Error: argument to first is not a list.");
 	}
 	else {
-		throw SemanticError("Error in call to first: invalid number of arguments.");
+		throw SemanticError("Error: more than one argument in call to first.");
 	}
 };
 
 Expression rest(const std::vector<Expression> & args) {
   if(nargs_equal(args, 1)) {
-    auto _r = args[0];
-    if(args[0].isList())
+    if(!args[0].isList())
       throw SemanticError("Error in call to rest: not a list argument.");
     else {
-      if(_r != Expression()) {
+      if(args[0] != Expression()) {
         std::vector<Expression> result;
-        auto e = _r.tailConstBegin();
+        auto e = args[0].tailConstBegin();
         e++;
-        while(e != _r.tailConstEnd()){
+        while(e != args[0].tailConstEnd()){
           result.emplace_back(*e++);
         }
         return Expression(result);
@@ -411,7 +410,61 @@ Expression rest(const std::vector<Expression> & args) {
   }
     else
       throw SemanticError("Error in call to rest: invalid number of arguments.");
-}
+};
+
+Expression length(const std::vector<Expression> & args) {
+  if(nargs_equal(args, 1)) {
+    if(!args[0].isList())
+      throw SemanticError("Error argument to length is not a list.");
+    else {
+        double len = (double)args[0].tailLength();
+        return Expression(len);
+      }
+  }
+  else
+    throw SemanticError("Error invalid number of arguments for length.");
+};
+
+Expression append(const std::vector<Expression> & args) {
+  if(nargs_equal(args, 2)) {
+    if(!args[0].isList())
+      throw SemanticError("Error first argument not a list.");
+    else {
+      std::vector<Expression> result;
+      for(auto e = args[0].tailConstBegin(); e != args[0].tailConstEnd(); e++){
+        result.emplace_back(*e);
+      }
+      result.emplace_back(args[1]);
+      return Expression(result);
+    }
+  }
+  else 
+    throw SemanticError("Error invalid number of arguments for append.");
+};
+
+Expression join(const std::vector<Expression> & args) {
+  if(nargs_equal(args, 2)) {
+    if(!args[0].isList() || !args[1].isList())
+      throw SemanticError("Error: argument to join not a list.");
+    else {
+      return Expression();
+    } 
+  }
+  else
+    throw SemanticError("Error invalid number of arguments to join.");
+};
+
+Expression range(const std::vector<Expression> & args) {
+  if(nargs_equal(args, 3)) {
+    if(!args[0].isHeadNumber() || !args[1].isHeadNumber() || !args[2].isHeadNumber())
+      throw SemanticError("Error an argument is not a number.");
+    else {
+      return Expression();
+    }  
+  }
+  else
+    throw SemanticError("Error invalid number of arguments for range function.");
+};
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
@@ -558,5 +611,17 @@ void Environment::reset(){
 
   // Procedure: rest;
   envmap.emplace("rest", EnvResult(ProcedureType, rest));
+
+  // Procedure: length;
+  envmap.emplace("length", EnvResult(ProcedureType, length));
+
+  // Procedure: append;
+  envmap.emplace("append", EnvResult(ProcedureType, append));
+
+  // Procedure: join;
+  envmap.emplace("join", EnvResult(ProcedureType, join));
+
+  // Procedure: range;
+  envmap.emplace("range", EnvResult(ProcedureType, range));
 
 }
