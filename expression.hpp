@@ -23,7 +23,7 @@ class Expression {
 public:
 
   typedef std::vector<Expression>::const_iterator ConstIteratorType;
-  
+
   /// Default construct and Expression, whose type in NoneType
   Expression();
 
@@ -53,6 +53,9 @@ public:
   /// return a pointer to the last expression in the tail, or nullptr
   Expression * tail();
 
+  /// return the number of items in the tail vector 
+  size_t tailLength() const noexcept;
+
   /// return a const-iterator to the beginning of tail
   ConstIteratorType tailConstBegin() const noexcept;
 
@@ -71,6 +74,9 @@ public:
   /// member when determines if the expression is a list
   bool isList() const noexcept;
 
+  /// helper function to toggle  state variable
+  void makeList();
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -86,11 +92,9 @@ private:
   // and cache coherence, at the cost of wasted memory.
   std::vector<Expression> m_tail;
 
-  // state variable
-  bool list_flag = false;
-
-  /// helper function to toggle list state variable
-  void toggleListFlag() noexcept;
+  // state variable of the expression
+  enum Type {None, List};
+  Type m_type;
 
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;

@@ -6,17 +6,18 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-Expression::Expression(){}
+Expression::Expression():m_type(None) {}
 
-Expression::Expression(const Atom & a){
+Expression::Expression(const Atom & a): Expression() {
 
   m_head = a;
 }
 
 // recursive copy
-Expression::Expression(const Expression & a){
+Expression::Expression(const Expression & a) {
 
   m_head = a.m_head;
+  m_type = a.m_type ;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
   }
@@ -24,19 +25,23 @@ Expression::Expression(const Expression & a){
 
 // Constructor to get everything after the word "list"
 Expression::Expression(const std::vector<Expression> & a){
+  m_type = List;
   m_tail = a;
-  list_flag = true;
+}
+
+// Take an expression and change it to type List
+void Expression::makeList() {
+  m_type = List;
 }
 
 Expression & Expression::operator=(const Expression & a){
 
   // prevent self-assignment
   if(this != &a){
-    m_head = a.m_head;
-    m_tail.clear();
-    for(auto e : a.m_tail){
-      m_tail.push_back(e);
-    }
+      m_head = a.m_head;
+      m_tail.clear();
+      for(auto e : a.m_tail)
+        m_tail.push_back(e);
   }
 
   return *this;
@@ -64,11 +69,7 @@ bool Expression::isHeadComplex() const noexcept{
 }
 
 bool Expression::isList() const noexcept {
-	return list_flag;
-}
-
-void Expression::toggleListFlag() noexcept {
-	list_flag = !list_flag;
+	return (m_type == List);
 }
 
 void Expression::append(const Atom & a){
@@ -84,6 +85,10 @@ Expression * Expression::tail(){
   }
 
   return ptr;
+}
+
+size_t Expression::tailLength() const noexcept{
+  return m_tail.size();
 }
 
 Expression::ConstIteratorType Expression::tailConstBegin() const noexcept{
@@ -110,7 +115,12 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
   Procedure proc = env.get_proc(op);
 
   // call proc with args
-  return proc(args);
+  Expression a;
+  a = proc(args);
+
+  if(op.asSymbol() == "list")
+    a.makeList();
+  return a;
 }
 
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
@@ -148,7 +158,7 @@ Expression Expression::handle_begin(Environment & env){
 
 Expression Expression::handle_define(Environment & env){
 
-  // tail must have size 3 or error
+  // check expected tail size
   if(m_tail.size() != 2){
     throw SemanticError("Error during handle define: invalid number of arguments to define");
   }
@@ -160,7 +170,7 @@ Expression Expression::handle_define(Environment & env){
 
   // but tail[0] must not be a special-form or procedure
   std::string s = m_tail[0].head().asSymbol();
-  if((s == "define") || (s == "begin") || (s == "list")){
+  if((s == "define") || (s == "begin")){
     throw SemanticError("Error during handle define: attempt to redefine a special-form");
   }
 
@@ -188,7 +198,8 @@ Expression Expression::eval(Environment & env){
 
   if(m_tail.empty()){
 	  if (m_head.isSymbol() && (m_head.asSymbol() == "list")) {
-		  return Expression();
+      std::vector<Expression> a;
+		  return Expression(a);
 	  }
     return handle_lookup(m_head, env);
   }
