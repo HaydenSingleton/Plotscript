@@ -129,9 +129,10 @@ TEST_CASE("Test subneg procedure", "[environment]") {
 	Environment env;
 	Procedure psubneg = env.get_proc(Atom("-"));
 
-	INFO("subneg real arguments");
+	INFO("subneg 2 real arguments");
 	std::vector<Expression> one_two = { Expression(1.0), Expression(2.0) };
 	REQUIRE(psubneg(one_two) == Expression(-1.0));
+    INFO("subneg negate a real arg")
 	std::vector<Expression> four = { Expression(4.0) };
 	REQUIRE(psubneg(four) == Expression(-4.0));
 
