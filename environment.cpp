@@ -130,15 +130,14 @@ Expression div(const std::vector<Expression> & args) {
   bool noComplexArgs = true;
 
   if(nargs_equal(args,1)){
-	  result = 1.0;
 	  if (args[0].isHeadComplex())
 		  noComplexArgs = false;
-	  result /= args[0].head().asComplex();
+	  result = std::complex<double>(1.0,0) / args[0].head().asComplex();
 
   }
   else {
 	  if(is_num_type(args[0]))
-		result = args[0].head().asComplex() * args[0].head().asComplex();
+		  result = args[0].head().asComplex() * args[0].head().asComplex();
 	  for (auto & a : args) {
 		  if (a.isHeadNumber()) {
 			  result /= a.head().asNumber();
@@ -368,7 +367,7 @@ Expression conj(const std::vector<Expression> & args) {
 
 Expression list(const std::vector<Expression> & args) {
 	std::vector<Expression> result = args;
-  assert(Expression(result).isList());
+  // assert(Expression(result).isList());
 	return Expression(result);
 };
 
