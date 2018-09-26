@@ -165,6 +165,10 @@ TEST_CASE("Test division procedure", "[environment]") {
 	INFO("Div with complex args");
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(1, 1)), Expression(std::complex<double>(2, 2)) };
 	REQUIRE(pdiv(complex_args) == Expression(std::complex<double>(0.5, 0)));
+    std::vector<Expression> complex_and_real = { Expression(std::complex<double>(1, 1)), Expression(2) };
+    REQUIRE(pdiv(complex_and_real) == Expression(std::complex<double>(0.5, 0.5)));
+    std::vector<Expression> one_complex_arg = { Expression(std::complex<double>(2,2)) };
+    REQUIRE(pdiv(one_complex_arg) == Expression(std::complex<double>(0.25,-0.25)));
 
 	INFO("Div error messages");
 	std::vector<Expression> not_a_number = { Expression(std::string("F")), Expression(std::string("one")) };
@@ -199,8 +203,8 @@ TEST_CASE("Test power procedure", "[environment]") {
 	Procedure ppow = env.get_proc(Atom("^"));
 
 	INFO("Pow with real argument");
-	std::vector<Expression> real_args = { Expression(4.0), Expression(4.0) };
-	REQUIRE(ppow(real_args) == Expression(256));
+	std::vector<Expression> real_args = { Expression(1), Expression(1) };
+	REQUIRE(ppow(real_args) == Expression(1));
 
 	INFO("Pow with complex arguments");
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(0, 1)), Expression(5.0) };
@@ -236,41 +240,44 @@ TEST_CASE("Test natural log procedure", "[environment]") {
 TEST_CASE("Test sine procedure", "[environment]") {
 
 	Environment env;
-	std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
-	std::vector<Expression> four = { Expression(4.0) };
-	std::complex<double> c_zero_one(0, 1);
-	std::vector<Expression> complex_one = { Expression(c_zero_one) };
-	std::vector<Expression> not_a_number = { Expression(std::string("F")) };
+    Procedure psin = env.get_proc(Atom("sin"));
 
-	Procedure psin = env.get_proc(Atom("sin"));
+	std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
 	REQUIRE(psin(pi) == Expression(0.0));
+
+    std::vector<Expression> too_many_args = { Expression(4.0), Expression(1), Expression(std::complex<double>(3,3)) };
+    REQUIRE_THROWS_AS(psin(too_many_args), SemanticError);
+
+    std::vector<Expression> not_a_number = { Expression(std::string("F")) };
 	REQUIRE_THROWS_AS(psin(not_a_number), SemanticError);
 }
 
 TEST_CASE("Test cosine procedure", "[environment]") {
 
 	Environment env;
-	std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
-	std::vector<Expression> four = { Expression(4.0) };
-	std::complex<double> c_zero_one(0, 1);
-	std::vector<Expression> complex_one = { Expression(c_zero_one) };
-	std::vector<Expression> not_a_number = { Expression(std::string("F")) };
-
 	Procedure pcos = env.get_proc(Atom("cos"));
-	REQUIRE(pcos(pi) == Expression(-1.0));
-	REQUIRE_THROWS_AS(pcos(not_a_number), SemanticError);
+
+    std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
+    REQUIRE(pcos(pi) == Expression(-1.0));
+
+    std::vector<Expression> too_many_args = { Expression(4.0), Expression(1), Expression(std::complex<double>(3,3)) };
+    REQUIRE_THROWS_AS(pcos(too_many_args), SemanticError);
+
+    std::vector<Expression> not_a_number = { Expression(std::string("F")) };
+    REQUIRE_THROWS_AS(pcos(not_a_number), SemanticError);
 }
 
 TEST_CASE("Test tangent procedure", "[environment]") {
 
 	Environment env;
-	std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
-	std::vector<Expression> four = { Expression(4.0) };
-	std::complex<double> c_zero_one(0, 1);
-	std::vector<Expression> complex_one = { Expression(c_zero_one) };
-	std::vector<Expression> not_a_number = { Expression(std::string("F")) };
+    Procedure ptan = env.get_proc(Atom("tan"));
 
-	Procedure ptan = env.get_proc(Atom("tan"));
-	REQUIRE(ptan(pi) == Expression(0.0));
-	REQUIRE_THROWS_AS(ptan(not_a_number), SemanticError);
+    std::vector<Expression> pi = { env.get_exp(Atom("pi")) };
+    REQUIRE(ptan(pi) == Expression(0.0));
+
+    std::vector<Expression> too_many_args = { Expression(4.0), Expression(1), Expression(std::complex<double>(3,3)) };
+    REQUIRE_THROWS_AS(ptan(too_many_args), SemanticError);
+
+    std::vector<Expression> not_a_number = { Expression(std::string("F")) };
+    REQUIRE_THROWS_AS(ptan(not_a_number), SemanticError);
 }
