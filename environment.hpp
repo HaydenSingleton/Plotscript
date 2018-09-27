@@ -43,6 +43,14 @@ public:
    * definitions. */
   Environment();
 
+  /*! Construct a copy of the given environment with built-in procedures and
+   * definitions. */
+  Environment(const Environment & a);
+
+  /*! Assignment operator for an expression
+   * definitions. */
+  Environment & operator=(const Environment & a);
+
   /*! Determine if a symbol is known to the environment.
     \param sym the sumbol to lookup
     \return true if the symbol has been defined in the environment
@@ -55,6 +63,8 @@ public:
     expression
    */
   bool is_exp(const Atom &sym) const;
+
+  void __shadowing_helper(const Atom & sym, const Expression new_sym);
 
   /*! Get the Expression the argument symbol maps to.
     \param sym the symbol to lookup
@@ -73,6 +83,7 @@ public:
     \return true if the symbol maps to a procedure
    */
   bool is_proc(const Atom &sym) const;
+  bool is_proc(const Expression & sym) const;
 
   /*! Get the Procedure the argument symbol maps to
     \param sym the symbol to lookup
@@ -82,9 +93,12 @@ public:
           or does not map to a known procedure.
   */
   Procedure get_proc(const Atom &sym) const;
+  Procedure get_proc(const Expression & sym) const;
 
   /*! Reset the environment to its default state. */
   void reset();
+
+  void add_builtin_exps();
 
 private:
 

@@ -10,7 +10,7 @@ Defines the Expression type and assiciated functions.
 #include "token.hpp"
 #include "atom.hpp"
 
-#include <iostream>
+ #include <iostream>
 
 
 // forward declare Environment
@@ -40,6 +40,9 @@ public:
 
   /// constructor for list
   Expression(const std::vector<Expression> & a);
+
+  /// constructor for lambda type
+  Expression(const Atom & a_head, const std::vector<Expression> & a_tail);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
@@ -74,11 +77,20 @@ public:
   /// convenience member to determine if the head atom is a comlex number
   bool isHeadComplex() const noexcept;
 
+  /// member when determines if the expression has no type
+  bool isNone() const noexcept;
+
   /// member when determines if the expression is a list
   bool isList() const noexcept;
 
-  /// helper function to toggle  state variable
+  /// member when determines if the expression is a list
+  bool isLambda() const noexcept;
+
+  /// helper function to set state variable to list
   void makeList();
+
+  /// helper function to set state variable to list
+  void makeLambda();
 
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
@@ -96,7 +108,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum Type {None, List};
+  enum Type {None, List, Lambda};
   Type m_type;
 
   // convenience typedef
@@ -106,6 +118,7 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
+  Expression handle_lambda(Environment & env);
 };
 
 /// Render expression to output stream

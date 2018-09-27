@@ -45,7 +45,7 @@ Expression add(const std::vector<Expression> & args){
       noComplexArgs = false;
     }
     else{
-      throw SemanticError("Error in call to add, argument not a number");
+        throw SemanticError("Error in call to add, argument not a number");
     }
   }
 
@@ -491,10 +491,38 @@ Environment::Environment(){
   reset();
 }
 
+Environment::Environment(const Environment & a){
+
+  envmap = a.envmap;
+  add_builtin_exps();
+
+}
+
+Environment & Environment::operator=(const Environment & a){
+
+  envmap = a.envmap;
+  add_builtin_exps();
+  return *this;
+}
+
 bool Environment::is_known(const Atom & sym) const{
   if(!sym.isSymbol()) return false;
 
   return envmap.find(sym.asSymbol()) != envmap.end();
+}
+
+void Environment::__shadowing_helper(const Atom & sym, const Expression new_sym_val){
+    // std::cout << "\nWas sym(" << sym << ") an exp?: " << this->is_exp(sym);
+  if(this->envmap.find(sym.asSymbol()) != envmap.end()){
+    this->envmap.erase(sym.asSymbol());
+    }
+
+    // std::cout << "\nIs sym(" << sym << ") an exp?: " << this->is_exp(sym);
+
+    this->add_exp(sym, new_sym_val);
+    // std::cout << "the new_sym is: " << new_sym.head() << "\n";
+    // std::cout << "the sym is: " << sym << "\n";
+    // std::cout << "did new sym become an exp: " << this->is_exp(sym) << "\n";
 }
 
 bool Environment::is_exp(const Atom & sym) const{
@@ -520,16 +548,18 @@ Expression Environment::get_exp(const Atom & sym) const{
 
 void Environment::add_exp(const Atom & sym, const Expression & exp){
 
-  if(!sym.isSymbol()){
-    throw SemanticError("Attempt to add non-symbol to environment");
-  }
+    // std::cout << "\nAdding " << sym.asSymbol() << " to inner_scope as " << exp << std::endl;
 
-  // error if overwriting symbol map
-  if(envmap.find(sym.asSymbol()) != envmap.end()){
-    throw SemanticError("Attempt to overwrite symbol in environemnt");
-  }
+    if(!sym.isSymbol()){
+        throw SemanticError("Attempt to add non-symbol to environment");
+    }
 
-  envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
+    // error if overwriting symbol map
+    if(envmap.find(sym.asSymbol()) != envmap.end()){
+        throw SemanticError("Attempt to overwrite symbol in environemnt");
+    }
+
+    envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
 }
 
 bool Environment::is_proc(const Atom & sym) const{
@@ -539,12 +569,33 @@ bool Environment::is_proc(const Atom & sym) const{
   return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
+bool Environment::is_proc(const Expression & sym) const{
+  if(!sym.head().isSymbol()) return false;
+
+  auto result = envmap.find(sym.head().asSymbol());
+  return (result != envmap.end()) && (result->second.type == ProcedureType);
+}
+
 Procedure Environment::get_proc(const Atom & sym) const{
 
-  //Procedure proc = default_proc;
+  // Procedure proc = default_proc;
 
   if(sym.isSymbol()){
     auto result = envmap.find(sym.asSymbol());
+    if((result != envmap.end()) && (result->second.type == ProcedureType)){
+      return result->second.proc;
+    }
+  }
+
+  return default_proc;
+}
+
+Procedure Environment::get_proc(const Expression & sym) const{
+
+  // Procedure proc = default_proc;
+
+  if(sym.head().isSymbol()){
+    auto result = envmap.find(sym.head().asSymbol());
     if((result != envmap.end()) && (result->second.type == ProcedureType)){
       return result->second.proc;
     }
@@ -560,6 +611,12 @@ then re-add the default ones.
 void Environment::reset(){
 
   envmap.clear();
+
+  add_builtin_exps();
+
+}
+
+void Environment::add_builtin_exps() {
 
   // Built-In value of pi
   envmap.emplace("pi", EnvResult(ExpressionType, Expression(PI)));
@@ -638,5 +695,4 @@ void Environment::reset(){
 
   // Procedure: range;
   envmap.emplace("range", EnvResult(ProcedureType, range));
-
 }
