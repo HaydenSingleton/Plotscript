@@ -264,7 +264,7 @@ Expression Expression::handle_lambda(Environment & env){
     throw SemanticError("Error during handle define: invalid number of arguments to define");
   }
 
-  if(!m_tail[1].isHeadSymbol()){
+  if(!m_tail[1].isHeadSymbol() && env.is_proc(m_tail[1].head().asSymbol())){
     throw SemanticError("Error during handle lambda: first argument of function not symbol");
   }
 
