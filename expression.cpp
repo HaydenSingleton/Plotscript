@@ -131,39 +131,13 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
     Expression lambda = inner_scope.get_exp(op);
 
     Expression arg_template = *lambda.tailConstBegin();
-    Expression func = *lambda.tail();
-
-    // std::cout << "passed args: " << args << std::endl;
-    // std:: cout << "arg_template:\t|";
     size_t count = 0;
     for(auto p = arg_template.tailConstBegin(); p != arg_template.tailConstEnd(); p++){
-      // std::cout << p->head() << " <=> " << args[count] << "|";
       inner_scope.__shadowing_helper(p->head(), args[count++]);
-      // if(inner_scope.is_exp(p->head())) std::cout << "\nadd succ for " << p->head() << "\n";
     }
 
-    // std::cout << "\n";
-    // std::cout << "func begin: "<< func.head() << std::endl;
-
-    // std::vector<Expression> call_args;
-    // for(auto p = func.tailConstBegin(); p != func.tailConstEnd(); p++){
-    //   call_args.emplace_back(p->head());
-    // }
-    // // std::cout << "call args: " << call_args << std::endl;
-
-    // // std::cout << "\nevaling: " << call_args << "\n";
-    // Expression temp = Expression(func.head(), call_args);
+    Expression func = *lambda.tail();
     return func.eval(inner_scope);
-
-    // Procedure proc;
-    // if(inner_scope.is_proc(func.head())) {
-    //   proc = inner_scope.get_proc(func.head());
-    // }
-    // else {
-    //   throw SemanticError("Error during evaluation: symbol does not name a procedure");
-    // }
-    //
-    // return proc(call_args);
   }//stop here if applying a lambda
 
 
@@ -247,11 +221,7 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during handle define: attempt to redefine a previously defined symbol");
   }
 
-  // //and add to env
-  // std::cout << "mtail_head: " << m_tail[0].head() << "\t\tresult: " << result << "\nis mtail_head an exp: ";
-  //
-  // std::cout << env.is_exp(m_tail[0].head());
-
+  //and add to env
   env.add_exp(m_tail[0].head(), result);
 
   return result;
@@ -267,11 +237,6 @@ Expression Expression::handle_lambda(Environment & env){
   if(!m_tail[1].isHeadSymbol() && env.is_proc(m_tail[1].head().asSymbol())){
     throw SemanticError("Error during handle lambda: first argument of function not symbol");
   }
-
-  // std::string s = m_tail[1].head().asSymbol();
-  // if((s == "define") || (s == "begin") || (s == "lambda")){
-  //   throw SemanticError("Error during handle lambda: attempt to redefine a special-form");
-  // }
 
  if(env.is_proc(m_tail[0].head().asSymbol())){
     throw SemanticError("Error during handle lambda: attempt to redefine a built-in procedure");

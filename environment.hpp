@@ -83,7 +83,6 @@ public:
     \return true if the symbol maps to a procedure
    */
   bool is_proc(const Atom &sym) const;
-  bool is_proc(const Expression & sym) const;
 
   /*! Get the Procedure the argument symbol maps to
     \param sym the symbol to lookup
@@ -93,12 +92,9 @@ public:
           or does not map to a known procedure.
   */
   Procedure get_proc(const Atom &sym) const;
-  Procedure get_proc(const Expression & sym) const;
 
   /*! Reset the environment to its default state. */
   void reset();
-
-  void add_builtin_exps();
 
 private:
 

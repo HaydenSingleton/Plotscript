@@ -133,7 +133,6 @@ Expression div(const std::vector<Expression> & args) {
 	  if (args[0].isHeadComplex())
 		  noComplexArgs = false;
 	  result = std::complex<double>(1.0,0) / args[0].head().asComplex();
-
   }
   else {
 	  if(is_num_type(args[0]))
@@ -494,14 +493,12 @@ Environment::Environment(){
 Environment::Environment(const Environment & a){
 
   envmap = a.envmap;
-  add_builtin_exps();
 
 }
 
 Environment & Environment::operator=(const Environment & a){
 
   envmap = a.envmap;
-  add_builtin_exps();
   return *this;
 }
 
@@ -512,18 +509,13 @@ bool Environment::is_known(const Atom & sym) const{
 }
 
 void Environment::__shadowing_helper(const Atom & sym, const Expression new_sym_val){
-    // std::cout << "\nWas sym(" << sym << ") an exp?: " << this->is_exp(sym);
+
   if(this->envmap.find(sym.asSymbol()) != envmap.end()){
     this->envmap.erase(sym.asSymbol());
     }
 
-    // std::cout << "\nIs sym(" << sym << ") an exp?: " << this->is_exp(sym);
-
     this->add_exp(sym, new_sym_val);
-    // std::cout << "the new_sym is: " << new_sym.head() << "\n";
-    // std::cout << "the sym is: " << sym << "\n";
-    // std::cout << "did new sym become an exp: " << this->is_exp(sym) << "\n";
-}
+ }
 
 bool Environment::is_exp(const Atom & sym) const{
   if(!sym.isSymbol()) return false;
@@ -548,8 +540,6 @@ Expression Environment::get_exp(const Atom & sym) const{
 
 void Environment::add_exp(const Atom & sym, const Expression & exp){
 
-    // std::cout << "\nAdding " << sym.asSymbol() << " to inner_scope as " << exp << std::endl;
-
     if(!sym.isSymbol()){
         throw SemanticError("Attempt to add non-symbol to environment");
     }
@@ -569,12 +559,12 @@ bool Environment::is_proc(const Atom & sym) const{
   return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
-bool Environment::is_proc(const Expression & sym) const{
-  if(!sym.head().isSymbol()) return false;
+// bool Environment::is_proc(const Expression & sym) const{
+//   if(!sym.head().isSymbol()) return false;
 
-  auto result = envmap.find(sym.head().asSymbol());
-  return (result != envmap.end()) && (result->second.type == ProcedureType);
-}
+//   auto result = envmap.find(sym.head().asSymbol());
+//   return (result != envmap.end()) && (result->second.type == ProcedureType);
+// }
 
 Procedure Environment::get_proc(const Atom & sym) const{
 
@@ -590,20 +580,6 @@ Procedure Environment::get_proc(const Atom & sym) const{
   return default_proc;
 }
 
-Procedure Environment::get_proc(const Expression & sym) const{
-
-  // Procedure proc = default_proc;
-
-  if(sym.head().isSymbol()){
-    auto result = envmap.find(sym.head().asSymbol());
-    if((result != envmap.end()) && (result->second.type == ProcedureType)){
-      return result->second.proc;
-    }
-  }
-
-  return default_proc;
-}
-
 /*
 Reset the environment to the default state. First remove all entries and
 then re-add the default ones.
@@ -611,12 +587,6 @@ then re-add the default ones.
 void Environment::reset(){
 
   envmap.clear();
-
-  add_builtin_exps();
-
-}
-
-void Environment::add_builtin_exps() {
 
   // Built-In value of pi
   envmap.emplace("pi", EnvResult(ExpressionType, Expression(PI)));
