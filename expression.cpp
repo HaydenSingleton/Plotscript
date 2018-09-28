@@ -226,7 +226,7 @@ Expression Expression::handle_define(Environment & env){
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
-  if(env.is_exp(m_head)){
+  if(env.is_exp(m_tail[0].head())){
     throw SemanticError("Error during handle define: attempt to redefine a previously defined symbol");
   }
 
@@ -238,18 +238,7 @@ Expression Expression::handle_define(Environment & env){
 
 Expression Expression::handle_lambda(Environment & env){
 
-  // check expected tail size
-  if(m_tail.size() != 2){
-    throw SemanticError("Error during handle define: invalid number of arguments to define");
-  }
-
-  if(!m_tail[1].isHeadSymbol() && env.is_proc(m_tail[1].head().asSymbol())){
-    throw SemanticError("Error during handle lambda: first argument of function not symbol");
-  }
-
- if(env.is_proc(m_tail[0].head().asSymbol())){
-    throw SemanticError("Error during handle lambda: attempt to redefine a built-in procedure");
-  }
+  Environment q = env;
 
   std::vector<Expression> argument_template;
   argument_template.emplace_back(Expression(m_tail[0].head()));
@@ -285,11 +274,11 @@ Expression Expression::handle_apply(Environment & env){
     throw SemanticError("Error during apply: second argument to apply not a list");
   }
   std::string s = op.asSymbol();
-  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list")){
+  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list") || (s == "map")){
     throw SemanticError("Error during handle apply: attempt to redefine a special-form");
   }
 
-  if(env.is_exp(m_tail[0].head())){
+  if(env.is_exp(m_tail[0].head())){ // the proc is a Lambda
     return apply(m_tail[0].head(), list_args, env);
   }
 
