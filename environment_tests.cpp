@@ -22,6 +22,34 @@ TEST_CASE( "Test default constructor", "[environment]" ) {
   REQUIRE(!env.is_proc(Atom("op")));
 }
 
+TEST_CASE( "Test assignment constructor", "[environment]" ) {
+
+  Environment env;
+
+  REQUIRE(env.is_known(Atom("pi")));
+  REQUIRE(env.is_exp(Atom("pi")));
+
+  REQUIRE(!env.is_known(Atom("hi")));
+  REQUIRE(!env.is_exp(Atom("hi")));
+
+  env.add_exp(Atom("yosh"), Expression(5));
+  REQUIRE(env.is_known(Atom("yosh")));
+
+  Environment copy_of_env = env;
+
+  REQUIRE(copy_of_env.is_known(Atom("yosh")));
+
+  copy_of_env.add_exp(Atom("only_in_Copy"), Expression(5));
+  REQUIRE(copy_of_env.is_known(Atom("only_in_Copy")));
+  REQUIRE(!env.is_known(Atom("only_in_Copy")));
+
+  REQUIRE(copy_of_env.is_known(Atom("pi")));
+  REQUIRE(copy_of_env.is_exp(Atom("pi")));
+
+  REQUIRE(!copy_of_env.is_known(Atom("hi")));
+  REQUIRE(!copy_of_env.is_exp(Atom("hi")));
+}
+
 TEST_CASE( "Test get expression", "[environment]" ) {
   Environment env;
 
@@ -157,13 +185,15 @@ TEST_CASE("Test division procedure", "[environment]") {
 
 	std::vector<Expression> complex_args = { Expression(std::complex<double>(1, 1)), Expression(std::complex<double>(2, 2)) };
 	REQUIRE(pdiv(complex_args) == Expression(std::complex<double>(0.5, 0)));
-    std::vector<Expression> complex_and_real = { Expression(std::complex<double>(1, 1)), Expression(2) };
-    REQUIRE(pdiv(complex_and_real) == Expression(std::complex<double>(0.5, 0.5)));
-    std::vector<Expression> one_complex_arg = { Expression(std::complex<double>(2,2)) };
-    REQUIRE(pdiv(one_complex_arg) == Expression(std::complex<double>(0.25,-0.25)));
+  std::vector<Expression> complex_and_real = { Expression(std::complex<double>(1, 1)), Expression(2) };
+  REQUIRE(pdiv(complex_and_real) == Expression(std::complex<double>(0.5, 0.5)));
+  std::vector<Expression> one_complex_arg = { Expression(std::complex<double>(2,2)) };
+  REQUIRE(pdiv(one_complex_arg) == Expression(std::complex<double>(0.25,-0.25)));
 
 	std::vector<Expression> not_a_number = { Expression(std::string("F")), Expression(std::string("one")) };
 	REQUIRE_THROWS_AS(pdiv(not_a_number), SemanticError);
+  std::vector<Expression> too_many_args = { Expression(1.1), Expression(2.2), Expression(3.3) };
+	REQUIRE_THROWS_AS(pdiv(too_many_args), SemanticError);
 }
 
 TEST_CASE("Test square root procedure", "[environment]") {
@@ -371,7 +401,6 @@ TEST_CASE("Testing first procedure", "[environment]") {
 
     std::vector<Expression> too_many_args = { plist(l), plist(l_010) };
     REQUIRE_THROWS_AS(pfirst(too_many_args), SemanticError);
-
 }
 
 TEST_CASE("Testing rest procedure", "[environment]") {
