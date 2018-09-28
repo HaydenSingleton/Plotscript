@@ -145,7 +145,7 @@ std::complex<double> Atom::asComplex() const noexcept{
     std::complex<double> number2complex(numberValue, 0.0);
     return number2complex;
   }
-  return (m_type == ComplexKind) ? complexValue : (std::complex<double>)(0,0);
+  return (m_type == ComplexKind) ? complexValue : (std::complex<double>)(0);
 }
 
 bool Atom::operator==(const Atom & right) const noexcept{
