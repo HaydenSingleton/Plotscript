@@ -134,7 +134,7 @@ Expression div(const std::vector<Expression> & args) {
 		  noComplexArgs = false;
 	  result = std::complex<double>(1.0,0) / args[0].head().asComplex();
   }
-  else {
+  else if (nargs_equal(args, 2)){
 	  if(is_num_type(args[0]))
 		  result = args[0].head().asComplex() * args[0].head().asComplex();
 	  for (auto & a : args) {
@@ -149,6 +149,9 @@ Expression div(const std::vector<Expression> & args) {
 			  throw SemanticError("Error in call to division, argument not a number");
 		  }
 	  }
+  }
+  else {
+    throw SemanticError("Error in call to division, too many arguments");
   }
 
   if (noComplexArgs) {
@@ -490,12 +493,6 @@ Environment::Environment(){
   reset();
 }
 
-Environment::Environment(const Environment & a){
-
-  envmap = a.envmap;
-
-}
-
 Environment & Environment::operator=(const Environment & a){
 
   envmap = a.envmap;
@@ -508,12 +505,11 @@ bool Environment::is_known(const Atom & sym) const{
   return envmap.find(sym.asSymbol()) != envmap.end();
 }
 
-void Environment::__shadowing_helper(const Atom & sym, const Expression new_sym_val){
+void Environment::__shadowing_helper(const Atom & sym, const Expression & new_sym_val){
 
   if(this->envmap.find(sym.asSymbol()) != envmap.end()){
     this->envmap.erase(sym.asSymbol());
     }
-
     this->add_exp(sym, new_sym_val);
  }
 
