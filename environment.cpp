@@ -507,7 +507,7 @@ bool Environment::is_known(const Atom & sym) const{
 
 void Environment::__shadowing_helper(const Atom & sym, const Expression & new_sym_val){
 
-  if(this->envmap.find(sym.asSymbol()) != envmap.end()){
+  if(this->envmap.find(sym.asSymbol()) != this->envmap.end()){
     this->envmap.erase(sym.asSymbol());
     }
     this->add_exp(sym, new_sym_val);

@@ -133,6 +133,10 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
     Expression lambda = inner_scope.get_exp(op);
     Expression arg_template = *lambda.tailConstBegin();
 
+    if(args.size() != arg_template.tailLength()){
+      throw SemanticError("Error: during apply: Error in call to procedure: invalid number of arguments.");
+    }
+
     size_t count = 0;
     for(auto p = arg_template.tailConstBegin(); p != arg_template.tailConstEnd(); p++){
       inner_scope.__shadowing_helper(p->head(), args[count++]);
@@ -271,6 +275,7 @@ Expression Expression::handle_apply(Environment & env){
 
   Atom op = m_tail[0].head();
   Expression list_evaled = m_tail[1].eval(env);
+
   std::vector<Expression> list_args;
   for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
     list_args.push_back(*e);
@@ -279,7 +284,7 @@ Expression Expression::handle_apply(Environment & env){
   if(!list_evaled.isList()){
     throw SemanticError("Error during apply: second argument to apply not a list");
   }
-  std::string s = m_tail[0].head().asSymbol();
+  std::string s = op.asSymbol();
   if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list")){
     throw SemanticError("Error during handle apply: attempt to redefine a special-form");
   }
@@ -288,11 +293,38 @@ Expression Expression::handle_apply(Environment & env){
     return apply(m_tail[0].head(), list_args, env);
   }
 
-  if(!env.is_proc(m_tail[0].head()) || m_tail[0].tailLength() != 0){
+  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
     throw SemanticError("Error during apply: first argument to apply not a procedure");
   }
 
+  //Default case
   return apply(op, list_args, env);
+}
+
+Expression Expression::handle_map(Environment & env){
+
+  if(m_tail.size() != 2){
+    throw SemanticError("Error during apply: invalid number of arguments to define");
+  }
+
+  Expression list_evaled = m_tail[1].eval(env);
+
+  if(!list_evaled.isList()){
+    throw SemanticError("Error during apply: second argument to apply not a list");
+  }
+
+  std::vector<Expression> return_args;
+  std::vector<Expression> temp;
+  Expression temp_e;
+
+  for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
+    temp.emplace_back(*e);
+    temp_e = apply(m_tail[0].head(), temp, env);
+    return_args.push_back(temp_e);
+    temp.clear();
+  }
+
+  return Expression(return_args);
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -321,6 +353,9 @@ Expression Expression::eval(Environment & env){
   }
   else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
     return handle_apply(env);
+  }
+  else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
+    return handle_map(env);
   }
   // else attempt to treat as procedure
   else{
