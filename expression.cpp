@@ -6,6 +6,7 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
+#include <cassert>
 
 Expression::Expression():m_type(None) {}
 
@@ -31,7 +32,7 @@ Expression::Expression(const std::vector<Expression> & a){
   m_tail = a;
 }
 
-//Constructor for lambdas
+//Constructor for making non listy-lists of type Lambda
 Expression::Expression(const Atom & a_head, const std::vector<Expression> & a_tail) {
     m_type = Lambda;
     m_head = a_head;
@@ -136,8 +137,10 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
       inner_scope.__shadowing_helper(p->head(), args[count++]);
     }
 
-    Expression func = *lambda.tail();
-    return func.eval(inner_scope);
+    Expression result = lambda.tail()->eval(inner_scope);
+    result.makeLambda();
+    assert(result.isLambda());
+    return result;
   }//stop here if applying a lambda
 
 
@@ -210,7 +213,7 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during handle define: attempt to redefine a special-form");
   }
 
-  if(env.is_proc(m_head)){
+  if(env.is_proc(m_tail[0].head())){
     throw SemanticError("Error during handle define: attempt to redefine a built-in procedure");
   }
 
@@ -253,7 +256,41 @@ Expression Expression::handle_lambda(Environment & env){
   temp.emplace_back(m_tail[1]);
   Expression result = Expression(temp);
   result.makeLambda();
+  assert(result.isLambda());
   return result;
+}
+
+Expression Expression::handle_apply(Environment & env){
+
+  if(m_tail.size() != 2){
+    throw SemanticError("Error during apply: invalid number of arguments to define");
+  }
+
+  Atom op = m_tail[0].head();
+  Expression list_evaled = m_tail[1].eval(env);
+  std::vector<Expression> list_args;
+  for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
+    list_args.push_back(*e);
+  }
+
+  if(!list_evaled.isList()){
+    throw SemanticError("Error during apply: second argument to apply not a list");
+  }
+  std::string s = m_tail[0].head().asSymbol();
+  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list")){
+    throw SemanticError("Error during handle apply: attempt to redefine a special-form");
+  }
+
+  if(env.is_exp(m_tail[0].head())){
+    std::cout << "Methinks essa lambda" << std::endl;
+    return apply(m_tail[0].head(), list_args, env);
+  }
+
+  if(!env.is_proc(m_tail[0].head()) || m_tail[0].tailLength() != 0){
+    throw SemanticError("Error during apply: first argument to apply not a procedure");
+  }
+
+  return apply(op, list_args, env);
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -262,7 +299,7 @@ Expression Expression::handle_lambda(Environment & env){
 Expression Expression::eval(Environment & env){
 
   if(m_tail.empty()){
-	  if (m_head.isSymbol() && (m_head.asSymbol() == "list")) {
+	  if (m_head.isSymbol() && m_head.asSymbol() == "list") {
       std::vector<Expression> a;
 		  return Expression(a);
 	  }
@@ -280,10 +317,11 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
     return handle_lambda(env);
   }
+  else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
+    return handle_apply(env);
+  }
   // else attempt to treat as procedure
   else{
-    // std::cout << "\neval head: " << m_head;
-    // std::cout << "\neval tail: " << m_tail << "\n";
     std::vector<Expression> results;
     for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
       results.push_back(it->eval(env));

@@ -541,12 +541,12 @@ Expression Environment::get_exp(const Atom & sym) const{
 void Environment::add_exp(const Atom & sym, const Expression & exp){
 
     if(!sym.isSymbol()){
-        throw SemanticError("Attempt to add non-symbol to environment");
+        throw SemanticError("Error during add_exp: Attempt to add non-symbol to environment");
     }
 
     // error if overwriting symbol map
     if(envmap.find(sym.asSymbol()) != envmap.end()){
-        throw SemanticError("Attempt to overwrite symbol in environemnt");
+        throw SemanticError("Error during add_exp: Attempt to overwrite symbol in environment");
     }
 
     envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
@@ -558,13 +558,6 @@ bool Environment::is_proc(const Atom & sym) const{
   auto result = envmap.find(sym.asSymbol());
   return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
-
-// bool Environment::is_proc(const Expression & sym) const{
-//   if(!sym.head().isSymbol()) return false;
-
-//   auto result = envmap.find(sym.head().asSymbol());
-//   return (result != envmap.end()) && (result->second.type == ProcedureType);
-// }
 
 Procedure Environment::get_proc(const Atom & sym) const{
 
