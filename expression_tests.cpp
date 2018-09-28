@@ -27,3 +27,17 @@ TEST_CASE( "Test symbol expression", "[expression]" ) {
   REQUIRE(exp.isHeadSymbol());
 }
 
+TEST_CASE("Test make functions", "[expression]") {
+
+  std::vector<Expression> func = {Expression(Atom("*")),Expression(Atom("x")),Expression(2.0)};
+  std::vector<Expression> tail = {Expression(Atom("x")), func};
+  Expression lambda = Expression(Atom("lambda"), tail);
+  
+  REQUIRE(lambda.isLambda());
+  lambda.makeLambda();
+  REQUIRE(lambda.isLambda());
+  lambda.makeList();
+  REQUIRE(lambda.isList());
+
+
+}
