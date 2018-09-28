@@ -43,10 +43,6 @@ public:
    * definitions. */
   Environment();
 
-  /*! Construct a copy of the given environment with built-in procedures and
-   * definitions. */
-  Environment(const Environment & a);
-
   /*! Assignment operator for an expression
    * definitions. */
   Environment & operator=(const Environment & a);
@@ -64,7 +60,7 @@ public:
    */
   bool is_exp(const Atom &sym) const;
 
-  void __shadowing_helper(const Atom & sym, const Expression new_sym);
+  void __shadowing_helper(const Atom & sym, const Expression & new_sym);
 
   /*! Get the Expression the argument symbol maps to.
     \param sym the symbol to lookup
