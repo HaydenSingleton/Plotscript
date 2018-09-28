@@ -129,15 +129,17 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
   //op holds a lambda
   if(env.is_exp(op)){
     Environment inner_scope = env;
-    Expression lambda = inner_scope.get_exp(op);
 
+    Expression lambda = inner_scope.get_exp(op);
     Expression arg_template = *lambda.tailConstBegin();
+
     size_t count = 0;
     for(auto p = arg_template.tailConstBegin(); p != arg_template.tailConstEnd(); p++){
       inner_scope.__shadowing_helper(p->head(), args[count++]);
     }
 
     Expression result = lambda.tail()->eval(inner_scope);
+
     result.makeLambda();
     assert(result.isLambda());
     return result;
@@ -254,6 +256,7 @@ Expression Expression::handle_lambda(Environment & env){
   std::vector<Expression> temp;
   temp.emplace_back(argument_template);
   temp.emplace_back(m_tail[1]);
+
   Expression result = Expression(temp);
   result.makeLambda();
   assert(result.isLambda());
@@ -282,7 +285,6 @@ Expression Expression::handle_apply(Environment & env){
   }
 
   if(env.is_exp(m_tail[0].head())){
-    std::cout << "Methinks essa lambda" << std::endl;
     return apply(m_tail[0].head(), list_args, env);
   }
 
