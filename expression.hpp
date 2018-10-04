@@ -42,7 +42,7 @@ public:
   Expression(const std::vector<Expression> & a);
 
   /// constructor for lambda type
-  Expression(const Atom & a_head, const std::vector<Expression> & a_tail);
+  Expression(const std::vector<Expression> & args, Expression & func);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
@@ -77,6 +77,8 @@ public:
   /// convenience member to determine if the head atom is a comlex number
   bool isHeadComplex() const noexcept;
 
+  bool isHeadString() const noexcept;
+
   /// member when determines if the expression has no type
   bool isNone() const noexcept;
 
@@ -85,13 +87,7 @@ public:
 
   /// member when determines if the expression is a list
   bool isLambda() const noexcept;
-
-  /// helper function to set state variable to list
-  void makeList();
-
-  /// helper function to set state variable to list
-  void makeLambda();
-
+  
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -108,8 +104,8 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum Type {None, List, Lambda};
-  Type m_type;
+  enum class ExpType {None, List, Lambda};
+  ExpType m_type = ExpType::None;
 
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;

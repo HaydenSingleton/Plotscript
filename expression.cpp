@@ -8,13 +8,11 @@
 
 #include <cassert>
 
-Expression::Expression():m_type(None) {}
+Expression::Expression()
+{}
 
-Expression::Expression(const Atom & a): Expression() {
-
-  m_head = a;
-
-}
+Expression::Expression(const Atom & a): m_head(a) 
+{}
 
 // recursive copy
 Expression::Expression(const Expression & a) {
@@ -28,26 +26,15 @@ Expression::Expression(const Expression & a) {
 
 // Constructor for lists
 Expression::Expression(const std::vector<Expression> & a){
-  m_type = List;
+  m_type = ExpType::List;
   m_tail = a;
 }
 
-//Constructor for making non listy-lists of type Lambda
-Expression::Expression(const Atom & a_head, const std::vector<Expression> & a_tail) {
-    m_type = Lambda;
-    m_head = a_head;
-    for(auto e : a_tail){
-        m_tail.push_back(e);
-    }
-}
-
-// Take an expression and change it to type List
-void Expression::makeList() {
-  m_type = List;
-}
-
-void Expression::makeLambda() {
-  m_type = Lambda;
+//Constructor for Lambda functions
+Expression::Expression(const std::vector<Expression> & args, Expression & func) {
+    m_type = ExpType::Lambda;
+    m_tail.push_back(args);
+    m_tail.push_back(func);
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -85,16 +72,20 @@ bool Expression::isHeadComplex() const noexcept{
   return m_head.isComplex();
 }
 
+bool Expression::isHeadString() const noexcept{
+  return m_head.isString();
+}
+
 bool Expression::isNone() const noexcept {
-	return (m_type == None);
+	return (m_type == ExpType::None);
 }
 
 bool Expression::isList() const noexcept {
-	return (m_type == List);
+	return (m_type == ExpType::List);
 }
 
 bool Expression::isLambda() const noexcept {
-  return (m_type == Lambda);
+  return (m_type == ExpType::Lambda);
 }
 
 void Expression::append(const Atom & a){
@@ -142,11 +133,7 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
       inner_scope.__shadowing_helper(p->head(), args[count++]);
     }
 
-    Expression result = lambda.tail()->eval(inner_scope);
-
-    result.makeLambda();
-    assert(result.isLambda());
-    return result;
+    return lambda.tail()->eval(inner_scope);
   }//stop here if applying a lambda
 
 
@@ -168,11 +155,15 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 }
 
 Expression Expression::handle_lookup(const Atom & head, const Environment & env){
+
     if(head.isSymbol()) { // if symbol is in env return value
       if(env.is_exp(head)) {
 	      return env.get_exp(head);
       }
       else {
+        if(head.isString()){
+          return Expression(head);
+        }
 	      throw SemanticError("Error during handle lookup: unknown symbol " + head.asSymbol());
       }
     }
@@ -223,6 +214,8 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during handle define: attempt to redefine a built-in procedure");
   }
 
+  if(m_tail[1].isHeadString()) std::cout << "define type STRING\n"; else std::cout << "define type SYMBOL\n";
+
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
@@ -238,22 +231,15 @@ Expression Expression::handle_define(Environment & env){
 
 Expression Expression::handle_lambda(Environment & env){
 
-  Environment q = env;
-
   std::vector<Expression> argument_template;
   argument_template.emplace_back(Expression(m_tail[0].head()));
   for(auto e = m_tail[0].tailConstBegin(); e!=m_tail[0].tailConstEnd(); e++){
     argument_template.emplace_back(Expression(*e));
   }
 
-  std::vector<Expression> temp;
-  temp.emplace_back(argument_template);
-  temp.emplace_back(m_tail[1]);
-
-  Expression result = Expression(temp);
-  result.makeLambda();
-  assert(result.isLambda());
-  return result;
+  Expression return_exp = Expression(argument_template, m_tail[1]);
+  assert(return_exp.isLambda());
+  return return_exp;
 }
 
 Expression Expression::handle_apply(Environment & env){
@@ -262,13 +248,15 @@ Expression Expression::handle_apply(Environment & env){
     throw SemanticError("Error during apply: invalid number of arguments to define");
   }
 
-  Atom op = m_tail[0].head();
-  Expression list_evaled = m_tail[1].eval(env);
-
-  std::vector<Expression> list_args;
-  for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
-    list_args.push_back(*e);
+  Atom op =  m_tail[0].head();
+  
+  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
+    Expression arg1 = m_tail[0].eval(env);
+    if(!arg1.isLambda())
+      throw SemanticError("Error during apply: first argument to apply not a procedure");
   }
+
+  Expression list_evaled = m_tail[1].eval(env);
 
   if(!list_evaled.isList()){
     throw SemanticError("Error during apply: second argument to apply not a list");
@@ -278,15 +266,11 @@ Expression Expression::handle_apply(Environment & env){
     throw SemanticError("Error during handle apply: attempt to redefine a special-form");
   }
 
-  if(env.is_exp(m_tail[0].head())){ // the proc is a Lambda
-    return apply(m_tail[0].head(), list_args, env);
+  std::vector<Expression> list_args;
+  for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
+    list_args.push_back(*e);
   }
 
-  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
-    throw SemanticError("Error during apply: first argument to apply not a procedure");
-  }
-
-  //Default case
   return apply(op, list_args, env);
 }
 
@@ -320,12 +304,17 @@ Expression Expression::handle_map(Environment & env){
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
-
-  if(m_tail.empty()){
-	  if (m_head.isSymbol() && m_head.asSymbol() == "list") {
+  if(m_head.isString()){
+      std::cout << "evaling string\n";
+      return Expression(m_head);
+  }
+  else if(m_tail.empty()){
+	  
+    if (m_head.isSymbol() && m_head.asSymbol() == "list") {
       std::vector<Expression> a;
 		  return Expression(a);
 	  }
+    std::cout << "looking up symbol: " << m_head.asSymbol() << "\n";
     return handle_lookup(m_head, env);
   }
   // handle begin special-form
@@ -358,6 +347,7 @@ Expression Expression::eval(Environment & env){
 
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
+
   if(!exp.isHeadComplex()) {
     out << "(";
   }

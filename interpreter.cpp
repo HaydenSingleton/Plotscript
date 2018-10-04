@@ -21,7 +21,12 @@ bool Interpreter::parseStream(std::istream & expression) noexcept{
 
 
 Expression Interpreter::evaluate(){
-
-  return ast.eval(env);
+  
+  Expression value = ast.eval(env);
+  if (value == Expression() && !value.isList()){
+    return Expression(Atom("NONE"));
+  }
+  else
+   return value;
 }
 

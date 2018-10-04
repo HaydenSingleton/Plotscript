@@ -362,13 +362,9 @@ TEST_CASE("Test handle_define errors", "[interpreter]"){
 
 TEST_CASE("Test apply", "[expression]"){
 
-  Atom op("+");
-  std::vector<Expression> args = {Expression(1), Expression(2)};
-  Environment env;
-
-  Expression exp(op, args);
-
-  REQUIRE(exp.eval(env) == Expression(3));
+  std::string program = "(+ 1 2)";
+  Expression result = run(program);
+  REQUIRE(result == Expression(3.));
 
 }
 

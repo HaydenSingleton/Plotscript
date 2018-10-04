@@ -8,14 +8,22 @@
 const char OPENCHAR = '(';
 const char CLOSECHAR = ')';
 const char COMMENTCHAR = ';';
+const char QUOTECHAR = '"';
 
 Token::Token(TokenType t): m_type(t){}
 
-Token::Token(const std::string & str): m_type(STRING), value(str) {}
+Token::Token(const std::string & str): value(str) {
+  if(str[0] != QUOTECHAR){
+    m_type = STRING;
+  }
+  else
+    m_type = QUOTE;
+}
 
 Token::TokenType Token::type() const{
   return m_type;
 }
+
 
 std::string Token::asString() const{
   switch(m_type){
@@ -24,6 +32,8 @@ std::string Token::asString() const{
   case CLOSE:
     return ")";
   case STRING:
+    return value;
+  case QUOTE:
     return value;
   }
   return "";
@@ -49,22 +59,33 @@ TokenSequenceType tokenize(std::istream & seq){
     if(c == COMMENTCHAR){
       // chomp until the end of the line
       while((!seq.eof()) && (c != '\n')){
-	c = seq.get();
+	      c = seq.get();
       }
       if(seq.eof()) break;
     }
-    else if(c == OPENCHAR){
+    else if(c == OPENCHAR){ // c == (
       store_ifnot_empty(token, tokens);
       tokens.push_back(Token::TokenType::OPEN);
     }
-    else if(c == CLOSECHAR){
+    else if(c == CLOSECHAR){ // c == )
       store_ifnot_empty(token, tokens);
       tokens.push_back(Token::TokenType::CLOSE);
     }
-    else if(isspace(c)){
+    else if(c == QUOTECHAR){ // c == " (BEGIN SPECIAL CASE)
+      token.push_back(QUOTECHAR);
+      c = seq.get();
+      while((!seq.eof()) && (c != '\n') && (c != QUOTECHAR)){
+	      token.push_back(c);
+        c = seq.get();
+      }
+      if(seq.eof()) break;
+      token.push_back(QUOTECHAR); // push last ending quote
       store_ifnot_empty(token, tokens);
     }
-    else{
+    else if(isspace(c)){ // c == ' '
+      store_ifnot_empty(token, tokens);
+    }
+    else{ // c == any other character
       token.push_back(c);
     }
   }
