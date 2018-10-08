@@ -36,6 +36,7 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
     m_type = ExpType::Lambda;
     m_tail.push_back(args);
     m_tail.push_back(func);
+    assert(m_properties.size()==0);
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -312,7 +313,7 @@ Expression Expression::handle_set_property(Environment & env){
       std::map<std::string, Expression>::iterator __;
       std::tie(__, success) = result.m_properties.emplace(str, value);
       if(success && result.m_properties.size()>0){
-        // std::cout << "Made map with " << result.m_properties.size() << " properties\n";
+        std::cout << "Made map with " << result.m_properties.size() << " properties\n";
         return result;
       }
       else {
@@ -334,15 +335,20 @@ Expression Expression::handle_get_property(Environment & env){
   Expression result;
   if(m_tail.size()==2) {
     if(m_tail[0].isHeadString()){
-        std::string key = m_tail[0].head().asString();
-        // std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
-        if(target.m_properties.find(key)!= target.m_properties.end()){
-          result = target.m_properties.at(key);
-        }
-        else {
-          result.m_type = ExpType::Empty;
-        }
-        return result;
+      if(!env.is_proc(target.head())){
+          std::string key = m_tail[0].head().asString();
+          std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
+          if(target.m_properties.find(key)!= target.m_properties.end()){
+            result = target.m_properties.at(key);
+          }
+          else {
+            result.m_type = ExpType::Empty;
+          }
+          return result;
+      }
+      else{
+        throw SemanticError("Error: second argument to get-property must not be a procedure.");
+      }
     }
     else{
       throw SemanticError("Error: first argument to get-property not a string.");

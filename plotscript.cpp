@@ -25,9 +25,7 @@ void info(const std::string & err_str){
   std::cout << "Info: " << err_str << std::endl;
 }
 
-int eval_from_stream(std::istream & stream){
-
-  Interpreter interp;
+int eval_from_stream(std::istream & stream, Interpreter &interp){
 
   if(!interp.parseStream(stream)){
     error("Invalid Program. Could not parse.");
@@ -47,7 +45,7 @@ int eval_from_stream(std::istream & stream){
   return EXIT_SUCCESS;
 }
 
-int eval_from_file(std::string filename){
+int eval_from_file(std::string filename, Interpreter &interp){
 
   std::ifstream ifs(filename);
 
@@ -56,37 +54,19 @@ int eval_from_file(std::string filename){
     return EXIT_FAILURE;
   }
 
-  return eval_from_stream(ifs);
+  return eval_from_stream(ifs, interp);
 }
 
-int eval_from_command(std::string argexp){
+int eval_from_command(std::string argexp, Interpreter &interp){
 
   std::istringstream expression(argexp);
 
-  return eval_from_stream(expression);
+  return eval_from_stream(expression, interp);
 }
 
 // A REPL is a repeated read-eval-print loop
-int repl(){
-  Interpreter interp;
+void repl(Interpreter &interp){
 
-  // Start up tasks
-  std::ifstream startup_stream(STARTUP_FILE);
-  if(!interp.parseStream(startup_stream)){
-    error("Invalid Program. Could not parse.");
-    return EXIT_FAILURE;
-  }
-  else{
-    try{
-      Expression exp = interp.evaluate();
-    }
-    catch(const SemanticError & ex){
-      std::cerr << ex.what() << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-
-  // Normal REPL
   while(!std::cin.eof()){
 
     prompt();
@@ -109,23 +89,39 @@ int repl(){
       }
     }
   }
-  return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
-{ 
+{
+  Interpreter interp;
+  std::ifstream startup_stream(STARTUP_FILE);
+  if(!interp.parseStream(startup_stream)){
+    error("Invalid Program. Could not parse.");
+    return EXIT_FAILURE;
+  }
+  else{
+    try{
+      interp.evaluate();
+    }
+    catch(const SemanticError & ex){
+      std::cerr << "Start-up failed" << std::endl;
+      std::cerr << ex.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
   if(argc == 2){
-    return eval_from_file(argv[1]);
+    return eval_from_file(argv[1], interp);
   }
   else if(argc == 3){
     if(std::string(argv[1]) == "-e"){
-      return eval_from_command(argv[2]);
+      return eval_from_command(argv[2], interp);
     }
     else{
       error("Incorrect number of command line arguments.");
     }
   }
   else{
-    return repl();
+    repl(interp);
   }
 }
