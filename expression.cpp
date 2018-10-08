@@ -228,7 +228,7 @@ Expression Expression::handle_define(Environment & env){
   return result;
 }
 
-Expression Expression::handle_lambda(Environment & env){
+Expression Expression::handle_lambda(){
 
   std::vector<Expression> argument_template;
   argument_template.emplace_back(Expression(m_tail[0].head()));
@@ -312,10 +312,11 @@ Expression Expression::handle_set_property(Environment & env){
       std::map<std::string, Expression>::iterator __;
       std::tie(__, success) = result.m_properties.emplace(str, value);
       if(success && result.m_properties.size()>0){
+        // std::cout << "Made map with " << result.m_properties.size() << " properties\n";
         return result;
       }
       else {
-        throw SemanticError("Error: FATAL - adding propterty failed.");
+        throw SemanticError("Error: FATAL - adding property failed.");
       }
     }
     else{
@@ -329,12 +330,14 @@ Expression Expression::handle_set_property(Environment & env){
 }
 
 Expression Expression::handle_get_property(Environment & env){
-  Expression result = m_tail[1].eval(env);
+  Expression target = m_tail[1].eval(env);
+  Expression result;
   if(m_tail.size()==2) {
     if(m_tail[0].isHeadString()){
-
-        if(result.m_properties.find(m_tail[0].head().asString())!= result.m_properties.end()){
-          result = result.m_properties.at(m_tail[0].head().asString());
+        std::string key = m_tail[0].head().asString();
+        // std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
+        if(target.m_properties.find(key)!= target.m_properties.end()){
+          result = target.m_properties.at(key);
         }
         else {
           result.m_type = ExpType::Empty;
@@ -375,7 +378,7 @@ Expression Expression::eval(Environment & env){
   }
   // handle other special-forms
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
-    return handle_lambda(env);
+    return handle_lambda();
   }
   else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
     return handle_apply(env);

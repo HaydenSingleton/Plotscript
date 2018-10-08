@@ -5,6 +5,7 @@
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
+#include "startup_config.hpp"
 
 void prompt(){
   std::cout << "\nplotscript> ";
@@ -13,7 +14,6 @@ void prompt(){
 std::string readline(){
   std::string line;
   std::getline(std::cin, line);
-
   return line;
 }
 
@@ -28,7 +28,7 @@ void info(const std::string & err_str){
 int eval_from_stream(std::istream & stream){
 
   Interpreter interp;
-  
+
   if(!interp.parseStream(stream)){
     error("Invalid Program. Could not parse.");
     return EXIT_FAILURE;
@@ -41,21 +41,21 @@ int eval_from_stream(std::istream & stream){
     catch(const SemanticError & ex){
       std::cerr << ex.what() << std::endl;
       return EXIT_FAILURE;
-    }	
+    }
   }
 
   return EXIT_SUCCESS;
 }
 
 int eval_from_file(std::string filename){
-      
+
   std::ifstream ifs(filename);
-  
+
   if(!ifs){
     error("Could not open file for reading.");
     return EXIT_FAILURE;
   }
-  
+
   return eval_from_stream(ifs);
 }
 
@@ -67,35 +67,53 @@ int eval_from_command(std::string argexp){
 }
 
 // A REPL is a repeated read-eval-print loop
-void repl(){
+int repl(){
   Interpreter interp;
-    
+
+  // Start up tasks
+  std::ifstream startup_stream(STARTUP_FILE);
+  if(!interp.parseStream(startup_stream)){
+    error("Invalid Program. Could not parse.");
+    return EXIT_FAILURE;
+  }
+  else{
+    try{
+      Expression exp = interp.evaluate();
+    }
+    catch(const SemanticError & ex){
+      std::cerr << ex.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
+  // Normal REPL
   while(!std::cin.eof()){
-    
+
     prompt();
     std::string line = readline();
-    
+
     if(line.empty()) continue;
 
     std::istringstream expression(line);
-    
+
     if(!interp.parseStream(expression)){
       error("Invalid Expression. Could not parse.");
     }
     else{
       try{
-	Expression exp = interp.evaluate();
-	std::cout << exp << std::endl;
+      	Expression exp = interp.evaluate();
+      	std::cout << exp << std::endl;
       }
       catch(const SemanticError & ex){
-	std::cerr << ex.what() << std::endl;
+        std::cerr << ex.what() << std::endl;
       }
     }
   }
+  return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
-{  
+{ 
   if(argc == 2){
     return eval_from_file(argv[1]);
   }
@@ -108,8 +126,6 @@ int main(int argc, char *argv[])
     }
   }
   else{
-    repl();
+    return repl();
   }
-    
-  return EXIT_SUCCESS;
 }

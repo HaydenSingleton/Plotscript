@@ -91,7 +91,7 @@ public:
 
   /// member when determines if the expression is actually empty
   bool isEmpty() const noexcept;
-  
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -121,7 +121,7 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
-  Expression handle_lambda(Environment & env);
+  Expression handle_lambda();
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
   Expression handle_set_property(Environment & env);
