@@ -19,6 +19,7 @@ Expression::Expression(const Expression & a) {
 
   m_head = a.m_head;
   m_type = a.m_type;
+  m_properties = a.m_properties;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
   }
@@ -43,11 +44,11 @@ Expression & Expression::operator=(const Expression & a){
   if(this != &a){
       m_type = a.m_type;
       m_head = a.m_head;
+      m_properties = a.m_properties;
       m_tail.clear();
       for(auto e : a.m_tail)
         m_tail.push_back(e);
   }
-
   return *this;
 }
 
@@ -88,12 +89,13 @@ bool Expression::isLambda() const noexcept {
   return (m_type == ExpType::Lambda);
 }
 
-void Expression::append(const Atom & a){
-
-  m_tail.emplace_back(a);
-
+bool Expression::isEmpty() const noexcept {
+  return (m_type == ExpType::Empty);
 }
 
+void Expression::append(const Atom & a){
+  m_tail.emplace_back(a);
+}
 
 Expression * Expression::tail(){
   Expression * ptr = nullptr;
@@ -297,12 +299,61 @@ Expression Expression::handle_map(Environment & env){
   return Expression(return_args);
 }
 
+Expression Expression::handle_set_property(Environment & env){
+   Expression result = m_tail[2].eval(env);
+   bool success;
+   if(m_tail.size()==3) {
+    if(m_tail[0].isHeadString()){
+      std::string str = m_tail[0].head().asString();
+      if(result.m_properties.find(str) != result.m_properties.end()){
+        result.m_properties.erase(str);
+      }
+      Expression value = m_tail[1].eval(env);
+      std::map<std::string, Expression>::iterator __;
+      std::tie(__, success) = result.m_properties.emplace(str, value);
+      if(success && result.m_properties.size()>0){
+        return result;
+      }
+      else {
+        throw SemanticError("Error: FATAL - adding propterty failed.");
+      }
+    }
+    else{
+      throw SemanticError("Error: first argument to set-property not a string.");
+    }
+  }
+  else{
+    throw SemanticError("Error invalid number of arguments for set-property.");
+  }
+  return result;
+}
+
+Expression Expression::handle_get_property(Environment & env){
+  Expression result = m_tail[1].eval(env);
+  if(m_tail.size()==2) {
+    if(m_tail[0].isHeadString()){
+
+        if(result.m_properties.find(m_tail[0].head().asString())!= result.m_properties.end()){
+          result = result.m_properties.at(m_tail[0].head().asString());
+        }
+        else {
+          result.m_type = ExpType::Empty;
+        }
+        return result;
+    }
+    else{
+      throw SemanticError("Error: first argument to get-property not a string.");
+    }
+  }
+  else{
+    throw SemanticError("Error invalid number of arguments for get-property.");
+  }
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
-
-
 
   if(m_tail.empty()){
     if (m_head.isSymbol() && m_head.asSymbol() == "list") {
@@ -322,7 +373,7 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
     return handle_define(env);
   }
-  // handle lambda special-form
+  // handle other special-forms
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
     return handle_lambda(env);
   }
@@ -331,6 +382,12 @@ Expression Expression::eval(Environment & env){
   }
   else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
     return handle_map(env);
+  }
+  else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
+    return handle_set_property(env);
+  }
+  else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
+    return handle_get_property(env);
   }
   // else attempt to treat as procedure
   else{
@@ -344,6 +401,11 @@ Expression Expression::eval(Environment & env){
 
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
+
+  if(exp.isEmpty()){
+    out << "NONE";
+    return out;
+  }
 
   if(!exp.isHeadComplex()) {
     out << "(";

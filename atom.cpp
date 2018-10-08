@@ -168,6 +168,17 @@ std::string Atom::asSymbol() const noexcept{
   return result;
 }
 
+std::string Atom::asString() const noexcept{
+
+  std::string result;
+
+  if(m_type == StringKind){
+    result = stringValue;
+  }
+
+  return result;
+}
+
 std::complex<double> Atom::asComplex() const noexcept{
   if (m_type == NumberKind) {
     std::complex<double> number2complex(numberValue, 0.0);

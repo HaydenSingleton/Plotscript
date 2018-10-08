@@ -520,6 +520,10 @@ bool Environment::is_exp(const Atom & sym) const{
   return (result != envmap.end()) && (result->second.type == ExpressionType);
 }
 
+Expression Environment::evaluate_an_exp(Expression & e){
+  return e.eval(*this);
+}
+
 Expression Environment::get_exp(const Atom & sym) const{
 
   Expression exp;
@@ -653,5 +657,6 @@ void Environment::reset(){
   envmap.emplace("join", EnvResult(ProcedureType, join));
 
   // Procedure: range;
-  envmap.emplace("range", EnvResult(ProcedureType, range));
+  envmap.emplace("range", EnvResult(ProcedureType, range)); 
+
 }

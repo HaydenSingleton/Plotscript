@@ -10,7 +10,8 @@ Defines the Expression type and assiciated functions.
 #include "token.hpp"
 #include "atom.hpp"
 
- #include <iostream>
+#include <map>
+#include <iostream>
 
 
 // forward declare Environment
@@ -87,6 +88,9 @@ public:
 
   /// member when determines if the expression is a list
   bool isLambda() const noexcept;
+
+  /// member when determines if the expression is actually empty
+  bool isEmpty() const noexcept;
   
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
@@ -104,8 +108,11 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda};
+  enum class ExpType {None, List, Lambda, Empty};
   ExpType m_type = ExpType::None;
+
+  // list of the expression's properties
+  std::map<std::string, Expression> m_properties;
 
   // convenience typedef
   typedef std::vector<Expression>::iterator IteratorType;
@@ -117,6 +124,8 @@ private:
   Expression handle_lambda(Environment & env);
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
+  Expression handle_set_property(Environment & env);
+  Expression handle_get_property(Environment & env);
 };
 
 /// Render expression to output stream

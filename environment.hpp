@@ -61,6 +61,7 @@ public:
   bool is_exp(const Atom &sym) const;
 
   void __shadowing_helper(const Atom & sym, const Expression & new_sym);
+  Expression evaluate_an_exp(Expression & e);
 
   /*! Get the Expression the argument symbol maps to.
     \param sym the symbol to lookup

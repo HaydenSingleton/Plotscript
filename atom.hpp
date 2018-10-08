@@ -62,6 +62,8 @@ public:
   /// value of Atom as a number, returns empty-string if not a Symbol
   std::string asSymbol() const noexcept;
 
+  std::string asString() const noexcept;
+
   /// value of Atom as a number, returns empty-string if not a String
   // std::string asString() const noexcept; just use asSymbol for both
 

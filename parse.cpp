@@ -7,7 +7,7 @@ bool setHead(Expression &exp, const Token &token) {
   Atom a(token);
 
   exp.head() = a;
-
+  
   return !a.isNone();
 }
 
