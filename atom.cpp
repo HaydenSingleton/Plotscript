@@ -29,28 +29,36 @@ Atom::Atom(const Token & token): Atom(){
   }
   else if(!std::isdigit(token.asString()[0]) && token.asString()[0]=='"'){ // check if literal string
     setString(token.asString());
-    std::cout << "Creating string\n";
   }
   else{ // else assume symbol
     // make sure does not start with number
     if(!std::isdigit(token.asString()[0]) )
       setSymbol(token.asString());
     }
+    // std::cout << "Atom type = " << m_type << "\n";
 }
 
 Atom::Atom(const std::string & value): Atom() {
-  setSymbol(value);
+  if(value[0]=='"'){
+    setString(value);
+  }
+  else{
+    setSymbol(value);
+  }
 }
 
 Atom::Atom(const Atom & x): Atom(){
   if(x.isNumber()){
     setNumber(x.numberValue);
   }
-  else if(x.isSymbol()||x.isString()){
+  else if(x.isSymbol()){
     setSymbol(x.stringValue);
   }
   else if(x.isComplex()){
     setComplex(x.complexValue);
+  }
+  else if(x.isString()){
+    setString(x.stringValue);
   }
 }
 
@@ -63,11 +71,14 @@ Atom & Atom::operator=(const Atom & x){
     else if(x.m_type == NumberKind){
       setNumber(x.numberValue);
     }
-    else if(x.m_type == SymbolKind || x.m_type==StringKind){
+    else if(x.m_type == SymbolKind){
       setSymbol(x.stringValue);
     }
     else if(x.m_type == ComplexKind){
       setComplex(x.complexValue);
+    }
+    else if(x.m_type==StringKind){
+      setString(x.stringValue);
     }
   }
   return *this;

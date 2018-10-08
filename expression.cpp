@@ -11,7 +11,7 @@
 Expression::Expression()
 {}
 
-Expression::Expression(const Atom & a): m_head(a) 
+Expression::Expression(const Atom & a): m_head(a)
 {}
 
 // recursive copy
@@ -89,7 +89,9 @@ bool Expression::isLambda() const noexcept {
 }
 
 void Expression::append(const Atom & a){
+
   m_tail.emplace_back(a);
+
 }
 
 
@@ -161,13 +163,10 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 	      return env.get_exp(head);
       }
       else {
-        if(head.isString()){
-          return Expression(head);
-        }
 	      throw SemanticError("Error during handle lookup: unknown symbol " + head.asSymbol());
       }
     }
-    else if(head.isNumber() || head.isComplex()){
+    else if(head.isNumber() || head.isComplex() || head.isString()){
       return Expression(head);
     }
     else{
@@ -214,8 +213,6 @@ Expression Expression::handle_define(Environment & env){
     throw SemanticError("Error during handle define: attempt to redefine a built-in procedure");
   }
 
-  if(m_tail[1].isHeadString()) std::cout << "define type STRING\n"; else std::cout << "define type SYMBOL\n";
-
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
@@ -249,7 +246,7 @@ Expression Expression::handle_apply(Environment & env){
   }
 
   Atom op =  m_tail[0].head();
-  
+
   if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
     Expression arg1 = m_tail[0].eval(env);
     if(!arg1.isLambda())
@@ -304,17 +301,17 @@ Expression Expression::handle_map(Environment & env){
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
-  if(m_head.isString()){
-      std::cout << "evaling string\n";
-      return Expression(m_head);
-  }
-  else if(m_tail.empty()){
-	  
+
+
+
+  if(m_tail.empty()){
     if (m_head.isSymbol() && m_head.asSymbol() == "list") {
       std::vector<Expression> a;
 		  return Expression(a);
 	  }
-    std::cout << "looking up symbol: " << m_head.asSymbol() << "\n";
+    if(m_head.isString()){
+      return Expression(m_head);
+    }
     return handle_lookup(m_head, env);
   }
   // handle begin special-form
