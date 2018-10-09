@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 project(PLOTSCRIPT CXX)
 
-set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/startup.pls)
-configure_file(${CMAKE_SOURCE_DIR}/startup_config.hpp.in ${CMAKE_BINARY_DIR}/startup_config.hpp)
-include_directories(${CMAKE_BINARY_DIR})
+if(UNIX)
+  set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/startup.pls)
+  configure_file(${CMAKE_SOURCE_DIR}/startup_config.hpp.in ${CMAKE_BINARY_DIR}/startup_config.hpp)
+  include_directories(${CMAKE_BINARY_DIR})
+else(NOT UNIX)
+  set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/startup.pls)
+  configure_file(${CMAKE_SOURCE_DIR}/startup_config.hpp.in ${CMAKE_BINARY_DIR}/startup_config.hpp)
+  include_directories(${CMAKE_BINARY_DIR})
+endif()
+
 
 # EDIT
 # add any files you create related to the interpreter here
@@ -131,14 +138,14 @@ if (Qt5Widgets_FOUND AND Qt5Test_FOUND)
 
   add_executable(notebook ${gui_main} ${gui_src})
   if(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
-    target_link_libraries(notebook interpreter Qt5::Widgets pthread)
+    target_link_libraries(notebook interpreter Qt5::Widgets pthread gcov)
   else(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
     target_link_libraries(notebook interpreter Qt5::Widgets)
   endif()
 
   add_executable(notebook_test ${gui_test_src} ${gui_src})
   if(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
-    target_link_libraries(notebook_test interpreter Qt5::Widgets Qt5::Test pthread)
+    target_link_libraries(notebook_test interpreter Qt5::Widgets Qt5::Test pthread gcov)
   else(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
     target_link_libraries(notebook_test interpreter Qt5::Widgets Qt5::Test)
   endif()

@@ -313,7 +313,7 @@ Expression Expression::handle_set_property(Environment & env){
       std::map<std::string, Expression>::iterator __;
       std::tie(__, success) = result.m_properties.emplace(str, value);
       if(success && result.m_properties.size()>0){
-        std::cout << "Made map with " << result.m_properties.size() << " properties\n";
+        // std::cout << "Made map with " << result.m_properties.size() << " properties\n";
         return result;
       }
       else {
