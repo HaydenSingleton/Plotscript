@@ -337,7 +337,7 @@ Expression Expression::handle_get_property(Environment & env){
     if(m_tail[0].isHeadString()){
       if(!env.is_proc(target.head())){
           std::string key = m_tail[0].head().asString();
-          std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
+          // std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
           if(target.m_properties.find(key)!= target.m_properties.end()){
             result = target.m_properties.at(key);
           }
