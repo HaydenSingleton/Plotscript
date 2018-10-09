@@ -3,6 +3,6 @@
 
 #include <string>
 
-const std::string STARTUP_FILE = "startup.pls";
+const std::string STARTUP_FILE = "@STARTUP_FILE@";
 
 #endif
