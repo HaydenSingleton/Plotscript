@@ -305,13 +305,13 @@ Expression Expression::handle_set_property(Environment & env){
    bool success;
    if(m_tail.size()==3) {
     if(m_tail[0].isHeadString()){
-      std::string str = m_tail[0].head().asString();
-      if(result.m_properties.find(str) != result.m_properties.end()){
-        result.m_properties.erase(str);
+      std::string key = m_tail[0].head().asString();
+      if(result.m_properties.find(key) != result.m_properties.end()){
+        result.m_properties.erase(key);
       }
       Expression value = m_tail[1].eval(env);
       std::map<std::string, Expression>::iterator __;
-      std::tie(__, success) = result.m_properties.emplace(str, value);
+      std::tie(__, success) = result.m_properties.emplace(key, value);
       if(success && result.m_properties.size()>0){
         // std::cout << "Made map with " << result.m_properties.size() << " properties\n";
         return result;
