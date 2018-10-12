@@ -179,9 +179,9 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 
 Expression Expression::handle_begin(Environment & env){
 
-  if(m_tail.size() == 0){
-    throw SemanticError("Error during handle begin: zero arguments to begin");
-  }
+  // if(m_tail.size() == 0){
+  //   throw SemanticError("Error during handle begin: zero arguments to begin");
+  // }
 
   // evaluate each arg from tail, return the last
   Expression result;
@@ -261,10 +261,6 @@ Expression Expression::handle_apply(Environment & env){
   if(!list_evaled.isList()){
     throw SemanticError("Error during apply: second argument to apply not a list");
   }
-  std::string s = op.asSymbol();
-  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list") || (s == "map")){
-    throw SemanticError("Error during handle apply: attempt to redefine a special-form");
-  }
 
   std::vector<Expression> list_args;
   for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
@@ -302,7 +298,6 @@ Expression Expression::handle_map(Environment & env){
 
 Expression Expression::handle_set_property(Environment & env){
    Expression result = m_tail[2].eval(env);
-   bool success;
    if(m_tail.size()==3) {
     if(m_tail[0].isHeadString()){
       std::string key = m_tail[0].head().asString();
@@ -310,15 +305,7 @@ Expression Expression::handle_set_property(Environment & env){
         result.m_properties.erase(key);
       }
       Expression value = m_tail[1].eval(env);
-      std::map<std::string, Expression>::iterator __;
-      std::tie(__, success) = result.m_properties.emplace(key, value);
-      if(success && result.m_properties.size()>0){
-        // std::cout << "Made map with " << result.m_properties.size() << " properties\n";
-        return result;
-      }
-      else {
-        throw SemanticError("Error: FATAL - adding property failed.");
-      }
+      result.m_properties[key] = value;
     }
     else{
       throw SemanticError("Error: first argument to set-property not a string.");
@@ -337,7 +324,6 @@ Expression Expression::handle_get_property(Environment & env){
     if(m_tail[0].isHeadString()){
       if(!env.is_proc(target.head())){
           std::string key = m_tail[0].head().asString();
-          // std::cout << "Searching map with " << target.m_properties.size() << " properties\n";
           if(target.m_properties.find(key)!= target.m_properties.end()){
             result = target.m_properties.at(key);
           }

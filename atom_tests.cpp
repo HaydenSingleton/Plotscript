@@ -2,7 +2,7 @@
 
 #include "atom.hpp"
 
-TEST_CASE( "Test constructors", "[atom]" ) {
+TEST_CASE( "Test atom constructors", "[atom]" ) {
 
   {
     INFO("Default Constructor");
@@ -40,13 +40,22 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(!a.isNone());
     REQUIRE(!a.isNumber());
     REQUIRE(a.isSymbol());
+
+    Token ts("\"hee hee\"");
+    Atom b(ts);
+
+    REQUIRE(!b.isNone());
+    REQUIRE(!b.isNumber());
+    REQUIRE(!b.isSymbol());
+    REQUIRE(b.isString());
   }
 
   {
     INFO("Copy Constructor");
     Atom a("hi");
     Atom b(1.0);
-    
+    Atom f("\"string my guy\"");
+
     Atom c = a;
     REQUIRE(!a.isNone());
     REQUIRE(!c.isNumber());
@@ -56,10 +65,16 @@ TEST_CASE( "Test constructors", "[atom]" ) {
     REQUIRE(!a.isNone());
     REQUIRE(d.isNumber());
     REQUIRE(!d.isSymbol());
+
+    Atom e = f;
+    REQUIRE(!e.isNone());
+    REQUIRE(!e.isNumber());
+    REQUIRE(!e.isSymbol());
+    REQUIRE(e.isString());
   }
 }
 
-TEST_CASE( "Test assignment", "[atom]" ) {
+TEST_CASE( "Test atom assignments", "[atom]" ) {
 
   {
     INFO("default to default");
@@ -85,6 +100,16 @@ TEST_CASE( "Test assignment", "[atom]" ) {
     INFO("default to symbol");
     Atom a;
     Atom b("hi");
+    b = a;
+    REQUIRE(b.isNone());
+    REQUIRE(!b.isNumber());
+    REQUIRE(!b.isSymbol());
+  }
+
+  {
+    INFO("default to string");
+    Atom a;
+    Atom b("\"hi mom\"");
     b = a;
     REQUIRE(b.isNone());
     REQUIRE(!b.isNumber());
@@ -119,6 +144,16 @@ TEST_CASE( "Test assignment", "[atom]" ) {
   }
 
   {
+    INFO("number to string");
+    Atom a("\"hi\"");
+    Atom b(1.0);
+    b = a;
+    REQUIRE(b.isString());
+    REQUIRE(b.asSymbol() == "\"hi\"");
+    REQUIRE(b.asString() == "\"hi\"");
+  }
+
+  {
     INFO("symbol to default");
     Atom a("hi");
     Atom b;
@@ -144,9 +179,20 @@ TEST_CASE( "Test assignment", "[atom]" ) {
     REQUIRE(b.isSymbol());
     REQUIRE(b.asSymbol() == "hi");
   }
+
+  {
+    INFO("default to string");
+    Atom x;
+    Atom y("\"str\"");
+    REQUIRE(y.isString());
+    REQUIRE(y.asString()=="\"str\"");
+    x = y;
+    REQUIRE(x.isString());
+    REQUIRE(x.asString()=="\"str\"");
+  }
 }
 
-TEST_CASE( "test comparison", "[atom]" ) {
+TEST_CASE( "Test atom comparisons", "[atom]" ) {
 
   {
     INFO("compare default to default");
@@ -215,9 +261,18 @@ TEST_CASE( "test comparison", "[atom]" ) {
     REQUIRE(a != c);
   }
 
+  {
+    INFO("compare string to string");
+    Atom a("\"The Lord of the Rings\"");
+    Atom b("\"The Lord of the Rings\"");
+    Atom c("The Lord of the Rings");
+    REQUIRE(a.isString());
+    REQUIRE(c.isSymbol());
+    REQUIRE(a!=c);
+    REQUIRE(a==b);
+  }
+
 }
-
-
 
 
 

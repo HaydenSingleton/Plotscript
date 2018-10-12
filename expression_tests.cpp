@@ -26,3 +26,11 @@ TEST_CASE( "Test symbol expression", "[expression]" ) {
   REQUIRE(!exp.isHeadNumber());
   REQUIRE(exp.isHeadSymbol());
 }
+
+TEST_CASE( "Test string expression", "[expression]") {
+
+  Expression exp(Atom("\"yeet! Dab on em.\""));
+
+  REQUIRE(exp.isHeadString());
+  REQUIRE(!exp.isHeadSymbol());
+}

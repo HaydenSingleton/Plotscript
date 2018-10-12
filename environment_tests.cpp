@@ -101,6 +101,8 @@ TEST_CASE( "Test get built-in procedure", "[environment]" ) {
 	REQUIRE(result.isHeadComplex());
 	REQUIRE(Expression(c).isHeadComplex());
 	REQUIRE(result == Expression(Atom(c)));
+    REQUIRE(result != Expression(Atom(b)));
+    REQUIRE(result.head() != Atom(b));
 
 	INFO("add semantic error")
 	REQUIRE_THROWS_AS(padd(std::vector<Expression>{ Expression(std::string("not_valid_input")) }), SemanticError);
@@ -121,6 +123,19 @@ TEST_CASE( "Test reset", "[environment]" ) {
   REQUIRE(!env.is_known(Atom("hi")));
   REQUIRE(!env.is_exp(Atom("hi")));
   REQUIRE(env.get_exp(Atom("hi")) == Expression());
+}
+
+TEST_CASE( "Test enviorment class operators", "[environment]" ) {
+  Environment env;
+
+  Expression a(Atom(1.0));
+  env.add_exp(Atom("one"), a);
+  Expression b(Atom("hello"));
+  env.add_exp(Atom("hi"), b);
+
+  Environment second_env = env;
+  REQUIRE(second_env.is_exp(Atom("hi")));
+  REQUIRE(second_env.evaluate_an_exp(a) == Expression(1.0));
 }
 
 TEST_CASE( "Test semeantic errors", "[environment]" ) {

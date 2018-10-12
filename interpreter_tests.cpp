@@ -242,6 +242,12 @@ TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" )
     Expression result = run(program);
     REQUIRE(result == Expression(2.));
   }
+
+  {
+    std::string program = "(begin)";
+    INFO(program);
+    REQUIRE(run_and_expect_error(program));
+  }
 }
 
 TEST_CASE( "Test a medium-sized expression", "[interpreter]" ) {
@@ -366,6 +372,9 @@ TEST_CASE("Test apply", "[expression]"){
   Expression result = run(program);
   REQUIRE(result == Expression(3.));
 
+  std::string programF = "(~ 1 2)";
+  REQUIRE(run_and_expect_error(programF));
+
 }
 
 TEST_CASE("Test eval", "[expression]"){
@@ -404,6 +413,9 @@ TEST_CASE("Test handle_lambda", "[expression]"){
   program = "(lambda (x y) (+ x y 1))";
   run(program);
 
+  program = "(begin (define x 100) (lambda (x y) (+ x y 1)))";
+  run(program);
+
   program = "(begin (define f (lambda (x y) (# x y))) (f 5))";
   REQUIRE(run_and_expect_error(program));
 
@@ -432,6 +444,9 @@ TEST_CASE("Test handle_apply", "[expression]"){
 
   program = "(apply (+ x I) (list 0 1))";
   REQUIRE(run_and_expect_error(program));
+
+  program = "(apply (+ x I) (list 0 1))";
+  REQUIRE(run_and_expect_error(program));
 }
 
 TEST_CASE("Test handle_map", "[expression]"){
@@ -453,4 +468,37 @@ TEST_CASE("Test handle_map", "[expression]"){
 
   program = "(apply + (+ x I))";
   REQUIRE(run_and_expect_error(program));
+}
+
+TEST_CASE("Test handle get/set property", "[expression]"){
+
+  std::string program = "(begin (define f (set-property \"type\" \"number_list\" (list 0 1 2 3))))";
+  Expression result = run(program);
+  std::string program2 = "(list 0 1 2 3)";
+  Expression expected_result = run(program2);
+  REQUIRE(result == expected_result);
+
+  std::string overwrite_property = "(define myList (set-property \"type\" \"HAHAHA GOTTEM\" (set-property \"type\" \"number_list\" (list 0 1 2 3))))";
+  REQUIRE(run(overwrite_property)== expected_result);
+
+  std::string first_arg_error = "(define myList (set-property not_a_string \"WILL FAIL\" (list 0 1 2 3)))";
+  REQUIRE(run_and_expect_error(first_arg_error));
+
+  std::string sp_too_many_args = "(define myList (set-property \"type\" \"WILL FAIL\" \"Because 4 args\" (list 1)))";
+  REQUIRE(run_and_expect_error(sp_too_many_args));
+
+  std::string getprop_program = "(get-property \"type\" (set-property \"type\" \"number_list\" (list 0 1 2 3)))";
+  REQUIRE(run(getprop_program)== Expression(Atom("\"number_list\"")));
+
+  std::string getprop_returns_none = "(get-property \"yeeet\" (set-property \"type\" \"number_list\" (list 0 1 2 3)))";
+  REQUIRE(run(getprop_returns_none)== Expression());
+
+  std::string first_arg_not_string = "(get-property 10 (set-property \"type\" \"number_list\" (list 0 1 2 3)))";
+  REQUIRE(run_and_expect_error(first_arg_not_string));
+
+  std::string secon_arg_proc = "(get-property \"size\" +)";
+  REQUIRE(run_and_expect_error(secon_arg_proc));
+
+  std::string gp_too_many_args = "(get-property \"yote\" (set-property \"type\" \"number_list\" (list 0 1 2 3)) \"my dude\")";
+  REQUIRE(run_and_expect_error(gp_too_many_args));
 }

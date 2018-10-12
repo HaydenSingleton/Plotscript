@@ -57,3 +57,13 @@ TEST_CASE( "Test empty parens", "[parse]" ) {
   REQUIRE(parse(tokens) == Expression());
 }
 
+TEST_CASE( "Test open quotes", "[parse]" ) {
+
+  std::string program = "(\"this string is unbalanced)";
+
+  std::istringstream iss(program);
+
+  TokenSequenceType tokens = tokenize(iss);
+
+  REQUIRE(parse(tokens) == Expression());
+}
