@@ -219,8 +219,8 @@ Expression Expression::handle_define(Environment & env){
   // eval tail[1]
   Expression result = m_tail[1].eval(env);
 
-  if(env.is_exp(m_tail[0].head())){
-    throw SemanticError("Error during handle define: attempt to redefine a previously defined symbol");
+  if((s=="pi"||(s=="e")||s=="I")){
+    throw SemanticError("Error during handle define: attempt to redefine a built-in symbol");
   }
 
   //and add to env
