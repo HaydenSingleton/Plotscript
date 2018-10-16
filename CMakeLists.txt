@@ -39,7 +39,7 @@ set(tui_src
 # EDIT
 # add source for any GUI modules here
 set(gui_src
-    myWidgets.hpp myWidgets.cpp
+    notebook_app.hpp input_widget.hpp output_widget.hpp
   )
 
 # EDIT
