@@ -2,6 +2,11 @@
 #define OUTPUT_WIDGET_HPP
 
 #include <QWidget>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+
+#include "interpreter.hpp"
+
 
 class OutputWidget: public QWidget {
     Q_OBJECT
@@ -12,10 +17,12 @@ class OutputWidget: public QWidget {
         };
 
     private slots:
-        void expression_result(QString r){
-            return;
-        };
+        void catch_result(Expression exp){
 
+        };
+        void catch_failure(int code, std::string message){
+
+        };
 
 };
 
