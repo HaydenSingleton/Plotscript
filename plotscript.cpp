@@ -102,7 +102,6 @@ int main(int argc, char *argv[])
   else{
     try{
       Expression exp = interp.evaluate();
-      // std::cout << exp << std::endl;
     }
     catch(const SemanticError & ex){
       std::cerr << "Start-up failed" << std::endl;
