@@ -39,7 +39,7 @@ Atom::Atom(const Token & token): Atom(){
 }
 
 Atom::Atom(const std::string & value): Atom() {
-  if(value[0]=='"'){
+  if(value[0] == '"'){
     setString(value);
   }
   else{
