@@ -408,9 +408,9 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
   out << exp.head();
 
-  if(0 != exp.tailLength() && exp.isNone()){
+  if(exp.tailLength() > 0 && exp.isNone()){
       out << " ";
-    }
+  }
 
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
     out << *e;
