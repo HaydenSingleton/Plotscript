@@ -5,8 +5,8 @@ int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
 
-  NotebookApp widget;
-  widget.show();
+  NotebookApp na;
+  na.show();
 
   return app.exec();
 }

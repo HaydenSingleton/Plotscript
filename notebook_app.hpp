@@ -10,7 +10,6 @@
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
 #include "startup_config.hpp"
-#include <string>
 #include <fstream>
 #include <sstream>
 
@@ -38,19 +37,19 @@ class NotebookApp : public QWidget{
             QObject::connect(this, SIGNAL(send_result(Expression)), out, SLOT(catch_result(Expression)));
 
             // send any errors to output widget with a different mechanism
-            QObject::connect(this, SIGNAL(failure(int, std::string)), out, SLOT(catch_failure(int, std::string)));
+            QObject::connect(this, SIGNAL(send_failure(int, std::string)), out, SLOT(catch_failure(int, std::string)));
 
             //startup procedure
             std::ifstream startip_str(STARTUP_FILE);
             if(!mrInterpret.parseStream(startip_str)){
-                emit failure(EXIT_FAILURE, "Invalid Program. Could not parse.");
+                emit send_failure(1, "Invalid Program. Could not parse.");
             }
             else{
                 try{
-                    mrInterpret.evaluate();
+                    Expression exp = mrInterpret.evaluate();
                 }
                 catch(const SemanticError & ex){
-                    emit failure(EXIT_FAILURE, ex.what());
+                    emit send_failure(1, ex.what());
                 }
             }
         };
@@ -59,23 +58,22 @@ class NotebookApp : public QWidget{
         void catch_input(QString r){
             std::istringstream expression(r.toStdString());
             if(!mrInterpret.parseStream(expression)){
-                emit failure(0, "Invalid Expression. Could not parse.");
+                emit send_failure(0, "Invalid Expression. Could not parse.");
             }
             else{
                 try{
                     Expression exp = mrInterpret.evaluate();
                     emit send_result(exp);
-                    std::cout << exp << std::endl;
                 }
                 catch(const SemanticError & ex){
-                    emit failure(0, ex.what());
+                    emit send_failure(0, ex.what());
                 }
             }
         };
 
     signals:
         void send_result(Expression exp);
-        void failure(int code, std::string message);
+        void send_failure(int code, std::string message);
 
     private:
         InputWidget *in;
