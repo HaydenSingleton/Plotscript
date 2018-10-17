@@ -8,6 +8,7 @@ Defines the Atom type and associated functions.
 #include "token.hpp"
 #include <complex>
 #include <limits>
+#include <sstream>
 
 
 /*! \class Atom

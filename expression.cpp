@@ -446,3 +446,33 @@ bool operator!=(const Expression & left, const Expression & right) noexcept{
 
   return !(left == right);
 }
+
+std::string Expression::toString() const noexcept{
+  std::string result = "";
+  if(this->isEmpty()){
+    result += "NONE";
+    return result;
+  }
+
+  if(!isHeadComplex()) {
+    result += "(";
+  }
+
+  result += this->head().asString();
+
+  if(this->tailLength() > 0 && this->isNone()){
+      result += " ";
+  }
+
+  for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){
+    result += e->toString();
+    if((e + 1) != this->tailConstEnd()){
+      result += " ";
+    }
+  }
+  if(!this->isHeadComplex()) {
+    result += ")";
+  }
+
+  return result;
+}

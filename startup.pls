@@ -10,20 +10,20 @@
 	)
 
 	(define make-line
-		(lambda (x y)
+		(lambda (p1 p2)
 			(set-property "thickness" (1)
 				(set-property "object-name" "line"
-					(list x y)
+					(list p1 p2)
 				)
 			)
 		)
 	)
 
 	(define make-text
-		(lambda (x)
+		(lambda (str)
 			(set-property "position" (make-point 0 0)
 				(set-property "object-name" "text"
-					(x)
+					(str)
 				)
 			)
 		)

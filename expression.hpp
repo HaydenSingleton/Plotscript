@@ -98,6 +98,9 @@ public:
   /// equality comparison for two expressions (recursive)
   bool operator==(const Expression & exp) const noexcept;
 
+  /// convert expression to a string
+  std::string toString() const noexcept;
+
 private:
 
   // the head of the expression
