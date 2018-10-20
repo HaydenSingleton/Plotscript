@@ -1,13 +1,17 @@
 #include "output_widget.hpp"
-#include <iostream>
 
 OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
     setObjectName("output");
+    auto layout = new QHBoxLayout(this);
+    layout->addWidget(view);
     view->setScene(scene);
 
-    scene->addText("Hello World!");
-    QGraphicsRectItem *panel = new QGraphicsRectItem(0,0,1440,900);//,(QGraphicsRectItem *)this);
+    // QGraphicsTextItem *welcome = scene->addText("Hello World!");
+    QGraphicsTextItem *centered = scene->addText("(0,0)");
+
+    QGraphicsRectItem *panel = new QGraphicsRectItem();
     scene->addItem(panel);
+
 }
 
 void OutputWidget::clear_screen() {
@@ -15,10 +19,40 @@ void OutputWidget::clear_screen() {
 }
 
 void OutputWidget::catch_result(Expression e){
-    clear_screen();
-    if(e.isNone() || e.isList()){ // Not a special case, display normally
+    if(clear_on_print){
+        clear_screen();
+    }
+    if(e.isPoint()){
+        std::pair<double, double> coordinates = e.getPointCoordinates();
+        double diam = e.getPointSize();
+
+        QRectF *circle = new QRectF(0, 0, diam, diam);
+        circle->moveCenter(QPointF(coordinates.first, coordinates.second));
+        scene->addEllipse(*circle, QPen(), QBrush(Qt::SolidPattern));
+    }
+    else if (e.isLine()){
+        std::cout << "Line" << std::endl;
+
+    }
+    else if (e.isText()){
+        std::string repl = e.toString();
+        QString qstr = QString::fromStdString(repl.substr(2, repl.length()-4));
+        QGraphicsTextItem *text = scene->addText(qstr);
+        auto coordinates = e.getPosition();
+        text->setPos(QPointF(coordinates.first, coordinates.second));
+    }
+    else if (e.isList()) {
+        std::cout << "List" << std::endl;
+        clear_on_print = false;
+        for(auto &i : e.asVector()){
+            catch_result(i);
+        }
+        clear_on_print = true;
+    }
+    else if(!e.isLambda()) {
+        // Not a special case, display normally
+        std::cout << "Default" << std::endl;
         QGraphicsTextItem *text = scene->addText(QString::fromStdString(e.toString()));
-        view->update();
     }
 }
 
@@ -27,10 +61,10 @@ void OutputWidget::catch_failure(int code, std::string message){
     QString msg = QString::fromStdString(message);
     if(code == 0) {
         QGraphicsTextItem * output = new QGraphicsTextItem;
-        output->setPos(0,10);
+        output->setPos(0,0);
         output->setPlainText(msg);
         scene->addItem(output);
-        view->update();
+        // view->update();
     }
     else {
         emit QCoreApplication::quit();

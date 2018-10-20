@@ -28,8 +28,8 @@ class NotebookApp : public QWidget{
         void catch_input(QString r);
 
     private:
-        InputWidget *in;
-        OutputWidget *out;
+        InputWidget * in;
+        OutputWidget * out;
         Interpreter mrInterpret;
 };
 

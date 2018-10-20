@@ -11,6 +11,7 @@ Defines the Expression type and assiciated functions.
 #include "atom.hpp"
 
 #include <map>
+#include <utility>
 #include <iostream>
 
 
@@ -98,8 +99,15 @@ public:
   /// equality comparison for two expressions (recursive)
   bool operator==(const Expression & exp) const noexcept;
 
-  /// convert expression to a string
+  /// helper methods for output widget
   std::string toString() const noexcept;
+  bool isPoint() const noexcept;
+  bool isLine() const noexcept;
+  bool isText() const noexcept;
+  std::pair<double, double> getPosition() const noexcept;
+  std::vector<Expression> asVector() const noexcept;
+  size_t getPointSize() const noexcept;
+  std::pair<double, double> getPointCoordinates() const noexcept;
 
 private:
 

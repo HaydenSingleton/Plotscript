@@ -19,9 +19,6 @@ class InputWidget: public QPlainTextEdit {
     private:
         QSet<int> pressedKeys;
 
-        // convience function to clear the screen on a click
-        void mousePressEvent(QMouseEvent *event) override;
-
         // to catch when users press SHIFT+ENTER
         bool eventFilter(QObject * obj, QEvent * event);
 };

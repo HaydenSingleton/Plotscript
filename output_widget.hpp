@@ -2,6 +2,7 @@
 #define OUTPUT_WIDGET_HPP
 
 #include <QWidget>
+#include <QLayout>
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
@@ -24,6 +25,7 @@ class OutputWidget: public QWidget {
     private:
         QGraphicsView * view = new QGraphicsView(this);
         QGraphicsScene * scene = new QGraphicsScene(this);
+        bool clear_on_print;
 
 };
 

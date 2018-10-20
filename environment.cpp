@@ -509,8 +509,8 @@ void Environment::__shadowing_helper(const Atom & sym, const Expression & new_sy
 
   if(this->envmap.find(sym.asSymbol()) != this->envmap.end()){
     this->envmap.erase(sym.asSymbol());
-    }
-    this->add_exp(sym, new_sym_val);
+  }
+  this->add_exp(sym, new_sym_val);
  }
 
 bool Environment::is_exp(const Atom & sym) const{
@@ -657,6 +657,6 @@ void Environment::reset(){
   envmap.emplace("join", EnvResult(ProcedureType, join));
 
   // Procedure: range;
-  envmap.emplace("range", EnvResult(ProcedureType, range)); 
+  envmap.emplace("range", EnvResult(ProcedureType, range));
 
 }

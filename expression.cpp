@@ -394,7 +394,6 @@ Expression Expression::eval(Environment & env){
   }
 }
 
-
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
   if(exp.isEmpty()){
@@ -474,5 +473,93 @@ std::string Expression::toString() const noexcept{
     result += ")";
   }
 
+  return result;
+}
+
+bool Expression::isPoint() const noexcept{
+  for(auto &p : m_properties){
+    if(p.first == "\"object-name\""){
+      return p.second == Expression(Atom("\"point\""));
+    }
+  }
+  return false;
+}
+
+bool Expression::isLine() const noexcept{
+  for(auto &p : m_properties){
+    if(p.first == "\"object-name\""){
+      return p.second == Expression(Atom("\"line\""));
+    }
+  }
+  return false;
+}
+
+bool Expression::isText() const noexcept{
+  const std::string target_property("\"object-name\"");
+  for(auto &p : m_properties){
+    if(p.first == target_property){
+      return p.second == Expression(Atom("\"text\""));
+    }
+  }
+  return false;
+}
+
+std::pair<double, double> Expression::getPosition() const noexcept{
+  Expression point;
+  if(m_properties.find("\"position\"")!=m_properties.end())
+    point = m_properties.at("\"position\"");
+  if(point.isPoint()){
+    std::string result = point.toString();
+    std::vector<double> myVector(result.begin(), result.end());
+    double *x = &myVector[2], *y = &myVector[6];
+    std::pair<double, double> p = {*x, *y};
+    return p;
+  }
+  else {
+    std::pair<double, double> p = {0, 0};
+    return p;
+  }
+}
+
+std::vector<Expression> Expression::asVector() const noexcept {
+    std::vector<Expression> result;
+    result.emplace_back(m_head);
+    for(auto e : m_tail){
+      result.emplace_back(e);
+    }
+    return result;
+}
+
+size_t Expression::getPointSize() const noexcept {
+  size_t size_value = 0;
+  if(m_properties.find("\"size\"") != m_properties.end()){
+    Expression point_size = m_properties.at("\"size\"");
+    size_value = point_size.head().asNumber();
+  }
+   return size_value;
+}
+
+std::pair<double, double> Expression::getPointCoordinates() const noexcept {
+  double x, y;
+  std::string repl = this->toString();
+
+  repl = repl.substr(2, repl.length() - 3);
+  std::string xcor = repl.substr(0, repl.find_first_of(')')), ycor = repl.substr(repl.find_first_of('('), repl.find_last_of(')')).substr(1);
+  ycor.pop_back();
+
+  if(xcor.find('.')!=std::string::npos){
+      x = std::stod(xcor);
+  }
+  else {
+      x = (double)std::stoi(xcor);
+  }
+
+  if(ycor.find('.')!=std::string::npos){
+      y = std::stod(ycor);
+  }
+  else {
+      y = (double)std::stoi(ycor);
+  }
+  std::pair<double, double> result = {x, y};
   return result;
 }
