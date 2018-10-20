@@ -9,7 +9,6 @@
 #include <QApplication>
 
 #include "interpreter.hpp"
-#include "iostream"
 
 class OutputWidget: public QWidget {
     Q_OBJECT
@@ -25,7 +24,7 @@ class OutputWidget: public QWidget {
     private:
         QGraphicsView * view = new QGraphicsView(this);
         QGraphicsScene * scene = new QGraphicsScene(this);
-        bool clear_on_print;
+        bool clear_on_print = true;
 
 };
 

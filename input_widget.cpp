@@ -20,8 +20,8 @@ bool InputWidget::eventFilter(QObject * obj, QEvent * event) {
         }
         else if(pressedKeys.contains(Qt::Key_Space) && pressedKeys.contains(Qt::Key_Control)) {
             //clear the screen
-            setPlainText(QString(""));
             emit clear_output();
+            setPlainText(QString(""));
         }
     }
     else if(event->type()==QEvent::KeyRelease) {

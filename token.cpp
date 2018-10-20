@@ -74,7 +74,7 @@ TokenSequenceType tokenize(std::istream & seq){
     else if(c == QUOTECHAR){ // c == " (BEGIN SPECIAL CASE)
       token.push_back(QUOTECHAR);
       c = seq.get();
-      while((!seq.eof()) && (c != '\n') && (c != QUOTECHAR)){
+      while(!seq.eof() && c != QUOTECHAR){
 	      token.push_back(c);
         c = seq.get();
       }
