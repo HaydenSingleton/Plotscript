@@ -31,7 +31,6 @@ void OutputWidget::catch_result(Expression e){
         scene->addEllipse(*circle, QPen(), QBrush(Qt::SolidPattern));
     }
     else if (e.isLine()){
-        std::cout << "Line" << std::endl;
 
     }
     else if (e.isText()){
@@ -41,17 +40,16 @@ void OutputWidget::catch_result(Expression e){
         auto coordinates = e.getPosition();
         text->setPos(QPointF(coordinates.first, coordinates.second));
     }
-    else if (e.isList()) {
-        std::cout << "List" << std::endl;
-        clear_on_print = false;
-        for(auto &i : e.asVector()){
-            catch_result(i);
-        }
-        clear_on_print = true;
-    }
+    // else if (e.isList()) {
+    //     std::cout << "List" << std::endl;
+    //     clear_on_print = false;
+    //     for(auto &i : e.asVector()){
+    //         catch_result(i);
+    //     }
+    //     clear_on_print = true;
+    // }
     else if(!e.isLambda()) {
         // Not a special case, display normally
-        std::cout << "Default" << std::endl;
         QGraphicsTextItem *text = scene->addText(QString::fromStdString(e.toString()));
     }
 }
