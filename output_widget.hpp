@@ -18,7 +18,7 @@ class OutputWidget: public QWidget {
 
     private slots:
         void catch_result(Expression e);
-        void catch_failure(int code, std::string message);
+        void catch_failure(bool fatal, std::string message);
         void clear_screen();
 
     private:

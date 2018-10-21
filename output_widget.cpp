@@ -26,7 +26,10 @@ void OutputWidget::catch_result(Expression e){
     if(e.isPoint()) {
         auto coordinates = e.getPointCoordinates();
         double diam = e.getNumericalProperty("\"size\"");
-
+        if(!(diam >= 0)){
+                catch_failure(0, "Error in make-point call: diameter not positive");
+                return;
+        }
         QRectF *circle = new QRectF(0, 0, diam, diam);
         circle->moveCenter(QPointF(coordinates.first, coordinates.second));
         scene->addEllipse(*circle, QPen(), QBrush(Qt::SolidPattern));
@@ -34,21 +37,39 @@ void OutputWidget::catch_result(Expression e){
     else if (e.isLine()) {
         std::vector<Expression> vec = e.asVector();
         Expression p1 = vec[0], p2 = vec[1];
-        auto start = p1.getPointCoordinates();
-        auto end = p2.getPointCoordinates();
-        QPointF start_point = QPointF(start.first, start.second);
-        QPointF end_point = QPointF(end.first, end.second);
+        if(p1.isPoint() && p2.isPoint()){
+            auto start = p1.getPointCoordinates();
+            auto end = p2.getPointCoordinates();
+            QPointF start_point = QPointF(start.first, start.second);
+            QPointF end_point = QPointF(end.first, end.second);
 
-        QLineF line = QLineF(start_point, end_point);
-        double thicc = e.getNumericalProperty("\"thickness\"");
-        scene->addLine(line, QPen(QBrush(Qt::SolidPattern), thicc));
+            QLineF line = QLineF(start_point, end_point);
+            double thicc = e.getNumericalProperty("\"thickness\"");
+            if(!(thicc >= 0)){
+                catch_failure(0, "Error in make-line call: thickness value not positive");
+                return;
+            }
+            scene->addLine(line, QPen(QBrush(Qt::SolidPattern), thicc));
+        }
+        else {
+            catch_failure(0, "Error: argument to make-line not a point");
+            return;
+        }
     }
     else if (e.isText()) {
         std::string repl = e.toString();
         QString qstr = QString::fromStdString(repl.substr(2, repl.length()-4));
         QGraphicsTextItem *text = scene->addText(qstr);
-        auto coordinates = e.getPosition();
-        text->setPos(QPointF(coordinates.first, coordinates.second));
+
+        double xcor, ycor;
+        bool isValidPoint;
+        std::tie(xcor, ycor, isValidPoint) = e.getPosition();
+        if(isValidPoint)
+            text->setPos(QPointF(xcor, ycor));
+        else {
+            catch_failure(0, "Error in make-text: not a valid position in property list");
+            return;
+        }
     }
     else if (e.isList()) {
         clear_on_print = false;
@@ -64,10 +85,10 @@ void OutputWidget::catch_result(Expression e){
     }
 }
 
-void OutputWidget::catch_failure(int code, std::string message){
+void OutputWidget::catch_failure(bool fatal, std::string message) {
     clear_screen();
     QString msg = QString::fromStdString(message);
-    if(code == 0) {
+    if(!fatal) {
         QGraphicsTextItem * output = new QGraphicsTextItem;
         output->setPos(0,0);
         output->setPlainText(msg);

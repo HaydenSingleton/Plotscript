@@ -504,13 +504,15 @@ bool Expression::isText() const noexcept{
   return false;
 }
 
-std::pair<double, double> Expression::getPosition() const noexcept{
+std::tuple<double, double, bool> Expression::getPosition() const noexcept{
   if(m_properties.find("\"position\"") != m_properties.end()){
     Expression point = m_properties.at("\"position\"");
-    return point.getPointCoordinates();
+    auto a = point.getPointCoordinates().first;
+    auto b = point.getPointCoordinates().second;
+    return {a, b, true};
   }
   else{
-    return {0, 0};
+    return {0, 0, false};
   }
 }
 
