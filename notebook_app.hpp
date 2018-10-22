@@ -22,7 +22,7 @@ class NotebookApp : public QWidget{
 
     signals:
         void send_result(Expression exp);
-        void send_failure(int code, std::string message);
+        void send_failure(std::string message);
 
      private slots:
         void catch_input(QString r);

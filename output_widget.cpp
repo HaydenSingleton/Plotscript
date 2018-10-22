@@ -26,8 +26,8 @@ void OutputWidget::catch_result(Expression e){
     if(e.isPoint()) {
         auto coordinates = e.getPointCoordinates();
         double diam = e.getNumericalProperty("\"size\"");
-        if(!(diam >= 0)){
-                catch_failure(0, "Error in make-point call: diameter not positive");
+        if(diam < 0){
+                catch_failure("Error in make-point call: diameter not positive");
                 return;
         }
         QRectF *circle = new QRectF(0, 0, diam, diam);
@@ -46,13 +46,13 @@ void OutputWidget::catch_result(Expression e){
             QLineF line = QLineF(start_point, end_point);
             double thicc = e.getNumericalProperty("\"thickness\"");
             if(!(thicc >= 0)){
-                catch_failure(0, "Error in make-line call: thickness value not positive");
+                catch_failure("Error in make-line call: thickness value not positive");
                 return;
             }
             scene->addLine(line, QPen(QBrush(Qt::SolidPattern), thicc));
         }
         else {
-            catch_failure(0, "Error: argument to make-line not a point");
+            catch_failure("Error: argument to make-line not a point");
             return;
         }
     }
@@ -67,7 +67,7 @@ void OutputWidget::catch_result(Expression e){
         if(isValidPoint)
             text->setPos(QPointF(xcor, ycor));
         else {
-            catch_failure(0, "Error in make-text: not a valid position in property list");
+            catch_failure("Error in make-text: not a valid position in property list");
             return;
         }
     }
@@ -85,16 +85,11 @@ void OutputWidget::catch_result(Expression e){
     }
 }
 
-void OutputWidget::catch_failure(bool fatal, std::string message) {
+void OutputWidget::catch_failure(std::string message) {
     clear_screen();
     QString msg = QString::fromStdString(message);
-    if(!fatal) {
-        QGraphicsTextItem * output = new QGraphicsTextItem;
-        output->setPos(0,0);
-        output->setPlainText(msg);
-        scene->addItem(output);
-    }
-    else {
-        emit QCoreApplication::quit();
-    }
+    QGraphicsTextItem * output = new QGraphicsTextItem;
+    output->setPos(0,0);
+    output->setPlainText(msg);
+    scene->addItem(output);
 }

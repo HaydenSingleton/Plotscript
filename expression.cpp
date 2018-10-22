@@ -527,8 +527,8 @@ std::vector<Expression> Expression::asVector() const noexcept {
     return result;
 }
 
-size_t Expression::getNumericalProperty(std::string prop) const noexcept {
-  size_t size_value = 0;
+double Expression::getNumericalProperty(std::string prop) const noexcept {
+  double size_value = 0;
   if(m_properties.find(prop) != m_properties.end()){
     Expression point_size = m_properties.at(prop);
     size_value = point_size.head().asNumber();

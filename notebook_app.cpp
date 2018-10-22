@@ -17,21 +17,21 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     QObject::connect(this, SIGNAL(send_result(Expression)), out, SLOT(catch_result(Expression)));
 
     // send any errors to output widget with a different mechanism
-    QObject::connect(this, SIGNAL(send_failure(int, std::string)), out, SLOT(catch_failure(int, std::string)));
+    QObject::connect(this, SIGNAL(send_failure(std::string)), out, SLOT(catch_failure(std::string)));
 
     QObject::connect(in, SIGNAL(clear_output()), out, SLOT(clear_screen()));
 
     //startup procedure
     std::ifstream startip_str(STARTUP_FILE);
     if(!mrInterpret.parseStream(startip_str)){
-        emit send_failure(1, "Invalid Program. Could not parse.");
+        emit send_failure("Invalid Program. Could not parse.");
     }
     else{
         try{
             Expression exp = mrInterpret.evaluate();
         }
         catch(const SemanticError & ex){
-            emit send_failure(1, ex.what());
+            emit send_failure(ex.what());
         }
     }
 }
@@ -39,7 +39,7 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
 void NotebookApp::catch_input(QString r){
     std::istringstream expression(r.toStdString());
     if(!mrInterpret.parseStream(expression)){
-        emit send_failure(0, "Invalid Expression. Could not parse.");
+        emit send_failure("Invalid Expression. Could not parse.");
     }
     else{
         try{
@@ -47,7 +47,7 @@ void NotebookApp::catch_input(QString r){
             emit send_result(exp);
         }
         catch(const SemanticError & ex){
-            emit send_failure(0, ex.what());
+            emit send_failure(ex.what());
         }
     }
 }
