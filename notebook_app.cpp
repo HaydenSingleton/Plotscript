@@ -39,7 +39,7 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
 void NotebookApp::catch_input(QString r){
     std::istringstream expression(r.toStdString());
     if(!mrInterpret.parseStream(expression)){
-        emit send_failure("Invalid Expression. Could not parse.");
+        emit send_failure("Error: Invalid Expression. Could not parse.");
     }
     else{
         try{
