@@ -2,7 +2,6 @@
 #define INPUT_WIDGET_HPP
 
 #include <QPlainTextEdit>
-#include <QKeySequence>
 #include <QSet>
 #include <QApplication>
 
@@ -13,10 +12,11 @@ class InputWidget: public QPlainTextEdit {
         InputWidget(QWidget *parent = nullptr);
 
     signals:
-        void send_input(QString r);
+        void send_input(QString s);
         void clear_output();
 
     private:
+        // to store which keys have been pressed
         QSet<int> pressedKeys;
 
         // to catch when users press SHIFT+ENTER

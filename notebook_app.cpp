@@ -19,6 +19,7 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     // send any errors to output widget with a different mechanism
     QObject::connect(this, SIGNAL(send_failure(std::string)), out, SLOT(catch_failure(std::string)));
 
+    // send the clear signal to the output
     QObject::connect(in, SIGNAL(clear_output()), out, SLOT(clear_screen()));
 
     //startup procedure

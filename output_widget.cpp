@@ -5,13 +5,6 @@ OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
     auto layout = new QHBoxLayout(this);
     layout->addWidget(view);
     view->setScene(scene);
-
-    // QGraphicsTextItem *welcome = scene->addText("Hello World!");
-    // QGraphicsTextItem *centered = scene->addText("(0,0)");
-
-    QGraphicsRectItem *panel = new QGraphicsRectItem();
-    scene->addItem(panel);
-
 }
 
 void OutputWidget::clear_screen() {

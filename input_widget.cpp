@@ -16,7 +16,7 @@ bool InputWidget::eventFilter(QObject * obj, QEvent * event) {
         }
         else if(pressedKeys.contains(Qt::Key_C) && pressedKeys.contains(Qt::Key_Control)) {
             // exit the application
-            emit QCoreApplication::quit();
+            emit QApplication::quit();
         }
         else if(pressedKeys.contains(Qt::Key_Space) && pressedKeys.contains(Qt::Key_Control)) {
             //clear the screen
