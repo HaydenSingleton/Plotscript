@@ -108,7 +108,6 @@ public:
   std::vector<Expression> asVector() const noexcept;
   double getNumericalProperty(std::string) const noexcept;
   std::pair<double, double> getPointCoordinates() const noexcept;
-  std::pair<double, double> getTextCoordinates() const noexcept;
 
 
 private:

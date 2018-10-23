@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-class NotebookApp : public QWidget{
+class NotebookApp : public QWidget {
     Q_OBJECT
 
     public:

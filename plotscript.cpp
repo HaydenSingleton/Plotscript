@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   Interpreter interp;
   std::ifstream startup_stream(STARTUP_FILE);
   if(!interp.parseStream(startup_stream)){
-    error("Invalid Program. Could not parse.");
+    error("Error : Invalid Program. Could not parse.");
     return EXIT_FAILURE;
   }
   else{
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
       Expression exp = interp.evaluate();
     }
     catch(const SemanticError & ex){
-      std::cerr << "Start-up failed" << std::endl;
+      std::cerr << "Start-up failed " << std::endl;
       std::cerr << ex.what() << std::endl;
       return EXIT_FAILURE;
     }

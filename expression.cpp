@@ -447,33 +447,35 @@ bool operator!=(const Expression & left, const Expression & right) noexcept{
 }
 
 std::string Expression::toString() const noexcept{
-  std::string result = "";
+
+  std::ostringstream out;
+
   if(this->isEmpty()){
-    result += "NONE";
-    return result;
+    out << "NONE";
   }
+  else {
+    if(!this->isHeadComplex()) {
+      out << "(";
+    }
 
-  if(!isHeadComplex()) {
-    result += "(";
-  }
+    out << this->head().asString();
 
-  result += this->head().asString();
+    if(this->tailLength() > 0 && this->isNone()){
+        out << " ";
+    }
 
-  if(this->tailLength() > 0 && this->isNone()){
-      result += " ";
-  }
-
-  for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){
-    result += e->toString();
-    if((e + 1) != this->tailConstEnd()){
-      result += " ";
+    for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){
+      out << *e;
+      if((e + 1) != this->tailConstEnd()){
+        out << " ";
+      }
+    }
+    if(!this->isHeadComplex()) {
+      out << ")";
     }
   }
-  if(!this->isHeadComplex()) {
-    result += ")";
-  }
 
-  return result;
+  return out.str();
 }
 
 bool Expression::isPoint() const noexcept{
@@ -528,12 +530,12 @@ std::vector<Expression> Expression::asVector() const noexcept {
 }
 
 double Expression::getNumericalProperty(std::string prop) const noexcept {
-  double size_value = 0;
+  double size_value = -1;
   if(m_properties.find(prop) != m_properties.end()){
     Expression point_size = m_properties.at(prop);
     size_value = point_size.head().asNumber();
   }
-   return size_value;
+  return size_value;
 }
 
 std::pair<double, double> Expression::getPointCoordinates() const noexcept {

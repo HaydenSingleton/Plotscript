@@ -8,6 +8,7 @@
 #include "semantic_error.hpp"
 #include "interpreter.hpp"
 #include "expression.hpp"
+#include "startup_config.hpp"
 
 Expression run(const std::string & program){
 
@@ -501,4 +502,50 @@ TEST_CASE("Test handle get/set property", "[expression]"){
 
   std::string gp_too_many_args = "(get-property \"yote\" (set-property \"type\" \"number_list\" (list 0 1 2 3)) \"my dude\")";
   REQUIRE(run_and_expect_error(gp_too_many_args));
+}
+
+TEST_CASE("Test output widget helper functions", "[expression]") {
+
+  Interpreter mrInterpret;
+
+  std::ifstream startip_str(STARTUP_FILE);
+  REQUIRE(mrInterpret.parseStream(startip_str));
+  REQUIRE_NOTHROW(mrInterpret.evaluate());
+
+  std::string program = "(define a (make-point 2 2))";
+
+  std::istringstream iss(program);
+
+  bool ok = mrInterpret.parseStream(iss);
+  REQUIRE(ok == true);
+  Expression e = mrInterpret.evaluate();
+  REQUIRE(e.isPoint());
+  REQUIRE(!e.isLine());
+  REQUIRE(!e.isText());
+  REQUIRE(e.toString() == "((2) (2))");
+  REQUIRE(e.getNumericalProperty("\"size\"") == 0);
+  std::pair<double, double> target = {2, 2};
+  REQUIRE(e.getPointCoordinates()==target);
+
+  program = "(set-property \"thickness\" 4 (make-line (make-point 0 0) (make-point 3 3)))";
+  std::istringstream iss2(program);
+  ok = mrInterpret.parseStream(iss2);
+  REQUIRE(ok);
+  e = mrInterpret.evaluate();
+  REQUIRE(e.isLine());
+  REQUIRE(!e.isPoint());
+  REQUIRE(!e.isText());
+  REQUIRE(e.getNumericalProperty("\"thickness\"") == (double)4);
+
+  program = "(set-property \"position\" (make-point 2 -2) (make-text \"General Kenobi\"))";
+  std::istringstream iss3(program);
+  ok = mrInterpret.parseStream(iss3);
+  REQUIRE(ok);
+  e = mrInterpret.evaluate();
+  REQUIRE(e.isText());
+  REQUIRE(!e.isPoint());
+  REQUIRE(!e.isLine());
+  std::tuple<double, double, bool> target2 = {2, -2, true};
+  REQUIRE(e.getPosition() == target2);
+
 }

@@ -2,6 +2,7 @@
 
 NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     setObjectName("notebook");
+
     in = new InputWidget(this); //child widgets of notebook
     out = new OutputWidget(this);
 
@@ -25,7 +26,7 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     //startup procedure
     std::ifstream startip_str(STARTUP_FILE);
     if(!mrInterpret.parseStream(startip_str)){
-        emit send_failure("Invalid Program. Could not parse.");
+        emit send_failure("Error: Invalid Startup Program. Could not parse.");
     }
     else{
         try{
@@ -37,8 +38,8 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     }
 }
 
-void NotebookApp::catch_input(QString r){
-    std::istringstream expression(r.toStdString());
+void NotebookApp::catch_input(QString s){
+    std::istringstream expression(s.toStdString());
     if(!mrInterpret.parseStream(expression)){
         emit send_failure("Error: Invalid Expression. Could not parse.");
     }
