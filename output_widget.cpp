@@ -51,10 +51,11 @@ void OutputWidget::catch_result(Expression e){
 
         double xcor, ycor; bool isValid;
         std::tie(xcor, ycor, isValid) = e.getPosition();
+
         if(isValid)
             text->setPos(QPointF(xcor, ycor));
         else {
-            catch_failure("Error in make-text: not a valid position in property list");
+            catch_failure("Error in make-text: not a valid position point in property list");
             return;
         }
     }
