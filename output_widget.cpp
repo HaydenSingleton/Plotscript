@@ -20,7 +20,7 @@ void OutputWidget::catch_result(Expression e){
                 catch_failure("Error in make-point call: diameter not positive");
                 return;
         }
-        QRectF corners = QRectF(0, 0, diam, diam);
+        QRectF corners = QRectF(coordinates.first, coordinates.second, diam, diam);
         corners.moveCenter(QPointF(coordinates.first, coordinates.second));
         scene->addEllipse(corners, QPen(), QBrush(Qt::SolidPattern));
     }
@@ -31,13 +31,16 @@ void OutputWidget::catch_result(Expression e){
             std::pair<double, double> X = p1.getPointCoordinates();
             std::pair<double, double> Y = p2.getPointCoordinates();
 
-            QLineF line = QLineF(X.first, Y.first, X.second, Y.second);
+            QLineF line = QLineF(QPointF(X.first, X.second), QPointF(Y.first, Y.second));
+
             double thicc = e.getNumericalProperty("\"thickness\"");
-            if(thicc < 0){
+            if(thicc < 1){
                 catch_failure("Error in make-line call: thickness value not positive");
                 return;
             }
-            scene->addLine(line, QPen(QBrush(Qt::SolidPattern), thicc));
+
+            scene->addLine(line, QPen(QBrush(Qt::SolidLine), thicc));
+
         }
         else {
             catch_failure("Error: argument to make-line not a point");
