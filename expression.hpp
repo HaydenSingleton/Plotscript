@@ -104,7 +104,7 @@ public:
   bool isPoint() const noexcept;
   bool isLine() const noexcept;
   bool isText() const noexcept;
-  std::tuple<double, double, bool> getPosition() const noexcept;
+  std::tuple<double, double, double, double, bool> getTextProperties() const noexcept;
   std::vector<Expression> asVector() const noexcept;
   double getNumericalProperty(std::string) const noexcept;
   std::pair<double, double> getPointCoordinates() const noexcept;

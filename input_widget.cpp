@@ -12,6 +12,7 @@ bool InputWidget::eventFilter(QObject * obj, QEvent * event) {
         if(pressedKeys.contains(Qt::Key_Shift) && pressedKeys.contains(Qt::Key_Return)) {
             // sent the current text to be evaluated and output
             QString program = this->toPlainText();
+            emit clear_output();
             emit send_input(program);
         }
         else if(pressedKeys.contains(Qt::Key_C) && pressedKeys.contains(Qt::Key_Control)) {

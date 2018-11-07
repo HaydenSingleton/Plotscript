@@ -1,5 +1,4 @@
 #include <QTest>
-#include <QtTest>
 #include "notebook_app.hpp"
 
 class NotebookTest : public QObject {
@@ -32,13 +31,11 @@ void NotebookTest::testInputWidget(){
   input->clear();
   QTest::keyClicks(input, "(define x 100)");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
-  // QTest::qWait(10);
   auto scene = output->findChild<QGraphicsScene *>();
   const QString name = QString();
   auto result = scene->items()[0];
   auto expectedresult = new QGraphicsTextItem(QString("(100)"));
   QVERIFY2(result == expectedresult, "Could not find expected result in ouput");
-
 }
 
 

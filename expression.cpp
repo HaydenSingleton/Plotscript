@@ -506,16 +506,27 @@ bool Expression::isText() const noexcept{
   return false;
 }
 
-std::tuple<double, double, bool> Expression::getPosition() const noexcept{
+std::tuple<double, double, double, double, bool> Expression::getTextProperties() const noexcept{
+  double sf = 1;
+  if(m_properties.find("\"text-scale\"") != m_properties.end()) {
+    sf = m_properties.at("\"text-scale\"").head().asNumber();
+    if(sf < 1)
+      sf = 1;
+  }
+
+  double rot = 0;
+  if(m_properties.find("\"rotation\"") != m_properties.end()) {
+    rot = m_properties.at("\"rotation\"").head().asNumber();
+  }
+
   if(m_properties.find("\"position\"") != m_properties.end()){
     Expression point = m_properties.at("\"position\"");
-    auto a = point.getPointCoordinates().first;
-    auto b = point.getPointCoordinates().second;
-    return {a, b, true};
+    double x = point.getPointCoordinates().first;
+    double y = point.getPointCoordinates().second;
+    return {x, y, sf, rot, true};
   }
-  else{
-    return {0, 0, false};
-  }
+  // Error case
+  return {0, 0, 1, 0, false};
 }
 
 std::vector<Expression> Expression::asVector() const noexcept {

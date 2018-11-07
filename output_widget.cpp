@@ -1,6 +1,7 @@
 #include "output_widget.hpp"
 
 OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
+
     setObjectName("output");
     auto layout = new QHBoxLayout(this);
     layout->addWidget(view);
@@ -8,10 +9,6 @@ OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
 }
 
 void OutputWidget::catch_result(Expression e){
-
-    if(clear_on_print) {
-        scene->clear();;
-    }
 
     if(e.isPoint()) {
         std::pair<double, double> coordinates = e.getPointCoordinates();
@@ -52,22 +49,31 @@ void OutputWidget::catch_result(Expression e){
         QString qstr = QString::fromStdString(repl.substr(2, repl.length()-4));
         QGraphicsTextItem *text = scene->addText(qstr);
 
-        double xcor, ycor; bool isValid;
-        std::tie(xcor, ycor, isValid) = e.getPosition();
+        text->setFont(QFont(QString("Courier")));
 
-        if(isValid)
+        double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
+        std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
+
+        text->setScale(scaleFactor);
+        text->setRotation(rotationAngle);
+
+        if(isValid) {
             text->setPos(QPointF(xcor, ycor));
+            text->boundingRect().moveCenter(QPointF(xcor, ycor));
+        }
         else {
-            catch_failure("Error in make-text: not a valid position point in property list");
+            catch_failure("Error in make-text: not a valid property in list for make-text");
             return;
         }
+
+
+
+
     }
     else if (e.isList()) {
-        clear_on_print = false;
         for(auto & e_part : e.asVector()){
             catch_result(e_part);
         }
-        clear_on_print = true;
     }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
@@ -76,7 +82,7 @@ void OutputWidget::catch_result(Expression e){
 }
 
 void OutputWidget::catch_failure(std::string message) {
-    scene->clear();
+
     QString msg = QString::fromStdString(message);
     QGraphicsTextItem * output = new QGraphicsTextItem;
     output->setPos(0,0);
