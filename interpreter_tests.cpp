@@ -537,7 +537,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(!e.isText());
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 4.0);
 
-  program = "(set-property \"position\" (make-point 2 -2) (make-text \"General Kenobi\"))";
+  program = "(set-property \"text-scale\" 2 (set-property \"text-rotation\" 10 (set-property \"position\" (make-point 2 -2) (make-text \"General Kenobi\"))))";
   std::istringstream iss3(program);
   ok = mrInterpret.parseStream(iss3);
   REQUIRE(ok);
@@ -545,7 +545,8 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isText());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isLine());
-  std::tuple<double, double, double, double, bool> target2 = {2, -2, 1, 0, true};
+  double rad = 10*180/3.1415926535897;
+  std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, rad, true};
   REQUIRE(e.getTextProperties() == target2);
 
 }

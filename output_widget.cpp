@@ -1,7 +1,6 @@
 #include "output_widget.hpp"
 
 OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
-
     setObjectName("output");
     auto layout = new QHBoxLayout(this);
     layout->addWidget(view);
@@ -9,13 +8,12 @@ OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
 }
 
 void OutputWidget::catch_result(Expression e){
-
     if(e.isPoint()) {
         std::pair<double, double> coordinates = e.getPointCoordinates();
         double diam = e.getNumericalProperty("\"size\"");
         if(diam < 0){
-                catch_failure("Error in make-point call: diameter not positive");
-                return;
+            catch_failure("Error in make-point call: diameter not positive");
+            return;
         }
         QRectF corners = QRectF(coordinates.first, coordinates.second, diam, diam);
         corners.moveCenter(QPointF(coordinates.first, coordinates.second));
@@ -45,11 +43,16 @@ void OutputWidget::catch_result(Expression e){
         }
     }
     else if (e.isText()) {
+
+        auto font = QFont("Monospace");
+        font.setStyleHint(QFont::TypeWriter);
+        font.setPointSize(1);
+
         std::string repl = e.toString();
         QString qstr = QString::fromStdString(repl.substr(2, repl.length()-4));
         QGraphicsTextItem *text = scene->addText(qstr);
 
-        text->setFont(QFont(QString("Courier")));
+        text->setFont(font);
 
         double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
         std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
@@ -66,9 +69,6 @@ void OutputWidget::catch_result(Expression e){
             return;
         }
 
-
-
-
     }
     else if (e.isList()) {
         for(auto & e_part : e.asVector()){
@@ -79,10 +79,11 @@ void OutputWidget::catch_result(Expression e){
         // Not a special case or user-defined function, display normally
         scene->addText(QString::fromStdString(e.toString()));
     }
+
+    view->fitInView(view->items()[0]);
 }
 
 void OutputWidget::catch_failure(std::string message) {
-
     QString msg = QString::fromStdString(message);
     QGraphicsTextItem * output = new QGraphicsTextItem;
     output->setPos(0,0);

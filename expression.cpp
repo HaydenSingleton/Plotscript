@@ -515,8 +515,10 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
   }
 
   double rot = 0;
-  if(m_properties.find("\"rotation\"") != m_properties.end()) {
-    rot = m_properties.at("\"rotation\"").head().asNumber();
+  if(m_properties.find("\"text-rotation\"") != m_properties.end()) {
+    rot = m_properties.at("\"text-rotation\"").head().asNumber();
+    rot *= 180;
+    rot /= 3.1415926535897;
   }
 
   if(m_properties.find("\"position\"") != m_properties.end()){
