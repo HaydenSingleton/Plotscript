@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QApplication>
+#include <QtMath>
 
 #include "interpreter.hpp"
 
@@ -25,6 +26,7 @@ class OutputWidget: public QWidget {
         QGraphicsView * view = new QGraphicsView(this);
         QGraphicsScene * scene = new QGraphicsScene(this);
         bool clear_on_print = true;
+        void resizeEvent(QResizeEvent *event) override;
 
 };
 

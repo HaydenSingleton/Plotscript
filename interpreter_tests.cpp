@@ -545,8 +545,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isText());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isLine());
-  double rad = 10*180/3.1415926535897;
-  std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, rad, true};
+  std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, 10, true};
   REQUIRE(e.getTextProperties() == target2);
 
 }

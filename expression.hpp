@@ -46,6 +46,12 @@ public:
   /// constructor for lambda type
   Expression(const std::vector<Expression> & args, Expression & func);
 
+  /// constructor for special cases like graphics items
+  Expression(const Atom & head, const std::vector<Expression> & tail);
+
+  //Constructor for plots
+  Expression(const Expression & a, std::string t);
+
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
 
@@ -93,6 +99,9 @@ public:
   /// member when determines if the expression is actually empty
   bool isEmpty() const noexcept;
 
+  // Check and change exp type for discrete-plots
+  bool isDP() const noexcept;
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -120,7 +129,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda, Empty};
+  enum class ExpType {None, List, Lambda, Empty, Graphic, DP};
   ExpType m_type = ExpType::None;
 
   // list of the expression's properties
@@ -138,6 +147,7 @@ private:
   Expression handle_map(Environment & env);
   Expression handle_set_property(Environment & env);
   Expression handle_get_property(Environment & env);
+  Expression handle_discrete_plot(Environment & env);
 };
 
 /// Render expression to output stream

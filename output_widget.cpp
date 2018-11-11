@@ -29,7 +29,7 @@ void OutputWidget::catch_result(Expression e){
             QLineF line = QLineF(QPointF(X.first, X.second), QPointF(Y.first, Y.second));
 
             double thicc = e.getNumericalProperty("\"thickness\"");
-            if(thicc < 1){
+            if(thicc < 0){
                 catch_failure("Error in make-line call: thickness value not positive");
                 return;
             }
@@ -57,12 +57,15 @@ void OutputWidget::catch_result(Expression e){
         double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
         std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
 
+        rotationAngle = rotationAngle * 180 / M_PI;
+
         text->setScale(scaleFactor);
         text->setRotation(rotationAngle);
 
         if(isValid) {
-            text->setPos(QPointF(xcor, ycor));
-            text->boundingRect().moveCenter(QPointF(xcor, ycor));
+            QRectF rect = text->sceneBoundingRect();
+            QPointF text_center = QPointF(xcor - rect.width()/2, ycor - rect.height()/2);
+            text->setPos(text_center);
         }
         else {
             catch_failure("Error in make-text: not a valid property in list for make-text");
@@ -79,8 +82,9 @@ void OutputWidget::catch_result(Expression e){
         // Not a special case or user-defined function, display normally
         scene->addText(QString::fromStdString(e.toString()));
     }
-
-    view->fitInView(view->items()[0]);
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->fitInView(scene->itemsBoundingRect());
 }
 
 void OutputWidget::catch_failure(std::string message) {
@@ -89,8 +93,18 @@ void OutputWidget::catch_failure(std::string message) {
     output->setPos(0,0);
     output->setPlainText(msg);
     scene->addItem(output);
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->fitInView(scene->itemsBoundingRect());
 }
 
 void OutputWidget::clear_screen() {
     scene->clear();
+}
+
+void OutputWidget::resizeEvent(QResizeEvent *event) {
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->fitInView(scene->itemsBoundingRect());
+    QWidget::resizeEvent(event);
 }

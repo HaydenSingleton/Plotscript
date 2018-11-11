@@ -6,8 +6,6 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-#include <cassert>
-
 Expression::Expression()
 {}
 
@@ -33,10 +31,32 @@ Expression::Expression(const std::vector<Expression> & a){
 
 //Constructor for Lambda functions
 Expression::Expression(const std::vector<Expression> & args, Expression & func) {
-    m_type = ExpType::Lambda;
-    m_tail.push_back(args);
-    m_tail.push_back(func);
-    assert(m_properties.size()==0);
+  m_type = ExpType::Lambda;
+  m_tail.push_back(args);
+  m_tail.push_back(func);
+}
+
+//Constructor for special cases
+Expression::Expression(const Atom & head, const std::vector<Expression> & tail) : m_head(head) {
+  m_type = ExpType::Graphic;
+  for(auto e : tail){
+    m_tail.push_back(e);
+  }
+}
+
+//Constructor for plots
+Expression::Expression(const Expression & a, std::string t){
+  if(t == "discrete-plot") {
+    m_head = a.m_head;
+    m_type = ExpType::DP;
+    m_properties = a.m_properties;
+    for(auto e : a.m_tail){
+      m_tail.push_back(e);
+    }
+  }
+  else {
+    return;
+  }
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -94,6 +114,10 @@ bool Expression::isEmpty() const noexcept {
   return (m_type == ExpType::Empty);
 }
 
+bool Expression::isDP() const noexcept {
+  return (m_type == ExpType::DP);
+}
+
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
 }
@@ -144,6 +168,7 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 
   // head must be a symbol
   if(!op.isSymbol()){
+    std::cout << op.asString() << std::endl;
     throw SemanticError("Error during evaluation: procedure name not symbol");
   }
 
@@ -179,11 +204,6 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 
 Expression Expression::handle_begin(Environment & env){
 
-  // if(m_tail.size() == 0){
-  //   throw SemanticError("Error during handle begin: zero arguments to begin");
-  // }
-
-  // evaluate each arg from tail, return the last
   Expression result;
   for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
     result = it->eval(env);
@@ -238,7 +258,6 @@ Expression Expression::handle_lambda(){
   }
 
   Expression return_exp = Expression(argument_template, m_tail[1]);
-  assert(return_exp.isLambda());
   return return_exp;
 }
 
@@ -345,6 +364,138 @@ Expression Expression::handle_get_property(Environment & env){
   }
 }
 
+Expression Expression::handle_discrete_plot(Environment & env){
+  if(m_tail.size()==2){
+    Expression DATA = m_tail[0].eval(env);
+    Expression OPTIONS = m_tail[1].eval(env);
+    if(DATA.isList() && OPTIONS.isList()) {
+
+      // Constants used to create bounding box and graph
+      double N = 20;//, A = 3, B = 3, C = 2, D = 2, P = 0.5;
+
+      std::vector<Expression> result;
+
+      // Find the max and min values of x and y inside DATA
+      double xmax, xmin, ymax, ymin;
+      for(auto &i : DATA.m_tail){
+        if(i.m_tail[0].head().asNumber() > xmax)
+          xmax = i.m_tail[0].head().asNumber();
+        else if(i.m_tail[0].head().asNumber() < xmin)
+          xmin = i.m_tail[0].head().asNumber();
+
+        if(i.m_tail[1].head().asNumber() > ymax)
+          ymax = i.m_tail[1].head().asNumber();
+        else if(i.m_tail[1].head().asNumber() < ymin)
+          ymin = i.m_tail[1].head().asNumber();
+      }
+      // std::cout << "Xmin: " << xmin << ", Xmax: " << xmax << std::endl;
+      // std::cout << "Ymin: " << ymin << ", Ymax: " << ymax << std::endl;
+
+      // Create scale factors using the max and min edges of the data
+      double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
+      // std::cout << "X-scale: " << xscale << "\nY-scale: " << yscale << std::endl;
+
+      // Scale bounds of the box
+      xmin *= xscale; xmax *= xscale; ymin *= yscale; ymax *= yscale;
+
+      // Make an expression for each point of the bounding box
+      Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
+      std::vector<Expression> xy = {Expression(xmin), Expression(ymax)};
+      topLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression((xmax+xmin)/2), Expression(ymax)};
+      topMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression(ymax)};
+      topRight = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmin), Expression((ymin+ymax)/2)};
+      midLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression((xmax+xmin)/2), Expression((ymin+ymax)/2)};
+      midMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression((ymin+ymax)/2)};
+      midRight = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmin), Expression(ymin)};
+      botLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression((xmax+xmin)/2), Expression(ymin)};
+      botMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression(ymin)};
+      botRight = Expression(Atom("make-point"), xy);
+
+      result.push_back(topLeft.eval(env));
+      result.push_back(botRight.eval(env));
+
+      // Make an expression to hold each line of the bounding rect
+      Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
+      std::vector<Expression> newline;
+
+      newline = {midLeft, topLeft};
+      Expression leftLine1 = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(leftLine1);
+
+      newline = {midRight, botRight};
+      Expression rightLine1 = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(rightLine1);
+
+      newline = {botLeft, topLeft};
+      leftLine = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(leftLine);
+
+      newline = {botMid, topMid};
+      yaxis = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(yaxis);
+
+      newline = {botRight, topRight};
+      rightLine = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(rightLine);
+
+      newline = {topLeft, topRight};
+      topLine = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(topLine);
+
+      newline = {midLeft, midRight};
+      xaxis = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(xaxis);
+
+      newline = {botLeft, botRight};
+      botLine = Expression(Atom("make-line"), newline).eval(env);
+      result.push_back(botLine);
+
+      // Add each original point x and y value to the result individually
+      std::string temp; Expression point_as_string;
+      for(auto & point : DATA.m_tail){
+        for(auto & value : point.m_tail){
+          temp = value.head().asString();
+          temp = "\"" + temp + "\"";
+          point_as_string = Expression(Atom(temp));
+          result.push_back(point_as_string);
+        }
+      }
+
+      // Add each option to the output
+      for(auto &opt : OPTIONS.m_tail){
+        result.push_back(opt.m_tail[1]);
+      }
+
+      return Expression(Expression(result), "discrete-plot");
+
+    }
+    else {
+      std::cout << "mtail0 " << DATA << "\n";
+      std::cout << "mtail1 " << m_tail[1] << "\n";
+      throw SemanticError("Error: An argument to discrete-plot is not a list");
+    }
+  }
+  else {
+    throw SemanticError("Error: invalid number of arguments for discrete-plot");
+  }
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
@@ -360,15 +511,12 @@ Expression Expression::eval(Environment & env){
     }
     return handle_lookup(m_head, env);
   }
-  // handle begin special-form
   else if(m_head.isSymbol() && m_head.asSymbol() == "begin"){
     return handle_begin(env);
   }
-  // handle define special-form
   else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
     return handle_define(env);
   }
-  // handle other special-forms
   else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
     return handle_lambda();
   }
@@ -384,7 +532,9 @@ Expression Expression::eval(Environment & env){
   else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
     return handle_get_property(env);
   }
-  // else attempt to treat as procedure
+  else if(m_head.isSymbol() && m_head.asSymbol() == "discrete-plot"){
+    return handle_discrete_plot(env);
+  }
   else{
     std::vector<Expression> results;
     for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
@@ -517,8 +667,6 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
   double rot = 0;
   if(m_properties.find("\"text-rotation\"") != m_properties.end()) {
     rot = m_properties.at("\"text-rotation\"").head().asNumber();
-    rot *= 180;
-    rot /= 3.1415926535897;
   }
 
   if(m_properties.find("\"position\"") != m_properties.end()){
