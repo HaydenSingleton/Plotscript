@@ -366,14 +366,13 @@ Expression Expression::handle_get_property(Environment & env){
 
 Expression Expression::handle_discrete_plot(Environment & env){
   if(m_tail.size()==2){
+    std::vector<Expression> result;
     Expression DATA = m_tail[0].eval(env);
     Expression OPTIONS = m_tail[1].eval(env);
     if(DATA.isList() && OPTIONS.isList()) {
 
       // Constants used to create bounding box and graph
-      double N = 20;//, A = 3, B = 3, C = 2, D = 2, P = 0.5;
-
-      std::vector<Expression> result;
+      double N = 20;
 
       // Find the max and min values of x and y inside DATA
       double xmax, xmin, ymax, ymin;
@@ -388,12 +387,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
         else if(i.m_tail[1].head().asNumber() < ymin)
           ymin = i.m_tail[1].head().asNumber();
       }
-      // std::cout << "Xmin: " << xmin << ", Xmax: " << xmax << std::endl;
-      // std::cout << "Ymin: " << ymin << ", Ymax: " << ymax << std::endl;
-
       // Create scale factors using the max and min edges of the data
       double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
-      // std::cout << "X-scale: " << xscale << "\nY-scale: " << yscale << std::endl;
 
       // Scale bounds of the box
       xmin *= xscale; xmax *= xscale; ymin *= yscale; ymax *= yscale;
@@ -427,44 +422,45 @@ Expression Expression::handle_discrete_plot(Environment & env){
       xy = {Expression(xmax), Expression(ymin)};
       botRight = Expression(Atom("make-point"), xy);
 
-      result.push_back(topLeft.eval(env));
-      result.push_back(botRight.eval(env));
-
       // Make an expression to hold each line of the bounding rect
       Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
       std::vector<Expression> newline;
 
       newline = {midLeft, topLeft};
-      Expression leftLine1 = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(leftLine1);
+      Expression leftLine1 = Expression(Atom("make-line"), newline);
 
       newline = {midRight, botRight};
-      Expression rightLine1 = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(rightLine1);
+      Expression rightLine1 = Expression(Atom("make-line"), newline);
 
       newline = {botLeft, topLeft};
-      leftLine = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(leftLine);
+      leftLine = Expression(Atom("make-line"), newline);
 
       newline = {botMid, topMid};
-      yaxis = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(yaxis);
+      yaxis = Expression(Atom("make-line"), newline);
 
       newline = {botRight, topRight};
-      rightLine = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(rightLine);
+      rightLine = Expression(Atom("make-line"), newline);
 
       newline = {topLeft, topRight};
-      topLine = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(topLine);
+      topLine = Expression(Atom("make-line"), newline);
 
       newline = {midLeft, midRight};
-      xaxis = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(xaxis);
+      xaxis = Expression(Atom("make-line"), newline);
 
       newline = {botLeft, botRight};
-      botLine = Expression(Atom("make-line"), newline).eval(env);
-      result.push_back(botLine);
+      botLine = Expression(Atom("make-line"), newline);
+
+      // Add all points and items to results vector
+      result.push_back(topLeft.eval(env));    //1
+      result.push_back(leftLine1.eval(env));  //2
+      result.push_back(botRight.eval(env));   //3
+      result.push_back(rightLine1.eval(env)); //4
+      result.push_back(yaxis.eval(env));      //5
+      result.push_back(xaxis.eval(env));      //6
+      result.push_back(topLine.eval(env));    //7
+      result.push_back(botLine.eval(env));    //8
+      result.push_back(leftLine.eval(env));   //9
+      result.push_back(rightLine.eval(env));  //10
 
       // Add each original point x and y value to the result individually
       std::string temp; Expression point_as_string;
