@@ -432,7 +432,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
       newline = {midRight, botRight};
       Expression rightLine1 = Expression(Atom("make-line"), newline);
 
-      newline = {botLeft, topLeft};
+      newline = {topLeft, botLeft};
       leftLine = Expression(Atom("make-line"), newline);
 
       newline = {topMid, botMid};
@@ -463,18 +463,16 @@ Expression Expression::handle_discrete_plot(Environment & env){
       result.push_back(rightLine.eval(env));  //10
 
       // Add each original point x and y value to the result individually
-      std::string temp; Expression point_as_string;
+      std::string temp;
       for(auto & point : DATA.m_tail){
         temp = point.m_tail[0].head().asString();
         temp = "\"" + temp + "\"";
-        point_as_string = Expression(Atom(temp));
-        result.push_back(point_as_string);
+        result.push_back(Expression(Atom(temp)));
       }
       for(auto & point : DATA.m_tail){
         temp = point.m_tail[1].head().asString();
         temp = "\"" + temp + "\"";
-        point_as_string = Expression(Atom(temp));
-        result.push_back(point_as_string);
+        result.push_back(Expression(Atom(temp)));
       }
 
       // Add each option to the output
