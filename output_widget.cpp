@@ -78,6 +78,36 @@ void OutputWidget::catch_result(Expression e){
             catch_result(e_part);
         }
     }
+    else if (e.isDP()) {
+
+        double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
+
+        std::vector<Expression> data = e.asVector();
+
+        // Draw bounding box
+        for(size_t i = 0; i < 10; i++){
+            data[i].setLineThickness(0);
+            catch_result(data[i]);
+        }
+
+        // Draw data points
+        std::string temp; double x, y;
+        for(size_t i = 10; i < data.size()-3; i += 2){
+            temp = data[i].head().asString();
+            temp = temp.substr(1, temp.size()-2);
+            std::cout << temp << "\n";
+            x = std::stod(temp);
+            temp = data[i+1].head().asString();
+            temp = temp.substr(1, temp.size()-2);
+            y = std::stod(temp);
+
+            QLineF line = QLineF(QPointF(x,0), QPointF(x,y));
+            scene->addLine(line, QPen(QBrush(Qt::SolidLine), 1));
+
+        }
+
+
+    }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
         scene->addText(QString::fromStdString(e.toString()));

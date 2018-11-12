@@ -389,6 +389,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
       }
       // Create scale factors using the max and min edges of the data
       double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
+      double xmin1 = xmin, xmax1 = xmax, ymax1 = ymax, ymin1 = ymin;
 
       // Scale bounds of the box
       xmin *= xscale; xmax *= xscale; ymin *= yscale; ymax *= yscale;
@@ -464,14 +465,22 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
       // Add each original point x and y value to the result individually
       std::string temp; Expression point_as_string;
-      for(auto & point : DATA.m_tail){
-        for(auto & value : point.m_tail){
-          temp = value.head().asString();
-          temp = "\"" + temp + "\"";
-          point_as_string = Expression(Atom(temp));
-          result.push_back(point_as_string);
-        }
-      }
+
+      temp = "\"" + Atom(xmin1).asString() + "\"";
+      point_as_string = Expression(Atom(temp));
+      result.push_back(point_as_string);
+
+      temp = "\"" + Atom(xmax1).asString() + "\"";
+      point_as_string = Expression(Atom(temp));
+      result.push_back(point_as_string);
+
+      temp = "\"" + Atom(ymin1).asString() + "\"";
+      point_as_string = Expression(Atom(temp));
+      result.push_back(point_as_string);
+
+      temp = "\"" + Atom(xmin1).asString() + "\"";
+      point_as_string = Expression(Atom(temp));
+      result.push_back(point_as_string);
 
       // Add each option to the output
       for(auto &opt : OPTIONS.m_tail){
@@ -482,8 +491,6 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
     }
     else {
-      std::cout << "mtail0 " << DATA << "\n";
-      std::cout << "mtail1 " << m_tail[1] << "\n";
       throw SemanticError("Error: An argument to discrete-plot is not a list");
     }
   }
@@ -718,4 +725,16 @@ std::pair<double, double> Expression::getPointCoordinates() const noexcept {
   }
   std::pair<double, double> result = {x, y};
   return result;
+}
+
+void Expression::setLineThickness(double thique) noexcept{
+  if(m_properties.find("\"thickness\"")!=m_properties.end()){
+    m_properties["\"thickness\""] = Expression(thique);
+  }
+}
+
+void Expression::setPointSize(double uWu) noexcept{
+  if(m_properties.find("\"size\"")!=m_properties.end()){
+    m_properties["\"size\""] = Expression(uWu);
+  }
 }
