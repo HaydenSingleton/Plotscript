@@ -375,48 +375,52 @@ Expression Expression::handle_discrete_plot(Environment & env){
       double N = 20;
 
       // Find the max and min values of x and y inside DATA
-      double xmax, xmin, ymax, ymin;
-      for(auto &i : DATA.m_tail){
-        if(i.m_tail[0].head().asNumber() > xmax)
-          xmax = i.m_tail[0].head().asNumber();
-        else if(i.m_tail[0].head().asNumber() < xmin)
-          xmin = i.m_tail[0].head().asNumber();
+      double xmax = -999, xmin = 999, ymax = -999, ymin = 999;
 
-        if(i.m_tail[1].head().asNumber() > ymax)
-          ymax = i.m_tail[1].head().asNumber();
-        else if(i.m_tail[1].head().asNumber() < ymin)
-          ymin = i.m_tail[1].head().asNumber();
+      for(auto & point : DATA.m_tail){
+        if(point.m_tail[0].head().asNumber() > xmax)
+          xmax = point.m_tail[0].head().asNumber();
+        if(point.m_tail[0].head().asNumber() < xmin)
+          xmin = point.m_tail[0].head().asNumber();
+
+        if(point.m_tail[1].head().asNumber() > ymax)
+          ymax = point.m_tail[1].head().asNumber();
+        if(point.m_tail[1].head().asNumber() < ymin)
+          ymin = point.m_tail[1].head().asNumber();
       }
       // Create scale factors using the max and min edges of the data
       double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
+      double AL = xmin, AU = xmax, OL = ymin, OU = ymax;
 
       // Scale bounds of the box
       xmin *= xscale; xmax *= xscale; ymin *= yscale; ymax *= yscale;
+
+      double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
 
       // Make an expression for each point of the bounding box
       Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
       std::vector<Expression> xy = {Expression(xmin), Expression(ymax)};
       topLeft = Expression(Atom("make-point"), xy);
 
-      xy = {Expression((xmax+xmin)/2), Expression(ymax)};
+      xy = {Expression(xmiddle), Expression(ymax)};
       topMid = Expression(Atom("make-point"), xy);
 
       xy = {Expression(xmax), Expression(ymax)};
       topRight = Expression(Atom("make-point"), xy);
 
-      xy = {Expression(xmin), Expression((ymin+ymax)/2)};
+      xy = {Expression(xmin), Expression(ymiddle)};
       midLeft = Expression(Atom("make-point"), xy);
 
-      xy = {Expression((xmax+xmin)/2), Expression((ymin+ymax)/2)};
+      xy = {Expression(xmiddle), Expression(ymiddle)};
       midMid = Expression(Atom("make-point"), xy);
 
-      xy = {Expression(xmax), Expression((ymin+ymax)/2)};
+      xy = {Expression(xmax), Expression(ymiddle)};
       midRight = Expression(Atom("make-point"), xy);
 
       xy = {Expression(xmin), Expression(ymin)};
       botLeft = Expression(Atom("make-point"), xy);
 
-      xy = {Expression((xmax+xmin)/2), Expression(ymin)};
+      xy = {Expression(xmiddle), Expression(ymin)};
       botMid = Expression(Atom("make-point"), xy);
 
       xy = {Expression(xmax), Expression(ymin)};
@@ -462,18 +466,11 @@ Expression Expression::handle_discrete_plot(Environment & env){
       result.push_back(leftLine.eval(env));   //9
       result.push_back(rightLine.eval(env));  //10
 
-      // Add each original point x and y value to the result individually
-      std::string temp;
-      for(auto & point : DATA.m_tail){
-        temp = point.m_tail[0].head().asString();
-        temp = "\"" + temp + "\"";
-        result.push_back(Expression(Atom(temp)));
-      }
-      for(auto & point : DATA.m_tail){
-        temp = point.m_tail[1].head().asString();
-        temp = "\"" + temp + "\"";
-        result.push_back(Expression(Atom(temp)));
-      }
+      // Add the bounds of the data as strings
+      result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(AU).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
 
       // Add each option to the output
       for(auto &opt : OPTIONS.m_tail){

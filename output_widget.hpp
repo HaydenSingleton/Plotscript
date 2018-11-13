@@ -27,7 +27,16 @@ class OutputWidget: public QWidget {
         QGraphicsScene * scene = new QGraphicsScene(this);
         bool clear_on_print = true;
         void resizeEvent(QResizeEvent *event) override;
+        void drawText(std::string, double, double, double, double);
+        void drawLine(double, double, double, double, double);
+        void drawPoint(double, double, double);
 
+        std::string removeQuotes(std::string s){
+            s.erase(s.begin());
+            s.erase(s.size()-1);
+            return s;
+        };
 };
+
 
 #endif

@@ -112,13 +112,14 @@ void NotebookTest::initTestCase(){
 void NotebookTest::testInputWidget(){
   QTest::keyClicks(input, "hello world");
   input->clear();
-  QTest::keyClicks(input, "(define x 100)");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
-  auto scene = output->findChild<QGraphicsScene *>();
-  const QString name = QString();
-  auto result = scene->items()[0];
-  auto expectedresult = new QGraphicsTextItem(QString("(100)"));
-  QVERIFY2(result == expectedresult, "Could not find expected result in ouput");
+  std::string program = R"(define x 100)";
+  input->setPlainText(QString::fromStdString(program));
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier);
+
+  auto view = output->findChild<QGraphicsView *>();
+  QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
+  auto scene = view->scene();
+
 }
 
 void NotebookTest::testDiscretePlotLayout() {

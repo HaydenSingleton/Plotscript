@@ -11,7 +11,8 @@ Defines the Expression type and assiciated functions.
 #include "atom.hpp"
 
 #include <map>
-#include <utility>
+// #include <utility>
+#include <algorithm>
 #include <iostream>
 
 
