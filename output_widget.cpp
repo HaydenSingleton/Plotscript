@@ -121,9 +121,11 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isCP()){
 
-        double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
-        std::vector<Expression> data = e.asVector();
 
+
+        double N = 20, A = 3, B = 3, C = 2, D = 2;
+        std::vector<Expression> data = e.asVector();
+        std::cout << "Items on graph: " << data.size() << std::endl;
         // Draw bounding box
         size_t pos = 0;
         for(auto & item : data){
@@ -132,7 +134,7 @@ void OutputWidget::catch_result(Expression e){
                 item.setLineThickness(0);
             }
             else if (item.isPoint()){
-                item.setPointSize(P);
+                item.setPointSize(0);
             }
             else {
                 break;
@@ -222,9 +224,6 @@ void OutputWidget::drawText(std::string words, double scaleFactor, double rotati
     text->setFont(font);
     QRectF rect = text->sceneBoundingRect();
     QPointF text_center = QPointF(X - rect.width()/2, Y - rect.height()/2);
-        // std::cout << words << std::endl;
-        // std::cout << "  X: " << text_center.rx() << std::endl;
-        // std::cout << "  Y: " << text_center.ry() << std::endl << std::endl;
     text->setPos(text_center);
 
     QPointF _center = text->boundingRect().center();
