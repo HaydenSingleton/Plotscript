@@ -1,7 +1,6 @@
 #include <QTest>
 #include "notebook_app.hpp"
 
-
 /*
 findLines - find lines in a scene contained within a bounding box
             with a small margin
@@ -89,7 +88,6 @@ class NotebookTest : public QObject {
 private slots:
 
   void initTestCase();
-
   void testInputWidget();
   void testDiscretePlotLayout();
 
@@ -118,7 +116,7 @@ void NotebookTest::testInputWidget(){
 
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
-  auto scene = view->scene();
+  // auto scene = view->scene();
 
 }
 
@@ -204,7 +202,6 @@ void NotebookTest::testDiscretePlotLayout() {
   // check the point at (1,1)
   QCOMPARE(findPoints(scene, QPointF(10, -10), 0.6), 1);
 }
-
 
 QTEST_MAIN(NotebookTest)
 #include "notebook_test.moc"

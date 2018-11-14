@@ -60,61 +60,63 @@ void OutputWidget::catch_result(Expression e){
 
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
         std::vector<Expression> data = e.asVector();
-        // std::cout << "Data size: " << data.size() << std::endl;
 
         // Draw bounding box
-        for(size_t i = 0; i < 10; i++){
-            data[i].setLineThickness(0);
-            data[i].setPointSize(0.5);
-            catch_result(data[i]);
+        size_t pos = 0;
+        for(auto & item : data){
+
+            if(item.isLine()){
+                item.setLineThickness(0);
+            }
+            else if (item.isPoint()){
+                item.setPointSize(P);
+            }
+            else {
+                break;
+            }
+            catch_result(item);
+            pos++;
         }
 
         // Draw AL AU OL OU
         std::string AL_s, AU_s, OL_s, OU_s;
-        AL_s = removeQuotes(data[10].head().asString());
-        AU_s = removeQuotes(data[11].head().asString());
-        OL_s = removeQuotes(data[12].head().asString());
-        OU_s = removeQuotes(data[13].head().asString());
+        AL_s = removeQuotes(data[pos++].head().asString());
+        AU_s = removeQuotes(data[pos++].head().asString());
+        OL_s = removeQuotes(data[pos++].head().asString());
+        OU_s = removeQuotes(data[pos++].head().asString());
         double AL = std::stod(AL_s);
         double AU = std::stod(AU_s);
         double OL = std::stod(OL_s);
         double OU = std::stod(OU_s);
-        double AM = (AU+AL)/2, OM = (OU+OL)/2;
         double xscale = N/(AU-AL), yscale = N/(OU-OL);
         AL *= xscale;
         AU *= xscale;
-        OL *= yscale;
-        OU *= yscale;
-        AM *= xscale;
-        OM *= yscale;
-        std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
-        << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
+        OL *= yscale * -1;
+        OU *= yscale * -1;
+        double AM = (AU+AL)/2, OM = (OU+OL)/2;
+        // std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
+        // << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
 
-        drawText(AL_s, 1, 0, AL, OU + C);
-        // std::cout << "AL: " << AL_s << " at " << AL << ", " << OL + C << std::endl;
-        drawText(AU_s, 1, 0, AU, OU + C);
-        // std::cout << "AU: " << AU_s << " at " << AU << ", " << OL + C << std::endl;
-        drawText(OL_s, 1, 0, AL - D, OU);
-        // std::cout << "OL: " << OL_s << " at " << AL - D << ", " << OU << std::endl;
-        drawText(OU_s, 1, 0, AL - D, OL);
-        // std::cout << "OU: " << OU_s << " at " << AL - D << ", " << OL << std::endl;
+        drawText(AL_s, 1, 0, AL, OL+C);
+        drawText(AU_s, 1, 0, AU, OL+C);
+        drawText(OL_s, 1, 0, AL-D, OL);
+        drawText(OU_s, 1, 0, AL-D, OU);
 
         // Graph options
-        std::string title = removeQuotes(data[14].head().asString());
-        std::string a_label = removeQuotes(data[15].head().asString());
-        std::string o_label = removeQuotes(data[16].head().asString());
+        std::string title = removeQuotes(data[pos++].head().asString());
+        std::string a_label = removeQuotes(data[pos++].head().asString());
+        std::string o_label = removeQuotes(data[pos++].head().asString());
 
         double textscale;
-        if(data.size()==18)
-            textscale = data[17].head().asNumber();
+        if(data.size() > pos)
+            textscale = data[pos++].head().asNumber();
         else
             textscale = 1.0;
 
         // Add the graph labels
-        drawText(title, textscale, 0, AM, (-OU-A));
-        drawText(a_label, textscale, 0, AM, (OU+A));
-        drawText(o_label, textscale, -90, (AL-B), -OM);
-        std::cout << "Ylabel: " << o_label << " at (" << AL - B << ", " << OM << ")" << std::endl;
+        drawText(title, textscale, 0, AM, (OU-A));
+        drawText(a_label, textscale, 0, AM, (OL+A));
+        drawText(o_label, textscale, -90, (AL-B), OM);
 
     }
     else if(!e.isLambda()) {
@@ -148,7 +150,7 @@ void OutputWidget::resizeEvent(QResizeEvent *event) {
     view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
     QWidget::resizeEvent(event);
 }
-// void drawText(qstr, font, scaleFactor, rotationAngle, xcor, ycor);
+
 void OutputWidget::drawText(std::string words, double scaleFactor, double rotationAngle, double xcor, double ycor) {
     QString qstr = QString::fromStdString(words);
     QGraphicsTextItem *text = scene->addText(qstr);
@@ -156,15 +158,23 @@ void OutputWidget::drawText(std::string words, double scaleFactor, double rotati
     font.setStyleHint(QFont::TypeWriter);
     font.setPointSize(1);
     text->setFont(font);
-    text->setTransformOriginPoint(QPointF(0, 0));
-    text->setScale(scaleFactor);
-    text->setRotation(rotationAngle);
     QRectF rect = text->sceneBoundingRect();
+    scene->addRect(rect, QPen(Qt::NoPen), QBrush());
     QPointF text_center = QPointF(xcor - rect.width()/2, ycor - rect.height()/2);
+    text->setPos(xcor, ycor);
     if(rotationAngle == -90){
         text_center = QPointF(xcor - rect.height()/2, ycor + rect.width()/2);
     }
-    text->setPos(text_center);
+    QPointF _center = text->boundingRect().center();
+    text->setTransformOriginPoint(_center);
+    text->setScale(scaleFactor);
+    text->setRotation(rotationAngle);
+
+    // if(words == "Y Label"){
+    //     std::cout << "X pos: " << xcor - rect.height()/2 << "\nY pos: " << ycor - rect.width()/2 << "\n";
+    //     std::cout << "X cor: " << xcor << "\nY cor: " << ycor << "\n";
+    //     std::cout << "br h/2: " << rect.height()/2 << "\nbr w/2: " << rect.width()/2 << "\n";
+    // // }
 }
 
 void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, double thicc){
@@ -173,7 +183,7 @@ void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, doub
 }
 
 void OutputWidget::drawPoint(double X, double Y, double D){
-    QRectF corners = QRectF(X, Y, D, D);
+    QRectF corners = QRectF(0, 0, D, D);
     corners.moveCenter(QPointF(X, Y));
-    scene->addEllipse(corners, QPen(), QBrush(Qt::SolidPattern));
+    scene->addEllipse(corners, QPen(Qt::NoPen), QBrush(Qt::SolidPattern));
 }

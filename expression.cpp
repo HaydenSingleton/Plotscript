@@ -393,9 +393,12 @@ Expression Expression::handle_discrete_plot(Environment & env){
       double AL = xmin, AU = xmax, OL = ymin, OU = ymax;
 
       // Scale bounds of the box
-      xmin *= xscale; xmax *= xscale; ymin *= yscale; ymax *= yscale;
+      xmin *= xscale;
+      ymin *= yscale * -1;
+      xmax *= xscale;
+      ymax *= yscale * -1;
 
-      double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
+      double xmiddle = (xmax+xmin)/2, ymiddle = (ymin-ymax)/2;
 
       // Make an expression for each point of the bounding box
       Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
@@ -430,41 +433,73 @@ Expression Expression::handle_discrete_plot(Environment & env){
       Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
       std::vector<Expression> newline;
 
-      newline = {midLeft, topLeft};
-      Expression leftLine1 = Expression(Atom("make-line"), newline);
-
-      newline = {midRight, botRight};
-      Expression rightLine1 = Expression(Atom("make-line"), newline);
-
       newline = {topLeft, botLeft};
       leftLine = Expression(Atom("make-line"), newline);
-
-      newline = {topMid, botMid};
-      yaxis = Expression(Atom("make-line"), newline);
+      result.push_back(leftLine.eval(env));
 
       newline = {topRight, botRight};
       rightLine = Expression(Atom("make-line"), newline);
+      result.push_back(rightLine.eval(env));
 
       newline = {topLeft, topRight};
       topLine = Expression(Atom("make-line"), newline);
-
-      newline = {midLeft, midRight};
-      xaxis = Expression(Atom("make-line"), newline);
+      result.push_back(topLine.eval(env));
 
       newline = {botLeft, botRight};
       botLine = Expression(Atom("make-line"), newline);
+      result.push_back(botLine.eval(env));
 
-      // Add all points and items to results vector
-      result.push_back(topLeft.eval(env));    //1
-      result.push_back(leftLine1.eval(env));  //2
-      result.push_back(botRight.eval(env));   //3
-      result.push_back(rightLine1.eval(env)); //4
-      result.push_back(yaxis.eval(env));      //5
-      result.push_back(xaxis.eval(env));      //6
-      result.push_back(topLine.eval(env));    //7
-      result.push_back(botLine.eval(env));    //8
-      result.push_back(leftLine.eval(env));   //9
-      result.push_back(rightLine.eval(env));  //10
+      // Add draw axis lines if either zero line is within the boundaries
+
+      if(0 < OU && 0 > OL){
+        Expression xAxisStart, xAxisEnd;
+        xy = {Expression(xmax), Expression(0.0)};
+        xAxisStart = Expression(Atom("make-point"), xy);
+
+        xy = {Expression(xmin), Expression(0.0)};
+        xAxisEnd = Expression(Atom("make-point"), xy);
+
+        newline = {xAxisStart, xAxisEnd};
+        xaxis = Expression(Atom("make-line"), newline);
+        result.push_back(xaxis.eval(env));
+      }
+
+      if(0 < AU && 0 > AL){
+        Expression yAxisStart, yAxisEnd;
+        xy = {Expression(0.0), Expression(ymax)};
+        yAxisStart = Expression(Atom("make-point"), xy);
+
+        xy = {Expression(0.0), Expression(ymin)};
+        yAxisEnd = Expression(Atom("make-point"), xy);
+
+        newline = {yAxisStart, yAxisEnd};
+        yaxis = Expression(Atom("make-line"), newline);
+        result.push_back(yaxis.eval(env));
+      }
+
+      // Add all data points and stem lines
+      Expression new_point, stem_bottom, stemline; double x,y; std::vector<Expression> p1p2;
+
+      /* If the bottom of the graph is above the orign,
+      draw the stemlines down to the bottom line only */
+      double stembottomy = std::max(0.0, OL)*yscale*-1;
+
+      for(auto & point : DATA.m_tail){
+        x = point.m_tail[0].head().asNumber() * xscale;
+        y = point.m_tail[1].head().asNumber() * yscale * -1;
+
+        xy = {Expression(x), Expression(y)};
+        new_point = Expression(Atom("make-point"), xy);
+
+        xy = {Expression(x), Expression(stembottomy)};
+        stem_bottom = Expression(Atom("make-point"), xy);
+
+        p1p2 = {new_point, stem_bottom};
+        stemline = Expression(Atom("make-line"), p1p2);
+
+        result.push_back(new_point.eval(env));
+        result.push_back(stemline.eval(env));
+      }
 
       // Add the bounds of the data as strings
       result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
@@ -477,8 +512,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
         result.push_back(opt.m_tail[1]);
       }
 
+      // std::cout << "Done with handle discrete-plot" << std::endl;
       return Expression(Expression(result), "discrete-plot");
-
     }
     else {
       throw SemanticError("Error: An argument to discrete-plot is not a list");
