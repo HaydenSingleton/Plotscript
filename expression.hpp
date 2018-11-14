@@ -103,6 +103,9 @@ public:
   // Check and change exp type for discrete-plots
   bool isDP() const noexcept;
 
+  // Check and change exp type for continuous-plots
+  bool isCP() const noexcept;
+
   /// Evaluate expression using a post-order traversal (recursive)
   Expression eval(Environment & env);
 
@@ -131,7 +134,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda, Empty, Graphic, DP};
+  enum class ExpType {None, List, Lambda, Empty, Graphic, DP, CP};
   ExpType m_type = ExpType::None;
 
   // list of the expression's properties
@@ -150,6 +153,7 @@ private:
   Expression handle_set_property(Environment & env);
   Expression handle_get_property(Environment & env);
   Expression handle_discrete_plot(Environment & env);
+  Expression handle_cont_plot(Environment & env);
 };
 
 /// Render expression to output stream

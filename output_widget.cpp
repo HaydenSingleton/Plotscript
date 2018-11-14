@@ -119,6 +119,68 @@ void OutputWidget::catch_result(Expression e){
         drawText(o_label, textscale, -90, (AL-B), OM);
 
     }
+    else if (e.isCP()){
+
+        double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
+        std::vector<Expression> data = e.asVector();
+
+        // Draw bounding box
+        size_t pos = 0;
+        for(auto & item : data){
+
+            if(item.isLine()){
+                item.setLineThickness(0);
+            }
+            else if (item.isPoint()){
+                item.setPointSize(P);
+            }
+            else {
+                break;
+            }
+            catch_result(item);
+            pos++;
+        }
+
+        // Draw AL AU OL OU
+        std::string AL_s, AU_s, OL_s, OU_s;
+        AL_s = removeQuotes(data[pos++].head().asString());
+        AU_s = removeQuotes(data[pos++].head().asString());
+        OL_s = removeQuotes(data[pos++].head().asString());
+        OU_s = removeQuotes(data[pos++].head().asString());
+        double AL = std::stod(AL_s);
+        double AU = std::stod(AU_s);
+        double OL = std::stod(OL_s);
+        double OU = std::stod(OU_s);
+        double xscale = N/(AU-AL), yscale = N/(OU-OL);
+        AL *= xscale;
+        AU *= xscale;
+        OL *= yscale * -1;
+        OU *= yscale * -1;
+        double AM = (AU+AL)/2, OM = (OU+OL)/2;
+        // std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
+        // << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
+
+        drawText(AL_s, 1, 0, AL, OL+C);
+        drawText(AU_s, 1, 0, AU, OL+C);
+        drawText(OL_s, 1, 0, AL-D, OL);
+        drawText(OU_s, 1, 0, AL-D, OU);
+
+        // Graph options
+        std::string title = removeQuotes(data[pos++].head().asString());
+        std::string a_label = removeQuotes(data[pos++].head().asString());
+        std::string o_label = removeQuotes(data[pos++].head().asString());
+
+        double textscale;
+        if(data.size() > pos)
+            textscale = data[pos].head().asNumber();
+        else
+            textscale = 1.0;
+
+        // Add the graph labels
+        drawText(title, textscale, 0, AM, (OU-A));
+        drawText(a_label, textscale, 0, AM, (OL+A));
+        drawText(o_label, textscale, -90, (AL-B), OM);
+    }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
         scene->addText(QString::fromStdString(e.toString()));
@@ -151,7 +213,7 @@ void OutputWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 }
 
-void OutputWidget::drawText(std::string words, double scaleFactor, double rotationAngle, double xcor, double ycor) {
+void OutputWidget::drawText(std::string words, double scaleFactor, double rotationAngle, double X, double Y) {
     QString qstr = QString::fromStdString(words);
     QGraphicsTextItem *text = scene->addText(qstr);
     auto font = QFont("Monospace");
@@ -159,21 +221,17 @@ void OutputWidget::drawText(std::string words, double scaleFactor, double rotati
     font.setPointSize(1);
     text->setFont(font);
     QRectF rect = text->sceneBoundingRect();
-    QPointF text_center = QPointF(xcor - rect.width()/2, ycor - rect.height()/2);
+    QPointF text_center = QPointF(X - rect.width()/2, Y - rect.height()/2);
+        // std::cout << words << std::endl;
+        // std::cout << "  X: " << text_center.rx() << std::endl;
+        // std::cout << "  Y: " << text_center.ry() << std::endl << std::endl;
     text->setPos(text_center);
-    if(rotationAngle == -90){
-        text_center = QPointF(xcor - rect.height()/2, ycor + rect.width()/2);
-    }
+
     QPointF _center = text->boundingRect().center();
     text->setTransformOriginPoint(_center);
+
     text->setScale(scaleFactor);
     text->setRotation(rotationAngle);
-
-    // if(words == "Y Label"){
-    //     std::cout << "X pos: " << xcor - rect.height()/2 << "\nY pos: " << ycor - rect.width()/2 << "\n";
-    //     std::cout << "X cor: " << xcor << "\nY cor: " << ycor << "\n";
-    //     std::cout << "br h/2: " << rect.height()/2 << "\nbr w/2: " << rect.width()/2 << "\n";
-    // // }
 }
 
 void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, double thicc){

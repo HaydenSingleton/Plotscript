@@ -47,15 +47,15 @@ Expression::Expression(const Atom & head, const std::vector<Expression> & tail) 
 //Constructor for plots
 Expression::Expression(const Expression & a, std::string t){
   if(t == "discrete-plot") {
-    m_head = a.m_head;
     m_type = ExpType::DP;
-    m_properties = a.m_properties;
-    for(auto e : a.m_tail){
-      m_tail.push_back(e);
-    }
   }
-  else {
-    return;
+  else if (t == "continuous-plot"){
+    m_type = ExpType::CP;
+  }
+  m_head = a.m_head;
+  m_properties = a.m_properties;
+  for(auto e : a.m_tail){
+    m_tail.push_back(e);
   }
 }
 
@@ -116,6 +116,10 @@ bool Expression::isEmpty() const noexcept {
 
 bool Expression::isDP() const noexcept {
   return (m_type == ExpType::DP);
+}
+
+bool Expression::isCP() const noexcept {
+  return (m_type == ExpType::CP);
 }
 
 void Expression::append(const Atom & a){
@@ -512,6 +516,10 @@ Expression Expression::handle_discrete_plot(Environment & env){
         result.push_back(opt.m_tail[1]);
       }
 
+      // if(OPTIONS.m_tail.size() < 8){
+      //   result.push_back(Expression(Atom("\"1\"")));
+      // }
+
       // std::cout << "Done with handle discrete-plot" << std::endl;
       return Expression(Expression(result), "discrete-plot");
     }
@@ -522,6 +530,171 @@ Expression Expression::handle_discrete_plot(Environment & env){
   else {
     throw SemanticError("Error: invalid number of arguments for discrete-plot");
   }
+}
+
+Expression Expression::handle_cont_plot(Environment & env){
+
+    if(m_tail.size()==3){
+      std::vector<Expression> result;
+      Expression FUNC = m_tail[0].eval(env);
+      Expression BOUNDS = m_tail[1].eval(env);
+      Expression OPTIONS = m_tail[2].eval(env);
+      if(!FUNC.isLambda()) {
+        throw SemanticError("Error: first argument to continuous plot not a lambda");
+      }
+      else if(!BOUNDS.isList()){
+        throw SemanticError("Error: second argument to continuous plot not a list");
+      }
+      else if(!OPTIONS.isList()){
+        throw SemanticError("Error: third argument to continuous plot not a list");
+      }
+      
+      std::vector<Expression> Domain, Range, temp;
+      Domain = BOUNDS.asVector();
+      temp = {m_tail[0], m_tail[1]};
+      Range = Expression(Atom("map"), temp).eval(env).asVector();
+
+      std::cout << "Domain: " << Domain << "\nRange: " << Range << std::endl;
+      
+      double N = 20, xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
+
+      AL = std::min(Domain.begin()->head().asNumber(), (Domain.end()-1)->head().asNumber());
+      AU = std::max(Domain.begin()->head().asNumber(), (Domain.end()-1)->head().asNumber());
+      std::cout << "Domain min: " << AL << std::endl;
+      std::cout << "Domain max: " << AU << std::endl;
+
+      OL = std::min(Range.begin()->head().asNumber(), (Range.end()-1)->head().asNumber());
+      OU = std::max(Range.begin()->head().asNumber(), (Range.end()-1)->head().asNumber());    
+      std::cout << "\nRange min: " << OL << std::endl;
+      std::cout << "Range max: " << OU << std::endl;
+
+      // // Create scale factors using the max and min edges of the data
+      xscale = N/(AU-AL);
+      yscale = N/(OU-OL);
+
+      // // Scale bounds of the box
+      xmin = AL * xscale;
+      xmax = AU * xscale;
+      ymin = OL * yscale * -1;
+      ymax = OU  * yscale * -1;
+
+      double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
+
+      // Make an expression for each point of the bounding box
+      Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
+      std::vector<Expression> xy = {Expression(xmin), Expression(ymax)};
+      topLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmiddle), Expression(ymax)};
+      topMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression(ymax)};
+      topRight = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmin), Expression(ymiddle)};
+      midLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmiddle), Expression(ymiddle)};
+      midMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression(ymiddle)};
+      midRight = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmin), Expression(ymin)};
+      botLeft = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmiddle), Expression(ymin)};
+      botMid = Expression(Atom("make-point"), xy);
+
+      xy = {Expression(xmax), Expression(ymin)};
+      botRight = Expression(Atom("make-point"), xy);
+
+      // Make an expression to hold each line of the bounding rect
+      Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
+      std::vector<Expression> newline;
+
+      newline = {topLeft, botLeft};
+      leftLine = Expression(Atom("make-line"), newline);
+      result.push_back(leftLine.eval(env));
+
+      newline = {topRight, botRight};
+      rightLine = Expression(Atom("make-line"), newline);
+      result.push_back(rightLine.eval(env));
+
+      newline = {topLeft, topRight};
+      topLine = Expression(Atom("make-line"), newline);
+      result.push_back(topLine.eval(env));
+
+      newline = {botLeft, botRight};
+      botLine = Expression(Atom("make-line"), newline);
+      result.push_back(botLine.eval(env));
+
+      // Add draw axis lines if either zero line is within the boundaries
+      if(0 < OU && 0 > OL){
+        Expression xAxisStart, xAxisEnd;
+        xy = {Expression(xmax), Expression(0.0)};
+        xAxisStart = Expression(Atom("make-point"), xy);
+
+        xy = {Expression(xmin), Expression(0.0)};
+        xAxisEnd = Expression(Atom("make-point"), xy);
+
+        newline = {xAxisStart, xAxisEnd};
+        xaxis = Expression(Atom("make-line"), newline);
+        result.push_back(xaxis.eval(env));
+      }
+
+      if(0 < AU && 0 > AL){
+        Expression yAxisStart, yAxisEnd;
+        xy = {Expression(0.0), Expression(ymax)};
+        yAxisStart = Expression(Atom("make-point"), xy);
+
+        xy = {Expression(0.0), Expression(ymin)};
+        yAxisEnd = Expression(Atom("make-point"), xy);
+
+        newline = {yAxisStart, yAxisEnd};
+        yaxis = Expression(Atom("make-line"), newline);
+        result.push_back(yaxis.eval(env));
+      }
+
+      // // // Add all data points and stem lines
+      // // Expression new_point, stem_bottom, stemline; double x,y; std::vector<Expression> p1p2;
+
+      // // /* If the bottom of the graph is above the orign,
+      // // draw the stemlines down to the bottom line only */
+      // // double stembottomy = std::max(0.0, OL)*yscale*-1;
+
+      // // for(auto & point : DATA.m_tail){
+      // //   x = point.m_tail[0].head().asNumber() * xscale;
+      // //   y = point.m_tail[1].head().asNumber() * yscale * -1;
+
+      // //   xy = {Expression(x), Expression(y)};
+      // //   new_point = Expression(Atom("make-point"), xy);
+
+      // //   xy = {Expression(x), Expression(stembottomy)};
+      // //   stem_bottom = Expression(Atom("make-point"), xy);
+
+      // //   p1p2 = {new_point, stem_bottom};
+      // //   stemline = Expression(Atom("make-line"), p1p2);
+
+      // //   result.push_back(new_point.eval(env));
+      // //   result.push_back(stemline.eval(env));
+      // // }
+
+      // Add the bounds of the data as strings for making labels
+      result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(AU).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
+      result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
+
+      // Add each option to the output
+      for(auto &opt : OPTIONS.m_tail){
+        result.push_back(opt.m_tail[1]);
+      }
+      
+      return Expression(Expression(result), "continuous-plot");    
+    }
+    else
+      throw SemanticError("Error: invalid number of arguments to continuous plot");
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -562,6 +735,9 @@ Expression Expression::eval(Environment & env){
   }
   else if(m_head.isSymbol() && m_head.asSymbol() == "discrete-plot"){
     return handle_discrete_plot(env);
+  }
+  else if(m_head.isSymbol() && m_head.asSymbol() == "continuous-plot"){
+    return handle_cont_plot(env);
   }
   else{
     std::vector<Expression> results;
