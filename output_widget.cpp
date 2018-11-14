@@ -159,9 +159,8 @@ void OutputWidget::drawText(std::string words, double scaleFactor, double rotati
     font.setPointSize(1);
     text->setFont(font);
     QRectF rect = text->sceneBoundingRect();
-    scene->addRect(rect, QPen(Qt::NoPen), QBrush());
     QPointF text_center = QPointF(xcor - rect.width()/2, ycor - rect.height()/2);
-    text->setPos(xcor, ycor);
+    text->setPos(text_center);
     if(rotationAngle == -90){
         text_center = QPointF(xcor - rect.height()/2, ycor + rect.width()/2);
     }
