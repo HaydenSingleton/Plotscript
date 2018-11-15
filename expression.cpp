@@ -709,6 +709,7 @@ Expression Expression::handle_cont_plot(Environment & env){
       boundlabel = Expression(Atom("make-text"), temp).eval(env);
       boundlabel.setTextPosition(xmin-D, ymax);
       result.push_back(boundlabel);
+      std::cout << "bound labels set" << std::endl;
 
       if(m_tail.size() == 3){
         Expression OPTIONS = m_tail[2];
@@ -911,8 +912,14 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
     rot = m_properties.at("\"text-rotation\"").head().asNumber();
   }
 
+
+  std::cout << "yeet -> " << m_head.asString() << std::endl;
+
+
   if(m_properties.find("\"position\"") != m_properties.end()){
+    std::cout << "getting points KKONA CLAP " << std::endl;
     Expression point = m_properties.at("\"position\"");
+    std::cout << "point?= " << point << std::endl;
     double x = point.getPointCoordinates().first;
     double y = point.getPointCoordinates().second;
     return {x, y, sf, rot, true};
@@ -945,9 +952,13 @@ std::pair<double, double> Expression::getPointCoordinates() const noexcept {
   double x, y;
   std::string repl = this->toString();
 
+  std::cout << "this to string() = " << toString() << std::endl;
+
   repl = repl.substr(2, repl.length() - 3);
   std::string xcor = repl.substr(0, repl.find_first_of(')')), ycor = repl.substr(repl.find_first_of('('), repl.find_last_of(')')).substr(1);
   ycor.pop_back();
+
+  std::cout << "str Vs=\t" << xcor << "\n\t\t" << ycor << std::endl;
 
   if(xcor.find('.')!=std::string::npos){
       x = std::stod(xcor);
@@ -981,7 +992,7 @@ void Expression::setPointSize(double uWu) noexcept{
 void Expression::setTextPosition(double xp, double yp, double rot) noexcept{
   if(m_properties.find("\"position\"")!=m_properties.end()){
     std::vector<Expression> point = {Expression(xp), Expression(yp)};
-    m_properties["\"position\""] = Expression(Atom("make-point"), point);
+    m_properties["\"position\""] = Expression(point);
   }
   if(m_properties.find("\"text-rotation\"")!=m_properties.end()){
     m_properties["\"text-rotation\""] = Expression(rot * std::atan(1)*4 / 180);

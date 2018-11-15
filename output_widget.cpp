@@ -41,10 +41,11 @@ void OutputWidget::catch_result(Expression e){
         std::string repl = e.toString();
         std::string text_string = repl.substr(2, repl.length()-4);
         double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
+        std::cout << "trying to get properties for- " << repl << std::endl;
         std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
         rotationAngle = rotationAngle * 180 / M_PI;
         if(isValid) {
-
+            std::cout << "trying to draw" << std::endl;
             drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
         }
         else {
