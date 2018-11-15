@@ -44,7 +44,8 @@ void OutputWidget::catch_result(Expression e){
         std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
         rotationAngle = rotationAngle * 180 / M_PI;
         if(isValid) {
-            drawText(text_string, scaleFactor, rotationAngle, xcor, ycor);
+
+            drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
         }
         else {
             catch_failure("Error in make-text: not a valid property in list for make-text");
@@ -97,10 +98,10 @@ void OutputWidget::catch_result(Expression e){
         // std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
         // << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
 
-        drawText(AL_s, 1, 0, AL, OL+C);
-        drawText(AU_s, 1, 0, AU, OL+C);
-        drawText(OL_s, 1, 0, AL-D, OL);
-        drawText(OU_s, 1, 0, AL-D, OU);
+        drawText(QString::fromStdString(AL_s), 1, 0, AL, OL+C);
+        drawText(QString::fromStdString(AU_s), 1, 0, AU, OL+C);
+        drawText(QString::fromStdString(OL_s), 1, 0, AL-D, OL);
+        drawText(QString::fromStdString(OU_s), 1, 0, AL-D, OU);
 
         // Graph options
         std::string title = removeQuotes(data[pos++].head().asString());
@@ -114,14 +115,12 @@ void OutputWidget::catch_result(Expression e){
             textscale = 1.0;
 
         // Add the graph labels
-        drawText(title, textscale, 0, AM, (OU-A));
-        drawText(a_label, textscale, 0, AM, (OL+A));
-        drawText(o_label, textscale, -90, (AL-B), OM);
+        drawText(QString::fromStdString(title), textscale, 0, AM, (OU-A));
+        drawText(QString::fromStdString(a_label), textscale, 0, AM, (OL+A));
+        drawText(QString::fromStdString(o_label), textscale, -90, (AL-B), OM);
 
     }
     else if (e.isCP()){
-
-
 
         double N = 20, A = 3, B = 3, C = 2, D = 2;
         std::vector<Expression> data = e.asVector();
@@ -135,53 +134,11 @@ void OutputWidget::catch_result(Expression e){
             }
             else if (item.isPoint()){
                 item.setPointSize(0);
-            }
-            else {
-                break;
+                std::cout << "A man of your talents-- drawing Points, really?" << std::endl;
             }
             catch_result(item);
             pos++;
         }
-
-        // Draw AL AU OL OU
-        std::string AL_s, AU_s, OL_s, OU_s;
-        AL_s = removeQuotes(data[pos++].head().asString());
-        AU_s = removeQuotes(data[pos++].head().asString());
-        OL_s = removeQuotes(data[pos++].head().asString());
-        OU_s = removeQuotes(data[pos++].head().asString());
-        double AL = std::stod(AL_s);
-        double AU = std::stod(AU_s);
-        double OL = std::stod(OL_s);
-        double OU = std::stod(OU_s);
-        double xscale = N/(AU-AL), yscale = N/(OU-OL);
-        AL *= xscale;
-        AU *= xscale;
-        OL *= yscale * -1;
-        OU *= yscale * -1;
-        double AM = (AU+AL)/2, OM = (OU+OL)/2;
-        // std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
-        // << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
-
-        drawText(AL_s, 1, 0, AL, OL+C);
-        drawText(AU_s, 1, 0, AU, OL+C);
-        drawText(OL_s, 1, 0, AL-D, OL);
-        drawText(OU_s, 1, 0, AL-D, OU);
-
-        // Graph options
-        std::string title = removeQuotes(data[pos++].head().asString());
-        std::string a_label = removeQuotes(data[pos++].head().asString());
-        std::string o_label = removeQuotes(data[pos++].head().asString());
-
-        double textscale;
-        if(data.size() > pos)
-            textscale = data[pos].head().asNumber();
-        else
-            textscale = 1.0;
-
-        // Add the graph labels
-        drawText(title, textscale, 0, AM, (OU-A));
-        drawText(a_label, textscale, 0, AM, (OL+A));
-        drawText(o_label, textscale, -90, (AL-B), OM);
     }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
@@ -215,8 +172,7 @@ void OutputWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 }
 
-void OutputWidget::drawText(std::string words, double scaleFactor, double rotationAngle, double X, double Y) {
-    QString qstr = QString::fromStdString(words);
+void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAngle, double X, double Y) {
     QGraphicsTextItem *text = scene->addText(qstr);
     auto font = QFont("Monospace");
     font.setStyleHint(QFont::TypeWriter);

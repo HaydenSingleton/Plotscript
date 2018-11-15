@@ -38,7 +38,7 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 
 //Constructor for special cases
 Expression::Expression(const Atom & head, const std::vector<Expression> & tail) : m_head(head) {
-  m_type = ExpType::Graphic;
+  m_type = ExpType::None;
   for(auto e : tail){
     m_tail.push_back(e);
   }
@@ -52,7 +52,8 @@ Expression::Expression(const Expression & a, std::string t){
   else if (t == "continuous-plot"){
     m_type = ExpType::CP;
   }
-  m_head = a.m_head;
+  if(!a.m_head.isNone())
+    m_head = a.m_head;
   m_properties = a.m_properties;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
@@ -516,11 +517,12 @@ Expression Expression::handle_discrete_plot(Environment & env){
         result.push_back(opt.m_tail[1]);
       }
 
-      // if(OPTIONS.m_tail.size() < 8){
-      //   result.push_back(Expression(Atom("\"1\"")));
-      // }
+      if(OPTIONS.m_tail.size() < 8){
+        result.push_back(Expression(Atom("\"1\"")));
+      }
 
-      // std::cout << "Done with handle discrete-plot" << std::endl;
+      // std::cout << "Discrete-plot head: " << Expression(Expression(result), "discrete-plot").head() << std::endl;
+      // std::cout << "Discrete-plot size: " << Expression(Expression(result), "discrete-plot").m_tail.size() << std::endl;
       return Expression(Expression(result), "discrete-plot");
     }
     else {
@@ -534,49 +536,46 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
 Expression Expression::handle_cont_plot(Environment & env){
 
-    if(m_tail.size()==3){
+    if(m_tail.size() >= 2){
       std::vector<Expression> result;
-      Expression FUNC = m_tail[0].eval(env);
-      Expression BOUNDS = m_tail[1].eval(env);
-      Expression OPTIONS = m_tail[2].eval(env);
-      if(!FUNC.isLambda()) {
+      Expression FUNC = m_tail[0];
+      Expression BOUNDS = m_tail[1];
+      if(!FUNC.eval(env).isLambda()) {
         throw SemanticError("Error: first argument to continuous plot not a lambda");
       }
-      else if(!BOUNDS.isList()){
+      else if(!BOUNDS.eval(env).isList()){
         throw SemanticError("Error: second argument to continuous plot not a list");
       }
-      else if(!OPTIONS.isList()){
+      else if(m_tail.size() == 3 && !m_tail[2].eval(env).isList()){
         throw SemanticError("Error: third argument to continuous plot not a list");
       }
-      
-      std::vector<Expression> Domain, Range, temp;
-      Domain = BOUNDS.asVector();
-      temp = {m_tail[0], m_tail[1]};
-      Range = Expression(Atom("map"), temp).eval(env).asVector();
 
-      std::cout << "Domain: " << Domain << "\nRange: " << Range << std::endl;
-      
-      double N = 20, xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
+      std::vector<Expression> x_bounds, y_bounds, temp;
+      x_bounds = BOUNDS.eval(env).asVector();
+      temp = {FUNC, BOUNDS};
+      y_bounds = Expression(Atom("map"), temp).eval(env).asVector();
 
-      AL = std::min(Domain.begin()->head().asNumber(), (Domain.end()-1)->head().asNumber());
-      AU = std::max(Domain.begin()->head().asNumber(), (Domain.end()-1)->head().asNumber());
-      std::cout << "Domain min: " << AL << std::endl;
-      std::cout << "Domain max: " << AU << std::endl;
+      // std::cout << "x_bounds: " << x_bounds << "\ny_bounds: " << y_bounds << std::endl;
+      double N = 20, A = 3, B = 3, C = 2, D = 2;
+      double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
 
-      OL = std::min(Range.begin()->head().asNumber(), (Range.end()-1)->head().asNumber());
-      OU = std::max(Range.begin()->head().asNumber(), (Range.end()-1)->head().asNumber());    
-      std::cout << "\nRange min: " << OL << std::endl;
-      std::cout << "Range max: " << OU << std::endl;
+      AL = std::min(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
+      AU = std::max(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
+
+      OL = std::min(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
+      OU = std::max(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
 
       // // Create scale factors using the max and min edges of the data
       xscale = N/(AU-AL);
-      yscale = N/(OU-OL);
+      yscale = N/(OU-OL)  * -1;
+
+      // std::cout << "x scale: " << xscale << "\ny scale: " << yscale << std::endl;
 
       // // Scale bounds of the box
       xmin = AL * xscale;
       xmax = AU * xscale;
-      ymin = OL * yscale * -1;
-      ymax = OU  * yscale * -1;
+      ymin = OL * yscale;
+      ymax = OU  * yscale;
 
       double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
 
@@ -656,42 +655,81 @@ Expression Expression::handle_cont_plot(Environment & env){
         result.push_back(yaxis.eval(env));
       }
 
-      // // // Add all data points and stem lines
-      // // Expression new_point, stem_bottom, stemline; double x,y; std::vector<Expression> p1p2;
+      size_t M = 50; // Number of data points
 
-      // // /* If the bottom of the graph is above the orign,
-      // // draw the stemlines down to the bottom line only */
-      // // double stembottomy = std::max(0.0, OL)*yscale*-1;
+      double stepsize = (AU-AL)/M;
 
-      // // for(auto & point : DATA.m_tail){
-      // //   x = point.m_tail[0].head().asNumber() * xscale;
-      // //   y = point.m_tail[1].head().asNumber() * yscale * -1;
+      std::vector<double> domain, range;
+      std::vector<Expression> domain_exp, range_exp;
 
-      // //   xy = {Expression(x), Expression(y)};
-      // //   new_point = Expression(Atom("make-point"), xy);
+      for(double x = AL; x <= AU+stepsize; x+=stepsize){
+        domain.emplace_back(x);
+        domain_exp.emplace_back(Expression(x));
+      }
 
-      // //   xy = {Expression(x), Expression(stembottomy)};
-      // //   stem_bottom = Expression(Atom("make-point"), xy);
+      temp = {FUNC, Expression(Atom("list"), domain_exp)};
+      range_exp = Expression(Atom("map"), temp).eval(env).asVector();
 
-      // //   p1p2 = {new_point, stem_bottom};
-      // //   stemline = Expression(Atom("make-line"), p1p2);
+      Expression point;
+      std::vector<Expression> points;
+      size_t pos;
+      for(auto _ : range_exp){
+        range.push_back(range_exp[pos].head().asNumber());
+        temp = {Expression(domain[pos]*xscale), Expression(range[pos]*yscale)};
+        point = Expression(Atom("make-point"), temp);
+        points.push_back(point);
+        pos++;
+      }
 
-      // //   result.push_back(new_point.eval(env));
-      // //   result.push_back(stemline.eval(env));
-      // // }
+      Expression line;
+      for(int i = 1; i < points.size(); i++){
+        temp = {points[i-1], points[i]};
+        line = Expression(Atom("make-line"), temp);
+        result.push_back(line.eval(env));
+      }
 
       // Add the bounds of the data as strings for making labels
-      result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
-      result.push_back(Expression(Atom("\""+Atom(AU).asString()+"\"")));
-      result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
-      result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
+      Expression boundlabel;
+      temp = {Expression(Atom("\""+Atom(AL).asString()+"\""))};
+      boundlabel = Expression(Atom("make-text"), temp).eval(env);
+      boundlabel.setTextPosition(xmin, ymin + C);
+      result.push_back(boundlabel);
 
-      // Add each option to the output
-      for(auto &opt : OPTIONS.m_tail){
-        result.push_back(opt.m_tail[1]);
+      temp = {Expression(Atom("\""+Atom(AU).asString()+"\""))};
+      boundlabel = Expression(Atom("make-text"), temp).eval(env);
+      boundlabel.setTextPosition(xmax, ymin + C);
+      result.push_back(boundlabel);
+
+      temp = {Expression(Atom("\""+Atom(OL).asString()+"\""))};
+      boundlabel = Expression(Atom("make-text"), temp).eval(env);
+      boundlabel.setTextPosition(xmin-D, ymin);
+      result.push_back(boundlabel);
+
+      temp = {Expression(Atom("\""+Atom(OU).asString()+"\""))};
+      boundlabel = Expression(Atom("make-text"), temp).eval(env);
+      boundlabel.setTextPosition(xmin-D, ymax);
+      result.push_back(boundlabel);
+
+      if(m_tail.size() == 3){
+        Expression OPTIONS = m_tail[2];
+        // Add each option to the output
+        Expression textItem;
+        for(auto &opt : OPTIONS.m_tail){
+          textItem = opt.m_tail[1];
+          if(opt.m_tail[0].head().asString() == "title"){
+            textItem.setTextPosition(xmiddle, ymax-A);
+          }
+          else if(opt.m_tail[0].head().asString() == "abscissa-label"){
+            textItem.setTextPosition(xmiddle, ymin+A);
+          }
+          else if(opt.m_tail[0].head().asString() == "ordinate-label"){
+            textItem.setTextPosition(xmin-B, ymiddle, -90);
+          }
+          result.push_back(textItem);
+        }
       }
-      
-      return Expression(Expression(result), "continuous-plot");    
+
+      return Expression(Expression(result), "continuous-plot");
     }
     else
       throw SemanticError("Error: invalid number of arguments to continuous plot");
@@ -915,7 +953,7 @@ std::pair<double, double> Expression::getPointCoordinates() const noexcept {
       x = std::stod(xcor);
   }
   else {
-      x = (double)std::stoi(xcor);
+    x = (double)std::stoi(xcor);
   }
 
   if(ycor.find('.')!=std::string::npos){
@@ -937,5 +975,15 @@ void Expression::setLineThickness(double thique) noexcept{
 void Expression::setPointSize(double uWu) noexcept{
   if(m_properties.find("\"size\"")!=m_properties.end()){
     m_properties["\"size\""] = Expression(uWu);
+  }
+}
+
+void Expression::setTextPosition(double xp, double yp, double rot) noexcept{
+  if(m_properties.find("\"position\"")!=m_properties.end()){
+    std::vector<Expression> point = {Expression(xp), Expression(yp)};
+    m_properties["\"position\""] = Expression(Atom("make-point"), point);
+  }
+  if(m_properties.find("\"text-rotation\"")!=m_properties.end()){
+    m_properties["\"text-rotation\""] = Expression(rot * std::atan(1)*4 / 180);
   }
 }

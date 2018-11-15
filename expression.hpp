@@ -14,6 +14,7 @@ Defines the Expression type and assiciated functions.
 // #include <utility>
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 
 
 // forward declare Environment
@@ -123,6 +124,7 @@ public:
   std::pair<double, double> getPointCoordinates() const noexcept;
   void setLineThickness(double ) noexcept;
   void setPointSize(double ) noexcept;
+  void setTextPosition(double , double , double r = 0) noexcept;
 
 private:
 
@@ -134,7 +136,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda, Empty, Graphic, DP, CP};
+  enum class ExpType {None, List, Lambda, Empty, DP, CP};
   ExpType m_type = ExpType::None;
 
   // list of the expression's properties

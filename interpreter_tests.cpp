@@ -569,3 +569,23 @@ TEST_CASE("Test handle discrete-plot", "[expression]") {
   REQUIRE(data.size() == 17);
   REQUIRE(data[0].isLine());
 }
+
+TEST_CASE("Test handle continuous-plot", "[expression]") {
+
+  Interpreter mrInterpret;
+
+  std::ifstream startip_str(STARTUP_FILE);
+  REQUIRE(mrInterpret.parseStream(startip_str));
+  REQUIRE_NOTHROW(mrInterpret.evaluate());
+
+  std::string program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list \"title\" \"A continuous linear function\") (list \"abscissa-label\" \"x\") (list \"ordinate-label\" \"y\"))))";
+
+  std::istringstream iss(program);
+  bool ok = mrInterpret.parseStream(iss);
+  REQUIRE(ok == true);
+  Expression e;
+  REQUIRE_NOTHROW(e = mrInterpret.evaluate());
+  std::vector<Expression> data = e.asVector();
+  REQUIRE(data.size() == 63);
+  REQUIRE(data[0].isLine());
+}
