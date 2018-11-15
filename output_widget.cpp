@@ -41,11 +41,9 @@ void OutputWidget::catch_result(Expression e){
         std::string repl = e.toString();
         std::string text_string = repl.substr(2, repl.length()-4);
         double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
-        std::cout << "trying to get properties for- " << repl << std::endl;
         std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
         rotationAngle = rotationAngle * 180 / M_PI;
         if(isValid) {
-            std::cout << "trying to draw" << std::endl;
             drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
         }
         else {
@@ -123,11 +121,8 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isCP()){
 
-        double N = 20, A = 3, B = 3, C = 2, D = 2;
         std::vector<Expression> data = e.asVector();
-        std::cout << "Items on graph: " << data.size() << std::endl;
-        // Draw bounding box
-        size_t pos = 0;
+
         for(auto & item : data){
 
             if(item.isLine()){
@@ -138,7 +133,6 @@ void OutputWidget::catch_result(Expression e){
                 std::cout << "A man of your talents-- drawing Points, really?" << std::endl;
             }
             catch_result(item);
-            pos++;
         }
     }
     else if(!e.isLambda()) {

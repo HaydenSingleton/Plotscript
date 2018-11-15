@@ -53,7 +53,7 @@ Expression::Expression(const Expression & a, std::string t){
     m_type = ExpType::CP;
   }
   if(!a.m_head.isNone())
-    m_head = a.m_head;
+    m_tail.push_back(a.m_head);
   m_properties = a.m_properties;
   for(auto e : a.m_tail){
     m_tail.push_back(e);
@@ -173,7 +173,6 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 
   // head must be a symbol
   if(!op.isSymbol()){
-    std::cout << op.asString() << std::endl;
     throw SemanticError("Error during evaluation: procedure name not symbol");
   }
 
@@ -644,10 +643,10 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       if(0 < AU && 0 > AL){
         Expression yAxisStart, yAxisEnd;
-        xy = {Expression(0.0), Expression(ymax)};
+        xy = {Expression(Atom(0)), Expression(ymax)};
         yAxisStart = Expression(Atom("make-point"), xy);
 
-        xy = {Expression(0.0), Expression(ymin)};
+        xy = {Expression(Atom(0)), Expression(ymin)};
         yAxisEnd = Expression(Atom("make-point"), xy);
 
         newline = {yAxisStart, yAxisEnd};
@@ -672,10 +671,24 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       Expression point;
       std::vector<Expression> points;
-      size_t pos;
+      size_t pos = 0;
+
+
       for(auto _ : range_exp){
         range.push_back(range_exp[pos].head().asNumber());
-        temp = {Expression(domain[pos]*xscale), Expression(range[pos]*yscale)};
+        pos++;
+      }
+
+      pos = 0;
+      double scaled_X = 0, scaled_Y = 0;
+      for(auto _ : range_exp){
+        scaled_X = domain[pos] * xscale;
+        scaled_Y = range[pos] * yscale;
+        if(scaled_X < 0.001 && scaled_X > -0.001)
+          scaled_X = 0.0;
+        if(scaled_Y < 0.001 && scaled_Y > -0.001)
+          scaled_Y = 0.0;
+        temp = {Expression(scaled_X), Expression(scaled_Y)};
         point = Expression(Atom("make-point"), temp);
         points.push_back(point);
         pos++;
@@ -683,51 +696,76 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       Expression line;
       for(int i = 1; i < points.size(); i++){
+
         temp = {points[i-1], points[i]};
         line = Expression(Atom("make-line"), temp);
         result.push_back(line.eval(env));
       }
 
       // Add the bounds of the data as strings for making labels
-      Expression boundlabel;
+      Expression boundLabel, boundPos;
       temp = {Expression(Atom("\""+Atom(AL).asString()+"\""))};
-      boundlabel = Expression(Atom("make-text"), temp).eval(env);
-      boundlabel.setTextPosition(xmin, ymin + C);
-      result.push_back(boundlabel);
+      boundLabel = Expression(Atom("make-text"), temp).eval(env);
+      temp = {Expression(xmin), Expression(ymin + C)};
+      boundPos = Expression(Atom("make-point"), temp).eval(env);
+      boundLabel.setTextPosition(boundPos);
+      result.push_back(boundLabel);
+
 
       temp = {Expression(Atom("\""+Atom(AU).asString()+"\""))};
-      boundlabel = Expression(Atom("make-text"), temp).eval(env);
-      boundlabel.setTextPosition(xmax, ymin + C);
-      result.push_back(boundlabel);
+      boundLabel = Expression(Atom("make-text"), temp).eval(env);
+      temp = {Expression(xmax), Expression(ymin + C)};
+      boundPos = Expression(Atom("make-point"), temp).eval(env);
+      boundLabel.setTextPosition(boundPos);
+      result.push_back(boundLabel);
 
       temp = {Expression(Atom("\""+Atom(OL).asString()+"\""))};
-      boundlabel = Expression(Atom("make-text"), temp).eval(env);
-      boundlabel.setTextPosition(xmin-D, ymin);
-      result.push_back(boundlabel);
+      boundLabel = Expression(Atom("make-text"), temp).eval(env);
+      temp = {Expression(xmin-D), Expression(ymin)};
+      boundPos = Expression(Atom("make-point"), temp).eval(env);
+      boundLabel.setTextPosition(boundPos);
+      result.push_back(boundLabel);
 
       temp = {Expression(Atom("\""+Atom(OU).asString()+"\""))};
-      boundlabel = Expression(Atom("make-text"), temp).eval(env);
-      boundlabel.setTextPosition(xmin-D, ymax);
-      result.push_back(boundlabel);
-      std::cout << "bound labels set" << std::endl;
+      boundLabel = Expression(Atom("make-text"), temp).eval(env);
+
+      temp = {Expression(xmin-D), Expression(ymax)};
+      boundPos = Expression(Atom("make-point"), temp).eval(env);
+      boundLabel.setTextPosition(boundPos);
+      result.push_back(boundLabel);
 
       if(m_tail.size() == 3){
         Expression OPTIONS = m_tail[2];
         // Add each option to the output
-        Expression textItem;
+
+        Expression textItem, textPos;
         for(auto &opt : OPTIONS.m_tail){
-          textItem = opt.m_tail[1];
+          temp = { Expression(Atom(opt.m_tail[1].head().asString())) };
+          textItem = Expression(Atom("make-text"), temp).eval(env);
+
           if(opt.m_tail[0].head().asString() == "title"){
-            textItem.setTextPosition(xmiddle, ymax-A);
+            temp = {Expression(xmiddle), Expression(ymax-A)};
+            textPos = Expression(Atom("make-point"), temp).eval(env);
+            // textItem.setTextPosition(textPos);
+            textItem.m_properties["\"position\""] = textPos;
           }
           else if(opt.m_tail[0].head().asString() == "abscissa-label"){
-            textItem.setTextPosition(xmiddle, ymin+A);
+            temp = {Expression(xmiddle), Expression(ymin+A)};
+            textPos = Expression(Atom("make-point"), temp).eval(env);
+            // textItem.setTextPosition(textPos);
+            textItem.m_properties["\"position\""] = textPos;
           }
           else if(opt.m_tail[0].head().asString() == "ordinate-label"){
-            textItem.setTextPosition(xmin-B, ymiddle, -90);
+            temp = {Expression(xmin-B), Expression(ymiddle)};
+            textPos = Expression(Atom("make-point"), temp).eval(env);
+            // textItem.setTextPosition(textPos, -90);
+            textItem.m_properties["\"position\""] = textPos;
           }
+          std::cout << "Position: " << textPos << std::endl;
           result.push_back(textItem);
+          temp.clear();
         }
+        std::cout << "Options done." << std::endl;
       }
 
       return Expression(Expression(result), "continuous-plot");
@@ -912,14 +950,8 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
     rot = m_properties.at("\"text-rotation\"").head().asNumber();
   }
 
-
-  std::cout << "yeet -> " << m_head.asString() << std::endl;
-
-
   if(m_properties.find("\"position\"") != m_properties.end()){
-    std::cout << "getting points KKONA CLAP " << std::endl;
     Expression point = m_properties.at("\"position\"");
-    std::cout << "point?= " << point << std::endl;
     double x = point.getPointCoordinates().first;
     double y = point.getPointCoordinates().second;
     return {x, y, sf, rot, true};
@@ -952,25 +984,28 @@ std::pair<double, double> Expression::getPointCoordinates() const noexcept {
   double x, y;
   std::string repl = this->toString();
 
-  std::cout << "this to string() = " << toString() << std::endl;
-
   repl = repl.substr(2, repl.length() - 3);
   std::string xcor = repl.substr(0, repl.find_first_of(')')), ycor = repl.substr(repl.find_first_of('('), repl.find_last_of(')')).substr(1);
   ycor.pop_back();
 
-  std::cout << "str Vs=\t" << xcor << "\n\t\t" << ycor << std::endl;
+  if(xcor.size() > 6){
+    xcor = 0.0;
+  }
+  if(ycor.size() > 6){
+    ycor = 0.0;
+  }
 
   if(xcor.find('.')!=std::string::npos){
-      x = std::stod(xcor);
+    x = std::stod(xcor);
   }
-  else {
+  else if(xcor.size()!=0){
     x = (double)std::stoi(xcor);
   }
 
   if(ycor.find('.')!=std::string::npos){
       y = std::stod(ycor);
   }
-  else {
+  else if(ycor.size()!=0){
       y = (double)std::stoi(ycor);
   }
   std::pair<double, double> result = {x, y};
@@ -989,10 +1024,10 @@ void Expression::setPointSize(double uWu) noexcept{
   }
 }
 
-void Expression::setTextPosition(double xp, double yp, double rot) noexcept{
+void Expression::setTextPosition(Expression point, double rot) noexcept{
   if(m_properties.find("\"position\"")!=m_properties.end()){
-    std::vector<Expression> point = {Expression(xp), Expression(yp)};
-    m_properties["\"position\""] = Expression(point);
+    assert(point.isPoint());
+    m_properties["\"position\""] = point;
   }
   if(m_properties.find("\"text-rotation\"")!=m_properties.end()){
     m_properties["\"text-rotation\""] = Expression(rot * std::atan(1)*4 / 180);

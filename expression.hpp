@@ -11,10 +11,11 @@ Defines the Expression type and assiciated functions.
 #include "atom.hpp"
 
 #include <map>
-// #include <utility>
+#include <utility>
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <cassert>
 
 
 // forward declare Environment
@@ -124,7 +125,7 @@ public:
   std::pair<double, double> getPointCoordinates() const noexcept;
   void setLineThickness(double ) noexcept;
   void setPointSize(double ) noexcept;
-  void setTextPosition(double , double , double r = 0) noexcept;
+  void setTextPosition(Expression p , double r = 0) noexcept;
 
 private:
 
