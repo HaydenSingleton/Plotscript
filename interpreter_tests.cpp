@@ -578,7 +578,7 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   REQUIRE(mrInterpret.parseStream(startip_str));
   REQUIRE_NOTHROW(mrInterpret.evaluate());
 
-  std::string program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list \"title\" \"A continuous linear function\") (list \"abscissa-label\" \"x\") (list \"ordinate-label\" \"y\"))))";
+  std::string program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
 
   std::istringstream iss(program);
   bool ok = mrInterpret.parseStream(iss);
@@ -586,6 +586,18 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   Expression e;
   REQUIRE_NOTHROW(e = mrInterpret.evaluate());
   std::vector<Expression> data = e.asVector();
-  REQUIRE(data.size() == 63);
+  REQUIRE(data.size() == 60);
   REQUIRE(data[0].isLine());
+
+
+  program = "(begin (continuous-plot * (list -2 2)))";
+  REQUIRE(run_and_expect_error(program));
+
+
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
+  REQUIRE(run_and_expect_error(program));
+
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
+  REQUIRE(run_and_expect_error(program));
+
 }

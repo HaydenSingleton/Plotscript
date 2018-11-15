@@ -516,9 +516,9 @@ Expression Expression::handle_discrete_plot(Environment & env){
         result.push_back(opt.m_tail[1]);
       }
 
-      if(OPTIONS.m_tail.size() < 8){
-        result.push_back(Expression(Atom("\"1\"")));
-      }
+      // if(OPTIONS.m_tail.size() < 8){
+      //   result.push_back(Expression(Atom("\"1\"")));
+      // }
 
       // std::cout << "Discrete-plot head: " << Expression(Expression(result), "discrete-plot").head() << std::endl;
       // std::cout << "Discrete-plot size: " << Expression(Expression(result), "discrete-plot").m_tail.size() << std::endl;
@@ -738,34 +738,42 @@ Expression Expression::handle_cont_plot(Environment & env){
         Expression OPTIONS = m_tail[2];
         // Add each option to the output
 
-        Expression textItem, textPos;
+        Expression textItem, textPos, ffffff;
         for(auto &opt : OPTIONS.m_tail){
-          temp = { Expression(Atom(opt.m_tail[1].head().asString())) };
-          textItem = Expression(Atom("make-text"), temp).eval(env);
 
-          if(opt.m_tail[0].head().asString() == "title"){
-            temp = {Expression(xmiddle), Expression(ymax-A)};
-            textPos = Expression(Atom("make-point"), temp).eval(env);
-            // textItem.setTextPosition(textPos);
-            textItem.m_properties["\"position\""] = textPos;
-          }
-          else if(opt.m_tail[0].head().asString() == "abscissa-label"){
-            temp = {Expression(xmiddle), Expression(ymin+A)};
-            textPos = Expression(Atom("make-point"), temp).eval(env);
-            // textItem.setTextPosition(textPos);
-            textItem.m_properties["\"position\""] = textPos;
-          }
-          else if(opt.m_tail[0].head().asString() == "ordinate-label"){
-            temp = {Expression(xmin-B), Expression(ymiddle)};
-            textPos = Expression(Atom("make-point"), temp).eval(env);
-            // textItem.setTextPosition(textPos, -90);
-            textItem.m_properties["\"position\""] = textPos;
-          }
-          std::cout << "Position: " << textPos << std::endl;
-          result.push_back(textItem);
+
           temp.clear();
+          // std::cout << "option: " << opt.m_tail[0].head().asString() << std::endl;
+
+          if(opt.m_tail[0].head().asString() == "\"title\""){
+            temp.push_back(Expression(Atom(xmiddle)));
+            temp.push_back(Expression(Atom(ymax-A)));
+          }
+          else if(opt.m_tail[0].head().asString() == "\"abscissa-label\""){
+            temp.push_back(Expression(Atom(xmiddle)));
+            temp.push_back(Expression(Atom(ymin+A)));
+          }
+          else if(opt.m_tail[0].head().asString() == "\"ordinate-label\""){
+            temp.push_back(Expression(Atom(xmin-B)));
+            temp.push_back(Expression(Atom(ymiddle)));
+          }
+          assert(temp.size()==2);
+          // std::cout << "assertion passed" << std::endl;
+          textPos = Expression(Atom("make-point"), temp).eval(env);
+          // std::cout << "Position: " << textPos << std::endl;
+          temp.clear();
+          temp = { Expression(Atom(opt.m_tail[1].head().asString())) };
+          textItem = Expression(Atom("make-text"), temp);
+
+          temp = {Expression(Atom("\"position\"")), textPos, textItem};
+          ffffff = Expression(Atom("\"set-property\""), temp);
+
+
+          // textItem.setTextPosition(textPos);
+          // textItem.m_properties["\"position\""] = textPos;
+          result.push_back(ffffff.eval(env));
         }
-        std::cout << "Options done." << std::endl;
+
       }
 
       return Expression(Expression(result), "continuous-plot");
