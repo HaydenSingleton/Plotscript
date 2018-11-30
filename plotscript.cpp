@@ -26,17 +26,14 @@ class Consumer {
   private:
     InputQueue * iqueue;
     OutputQueue * oqueue;
-    int id;
   public:
-    Consumer(InputQueue * i, OutputQueue * o, int id = 0) : iqueue(i), oqueue(o), id(id){}
+    Consumer(InputQueue * i, OutputQueue * o) : iqueue(i), oqueue(o){}
     void operator()(Interpreter & interp) const {
       // std::cout << "Consumer thread: " << std::this_thread::get_id() << std::endl;
       while(true){
 
         std::string line;
-        // std::cout << "waiting for input..." << std::endl;
         iqueue->wait_and_pop(line);
-        // std::cout << "...done waiting for input" << std::endl;
         if(line==""){
           break;
         }
@@ -51,7 +48,6 @@ class Consumer {
         else{
           try{
             result = interp.evaluate();
-
           }
           catch(const SemanticError & ex){
             error = ex.what();
@@ -145,6 +141,7 @@ void repl(Interpreter &interp){
     // else if (line == "%reset"){
     // }
     p1(line);
+    ////THREAD STUFF HAPPENS
     output_type result;
     output->wait_and_pop(result);
 

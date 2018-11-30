@@ -10,9 +10,14 @@
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
 #include "startup_config.hpp"
+#include "TSmessage.hpp"
 
 #include <fstream>
 #include <sstream>
+
+typedef TSmessage<std::string> InputQueue;
+typedef std::pair<Expression, std::string> output_type;
+typedef TSmessage<output_type> OutputQueue;
 
 class NotebookApp : public QWidget {
     Q_OBJECT
@@ -31,6 +36,8 @@ class NotebookApp : public QWidget {
         InputWidget * in;
         OutputWidget * out;
         Interpreter mrInterpret;
+        InputQueue * inputQ = new InputQueue;
+        OutputQueue * outputQ = new OutputQueue;
 };
 
 #endif
