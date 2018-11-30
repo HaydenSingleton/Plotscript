@@ -6,6 +6,64 @@
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
 #include "startup_config.hpp"
+#include "TSmessage.hpp"
+
+typedef TSmessage<std::string> InputQueue;
+typedef std::pair<Expression, std::string> output_type;
+typedef TSmessage<output_type> OutputQueue;
+
+class Producer {
+  private:
+    InputQueue * iqueue;
+  public:
+    Producer(InputQueue * a) : iqueue(a){}
+    void operator()(std::string & str) const {
+      iqueue->push(str);
+    }
+};
+
+class Consumer {
+  private:
+    InputQueue * iqueue;
+    OutputQueue * oqueue;
+    int id;
+  public:
+    Consumer(InputQueue * i, OutputQueue * o, int id = 0) : iqueue(i), oqueue(o), id(id){}
+    void operator()(Interpreter & interp) const {
+      // std::cout << "Consumer thread: " << std::this_thread::get_id() << std::endl;
+      while(true){
+
+        std::string line;
+        // std::cout << "waiting for input..." << std::endl;
+        iqueue->wait_and_pop(line);
+        // std::cout << "...done waiting for input" << std::endl;
+        if(line==""){
+          break;
+        }
+        std::istringstream expression(line);
+
+        Expression result;
+        std::string error;
+
+        if(!interp.parseStream(expression)){
+          error = "Invalid Expression. Could not parse.";
+        }
+        else{
+          try{
+            result = interp.evaluate();
+
+          }
+          catch(const SemanticError & ex){
+            error = ex.what();
+          }
+        }
+
+        output_type output = std::make_pair(result, error);
+        oqueue->push(output);
+        // std::cout << "Sent result" << std::endl;
+      }
+    }
+};
 
 void prompt(){
   std::cout << "\nplotscript> ";
@@ -67,28 +125,45 @@ int eval_from_command(std::string argexp, Interpreter &interp){
 // A REPL is a repeated read-eval-print loop
 void repl(Interpreter &interp){
 
+  InputQueue * input = new InputQueue;
+  OutputQueue * output = new OutputQueue;
+
+  Producer p1(input);
+  Consumer c1(input, output);
+  // std::cout << "Main thread: " << std::this_thread::get_id() << std::endl;
+
+  std::thread cThread(c1, std::ref(interp));
+
   while(!std::cin.eof()){
 
     prompt();
     std::string line = readline();
 
     if(line.empty()) continue;
+    // if(line == "%start"){
+    // }
+    // else if (line == "%stop"){
+    // }
+    // else if (line == "%reset"){
+    // }
+    p1(line);
 
-    std::istringstream expression(line);
+    output_type result;
+    output->wait_and_pop(result);
 
-    if(!interp.parseStream(expression)){
-      error("Invalid Expression. Could not parse.");
+    if(result.second==""){
+      std::cout << result.first << std::endl;
     }
     else{
-      try{
-      	Expression exp = interp.evaluate();
-      	std::cout << exp << std::endl;
-      }
-      catch(const SemanticError & ex){
-        std::cerr << ex.what() << std::endl;
-      }
+      std::cerr << result.second << std::endl;
     }
+
   }
+
+  cThread.join();
+
+  delete input;
+  delete output;
 }
 
 int main(int argc, char *argv[])
@@ -96,7 +171,7 @@ int main(int argc, char *argv[])
   Interpreter interp;
   std::ifstream startup_stream(STARTUP_FILE);
   if(!interp.parseStream(startup_stream)){
-    error("Error : Invalid Program. Could not parse.");
+    error("Error: Invalid Startup Program. Could not parse.");
     return EXIT_FAILURE;
   }
   else{

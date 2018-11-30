@@ -6,17 +6,18 @@ Defines the Token and TokenSequence types, and associated functions.
 
 #include <deque>
 #include <istream>
+#include<future>
 
 /*! \class Token
   \brief Value class representing a token.
-  
+
   A token is a composition of a tag type and an optional string value.
 */
 class Token {
 public:
 
   /*! \enum TokenType
-    \brief a public enum defining the possible token types. 
+    \brief a public enum defining the possible token types.
    */
   enum TokenType { OPEN,  //< open tag, aka '('
 		   CLOSE, //< close tag, aka ')'
@@ -42,7 +43,7 @@ private:
 };
 
 /*! \typedef TokenSequenceType
-Define the token sequence using a std container. Any supporting 
+Define the token sequence using a std container. Any supporting
 sequential access should do.
  */
 typedef std::deque<Token> TokenSequenceType;
@@ -52,7 +53,7 @@ typedef std::deque<Token> TokenSequenceType;
 
 \param seq the input character stream
 \return The sequence of tokens
-  
+
 Split a stream into a sequnce of tokens where a token is one of
 OPEN or CLOSE or any space-delimited string
 

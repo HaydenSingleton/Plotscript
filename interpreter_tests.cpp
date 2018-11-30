@@ -565,6 +565,7 @@ TEST_CASE("Test handle discrete-plot", "[expression]") {
   REQUIRE(ok == true);
   Expression e;
   REQUIRE_NOTHROW(e = mrInterpret.evaluate());
+  REQUIRE(e.isDP());
   std::vector<Expression> data = e.asVector();
   REQUIRE(data.size() == 17);
   REQUIRE(data[0].isLine());
@@ -585,6 +586,7 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   REQUIRE(ok == true);
   Expression e;
   REQUIRE_NOTHROW(e = mrInterpret.evaluate());
+  REQUIRE(e.isCP());
   std::vector<Expression> data = e.asVector();
   REQUIRE(data.size() == 60);
   REQUIRE(data[0].isLine());
@@ -592,7 +594,6 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
 
   program = "(begin (continuous-plot * (list -2 2)))";
   REQUIRE(run_and_expect_error(program));
-
 
   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
   REQUIRE(run_and_expect_error(program));

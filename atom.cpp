@@ -198,44 +198,42 @@ bool Atom::operator==(const Atom & right) const noexcept{
   if(m_type != right.m_type) return false;
 
   switch(m_type){
-  case NoneKind:
-    if(right.m_type != NoneKind) return false;
-    break;
-  case NumberKind:
+    case NoneKind:
+      if(right.m_type != NoneKind) return false;
+      break;
+    case NumberKind:
+      {
+        if(right.m_type != NumberKind) return false;
+        double dleft = numberValue;
+        double dright = right.numberValue;
+        double diff = fabs(dleft - dright);
+        if(std::isnan(diff) || (diff > (std::numeric_limits<double>::epsilon()*2) ) )
+          return false;
+      }
+      break;
+    case SymbolKind:
+      {
+        if(right.m_type != SymbolKind) return false;
+        return stringValue == right.stringValue;
+      }
+      break;
+    case StringKind:
+      {
+        if(right.m_type != StringKind) return false;
+        return stringValue == right.stringValue;
+      }
+      break;
+    case ComplexKind:
     {
-      if(right.m_type != NumberKind) return false;
-      double dleft = numberValue;
-      double dright = right.numberValue;
-      double diff = fabs(dleft - dright);
-      if(std::isnan(diff) || (diff > (std::numeric_limits<double>::epsilon()*2) ) )
+      if(right.m_type != ComplexKind) return false;
+      std::complex<double> diff;
+      diff = (complexValue - right.complexValue);
+      double realPart = std::fabs(diff.real());
+      double imagPart = std::fabs(diff.imag());
+      if(realPart > std::numeric_limits<double>::epsilon()*2 || imagPart > std::numeric_limits<double>::epsilon()*2)
         return false;
     }
     break;
-  case SymbolKind:
-    {
-      if(right.m_type != SymbolKind) return false;
-      return stringValue == right.stringValue;
-    }
-    break;
-  case StringKind:
-    {
-      if(right.m_type != StringKind) return false;
-      return stringValue == right.stringValue;
-    }
-    break;
-  case ComplexKind:
-	{
-    if(right.m_type != ComplexKind) return false;
-    std::complex<double> diff;
-    diff = (complexValue - right.complexValue);
-    double realPart = std::fabs(diff.real());
-    double imagPart = std::fabs(diff.imag());
-    if(realPart > std::numeric_limits<double>::epsilon()*2 || imagPart > std::numeric_limits<double>::epsilon()*2)
-      return false;
-	}
-	break;
-  default:
-    return false;
   }
 
   return true;

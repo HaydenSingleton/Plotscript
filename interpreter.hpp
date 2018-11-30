@@ -10,10 +10,14 @@ It maintains an environment during evaluation.
 // system includes
 #include <istream>
 #include <string>
+#include <stdexcept>
 
 // module includes
 #include "environment.hpp"
 #include "expression.hpp"
+#include "token.hpp"
+#include "parse.hpp"
+#include "semantic_error.hpp"
 
 /*! \class Interpreter
 \brief Class to parse and evaluate an expression (program)
@@ -27,7 +31,7 @@ public:
 
   /*! Parse into an internal Expression from a stream
     \param expression the raw text stream repreenting the candidate expression
-    \return true on successful parsing 
+    \return true on successful parsing
    */
   bool parseStream(std::istream &expression) noexcept;
 
