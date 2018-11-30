@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
@@ -39,37 +40,35 @@ class Consumer {
       stopThread();
     }
     void ThreadFunction() {
-      while(true){
+        while(isRunning()){
+          std::string line;
+          iqueue->wait_and_pop(line);
+          std::istringstream expression(line);
 
-        std::string line;
-        iqueue->wait_and_pop(line);
-        if(line==""){
-          break;
-        }
-        std::istringstream expression(line);
+          if(line == "")
+            continue;
 
-        Expression result;
-        std::string error;
+          Expression result;
+          std::string error;
 
-        if(!cInterp.parseStream(expression)){
-          error = "Invalid Expression. Could not parse.";
-        }
-        else{
-          try{
-            result = cInterp.evaluate();
+          if(!cInterp.parseStream(expression)){
+            error = "Invalid Expression. Could not parse.";
           }
-          catch(const SemanticError & ex){
-            error = ex.what();
+          else{
+            try{
+              result = cInterp.evaluate();
+            }
+            catch(const SemanticError & ex){
+              error = ex.what();
+            }
           }
-        }
 
-        output_type output = std::make_pair(result, error);
-        oqueue->push(output);
-        // std::cout << "Sent result" << std::endl;
-      }
+          output_type output = std::make_pair(result, error);
+          oqueue->push(output);
+        }
     }
-    void change_interpreter(Interpreter & newinter){
-      cInterp = newinter;
+    bool isRunning(){
+      return running;
     }
     void startThread(){
       if(!running){
@@ -79,15 +78,20 @@ class Consumer {
     }
     void stopThread(){
       if(running){
-        if(cThread.joinable()) cThread.join();
         running = false;
+        std::string empty;
+        iqueue->push(empty);
+        cThread.join();
+        if(!iqueue->empty())
+          iqueue->wait_and_pop(empty);
+          assert(iqueue->empty());
       }
     }
     void resetThread(Interpreter & newinter){
       if(running){
         stopThread();
-        startThread();
         cInterp = newinter;
+        startThread();
       }
       else{
         startThread();
@@ -180,6 +184,10 @@ void repl(Interpreter &interp){
     }
     else if (line == "%reset"){
       c1.resetThread(default_state);
+      continue;
+    }
+    if(!c1.isRunning()){
+      std::cerr << "Error: interpreter kernel not running" << std::endl;
       continue;
     }
     p1(line);
