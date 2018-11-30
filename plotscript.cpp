@@ -162,6 +162,7 @@ void repl(Interpreter &interp){
 
   Producer p1(input);
   Consumer c1(input, output, interp);
+  c1.startThread();
 
   while(!std::cin.eof()){
 
