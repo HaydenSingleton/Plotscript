@@ -85,8 +85,6 @@ void NotebookApp::catch_input(QString s){
 
     inputQ->push(s.toStdString());
 
-    std::cout << "Sent input string: " << s.toStdString() << "\n";
-
     output_type results;
     outputQ->wait_and_pop(results);
 

@@ -26,10 +26,19 @@ class Consumer {
   private:
     InputQueue * iqueue;
     OutputQueue * oqueue;
+    Interpreter cInterp;
+    bool running = false;
+    std::thread cThread;
   public:
-    Consumer(InputQueue * i, OutputQueue * o) : iqueue(i), oqueue(o){}
-    void operator()(Interpreter & interp) const {
-      // std::cout << "Consumer thread: " << std::this_thread::get_id() << std::endl;
+    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter): cThread() {
+      iqueue = inq;
+      oqueue = outq;
+      cInterp = inter;
+    }
+    ~Consumer(){
+      stopThread();
+    }
+    void ThreadFunction() {
       while(true){
 
         std::string line;
@@ -42,12 +51,12 @@ class Consumer {
         Expression result;
         std::string error;
 
-        if(!interp.parseStream(expression)){
+        if(!cInterp.parseStream(expression)){
           error = "Invalid Expression. Could not parse.";
         }
         else{
           try{
-            result = interp.evaluate();
+            result = cInterp.evaluate();
           }
           catch(const SemanticError & ex){
             error = ex.what();
@@ -57,6 +66,31 @@ class Consumer {
         output_type output = std::make_pair(result, error);
         oqueue->push(output);
         // std::cout << "Sent result" << std::endl;
+      }
+    }
+    void change_interpreter(Interpreter & newinter){
+      cInterp = newinter;
+    }
+    void startThread(){
+      if(!running){
+        running = true;
+        cThread = std::thread(&Consumer::ThreadFunction, this);
+      }
+    }
+    void stopThread(){
+      if(running){
+        if(cThread.joinable()) cThread.join();
+        running = false;
+      }
+    }
+    void resetThread(Interpreter & newinter){
+      if(running){
+        stopThread();
+        startThread();
+        cInterp = newinter;
+      }
+      else{
+        startThread();
       }
     }
 };
@@ -120,13 +154,14 @@ int eval_from_command(std::string argexp, Interpreter &interp){
 
 // A REPL is a repeated read-eval-print loop
 void repl(Interpreter &interp){
-  // std::cout << "Main thread: " << std::this_thread::get_id() << std::endl;
+
+  Interpreter default_state = interp;
+
   InputQueue * input = new InputQueue;
   OutputQueue * output = new OutputQueue;
 
   Producer p1(input);
-  Consumer c1(input, output);
-  std::thread cThread(c1, std::ref(interp));
+  Consumer c1(input, output, interp);
 
   while(!std::cin.eof()){
 
@@ -134,12 +169,18 @@ void repl(Interpreter &interp){
     std::string line = readline();
 
     if(line.empty()) continue;
-    // if(line == "%start"){
-    // }
-    // else if (line == "%stop"){
-    // }
-    // else if (line == "%reset"){
-    // }
+    if(line == "%stop"){
+      c1.stopThread();
+      continue;
+    }
+    else if (line == "%start"){
+      c1.startThread();
+      continue;
+    }
+    else if (line == "%reset"){
+      c1.resetThread(default_state);
+      continue;
+    }
     p1(line);
     ////THREAD STUFF HAPPENS
     output_type result;
@@ -153,7 +194,8 @@ void repl(Interpreter &interp){
     }
   }
 
-  cThread.join();
+  // if(cThread.joinable())
+  //   cThread.join();
   delete input;
   delete output;
 }
