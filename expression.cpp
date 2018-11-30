@@ -695,7 +695,7 @@ Expression Expression::handle_cont_plot(Environment & env){
       }
 
       Expression line;
-      for(int i = 1; i < points.size(); i++){
+      for(size_t i = 1; i < points.size(); i++){
 
         temp = {points[i-1], points[i]};
         line = Expression(Atom("make-line"), temp);
