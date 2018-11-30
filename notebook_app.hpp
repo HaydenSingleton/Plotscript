@@ -19,6 +19,96 @@ typedef TSmessage<std::string> InputQueue;
 typedef std::pair<Expression, std::string> output_type;
 typedef TSmessage<output_type> OutputQueue;
 
+class Consumer {
+  private:
+    InputQueue * iqueue;
+    OutputQueue * oqueue;
+    Interpreter cInterp;
+    bool running = false;
+    std::thread cThread;
+  public:
+    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter): cThread() {
+      iqueue = inq;
+      oqueue = outq;
+      cInterp = inter;
+    }
+    Consumer(){
+    }
+    Consumer & operator=(Consumer & c){
+      iqueue = c.iqueue;
+      oqueue = c.oqueue;
+      cInterp = c.cInterp;
+      cThread.swap(c.cThread);
+    }
+    ~Consumer(){
+      stopThread();
+    }
+    Consumer(Consumer & c){
+      iqueue = c.iqueue;
+      oqueue = c.oqueue;
+      cInterp = c.cInterp;
+      cThread.swap(c.cThread);
+    }
+    void ThreadFunction() {
+        while(isRunning()){
+          std::string line;
+          iqueue->wait_and_pop(line);
+          std::istringstream expression(line);
+
+          if(line == "")
+            continue;
+
+          Expression result;
+          std::string error;
+
+          if(!cInterp.parseStream(expression)){
+            error = "Invalid Expression. Could not parse.";
+          }
+          else{
+            try{
+              result = cInterp.evaluate();
+            }
+            catch(const SemanticError & ex){
+              error = ex.what();
+            }
+          }
+
+          output_type output = std::make_pair(result, error);
+          oqueue->push(output);
+        }
+    }
+    bool isRunning(){
+      return running;
+    }
+    void startThread(){
+      if(!running){
+        running = true;
+        cThread = std::thread(&Consumer::ThreadFunction, this);
+      }
+    }
+    void stopThread(){
+      if(running){
+        running = false;
+        std::string empty;
+        iqueue->push(empty);
+        cThread.join();
+        if(!iqueue->empty())
+          iqueue->wait_and_pop(empty);
+          assert(iqueue->empty());
+      }
+    }
+    void resetThread(Interpreter & newinter){
+      if(running){
+        stopThread();
+        cInterp = newinter;
+        startThread();
+      }
+      else{
+        startThread();
+      }
+    }
+};
+
 class NotebookApp : public QWidget {
     Q_OBJECT
 
@@ -38,6 +128,7 @@ class NotebookApp : public QWidget {
         Interpreter mrInterpret;
         InputQueue * inputQ = new InputQueue;
         OutputQueue * outputQ = new OutputQueue;
+        Consumer c1;
 };
 
 #endif

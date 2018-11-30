@@ -172,6 +172,7 @@ void repl(Interpreter &interp){
 
     prompt();
     std::string line = readline();
+    output_type result;
 
     if(line.empty()) continue;
     if(line == "%stop"){
@@ -186,13 +187,16 @@ void repl(Interpreter &interp){
       c1.resetThread(default_state);
       continue;
     }
+    else if (line == "%exit"){
+      c1.stopThread();
+      exit(0);
+    }
     if(!c1.isRunning()){
       std::cerr << "Error: interpreter kernel not running" << std::endl;
       continue;
     }
     p1(line);
     ////THREAD STUFF HAPPENS
-    output_type result;
     output->wait_and_pop(result);
 
     if(result.second==""){

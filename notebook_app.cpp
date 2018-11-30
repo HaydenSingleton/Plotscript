@@ -1,42 +1,5 @@
 #include "notebook_app.hpp"
 
-class Consumer {
-  private:
-    InputQueue * iqueue;
-    OutputQueue * oqueue;
-  public:
-    Consumer(InputQueue * i, OutputQueue * o) : iqueue(i), oqueue(o){}
-    void operator()(Interpreter & miniInterpret) const {
-      while(true){
-
-        std::string line;
-        iqueue->wait_and_pop(line);
-        if(line==""){
-          break;
-        }
-        std::istringstream expression(line);
-
-        Expression result;
-        std::string error;
-
-        if(!miniInterpret.parseStream(expression)){
-          error = "Error: Invalid Expression. Could not parse.";
-        }
-        else{
-          try{
-            result = miniInterpret.evaluate();
-          }
-          catch(const SemanticError & ex){
-            error = ex.what();
-          }
-        }
-
-        output_type output = std::make_pair(result, error);
-        oqueue->push(output);
-      }
-    }
-};
-
 NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     setObjectName("notebook");
 
@@ -73,19 +36,17 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
             emit send_failure(ex.what());
         }
     }
+    c1 = *(new Consumer(inputQ, outputQ, mrInterpret));
+    c1.startThread();
 }
 
 void NotebookApp::catch_input(QString s){
     std::string errorMessage;
     Expression result;
-
-    Consumer c1(inputQ, outputQ);
-    std::thread cThread(c1, std::ref(mrInterpret));
-    cThread.detach();
+    output_type results;
 
     inputQ->push(s.toStdString());
-
-    output_type results;
+    ///THREAD STUFF HAPPENS
     outputQ->wait_and_pop(results);
 
     if(results.second=="")
@@ -97,9 +58,6 @@ void NotebookApp::catch_input(QString s){
         emit send_failure(results.second);
     }
 }
-
-
-
     // std::istringstream expression(s.toStdString());
     // if(!mrInterpret.parseStream(expression)){
     //     emit send_failure("Error: Invalid Expression. Could not parse.");
