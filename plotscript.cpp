@@ -124,14 +124,12 @@ int eval_from_command(std::string argexp, Interpreter &interp){
 
 // A REPL is a repeated read-eval-print loop
 void repl(Interpreter &interp){
-
+  // std::cout << "Main thread: " << std::this_thread::get_id() << std::endl;
   InputQueue * input = new InputQueue;
   OutputQueue * output = new OutputQueue;
 
   Producer p1(input);
   Consumer c1(input, output);
-  // std::cout << "Main thread: " << std::this_thread::get_id() << std::endl;
-
   std::thread cThread(c1, std::ref(interp));
 
   while(!std::cin.eof()){
@@ -147,7 +145,6 @@ void repl(Interpreter &interp){
     // else if (line == "%reset"){
     // }
     p1(line);
-
     output_type result;
     output->wait_and_pop(result);
 
@@ -157,11 +154,9 @@ void repl(Interpreter &interp){
     else{
       std::cerr << result.second << std::endl;
     }
-
   }
 
   cThread.join();
-
   delete input;
   delete output;
 }
