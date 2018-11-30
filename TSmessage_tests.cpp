@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include <utility>
-#include "Tsmessage.hpp"
+#include "TSmessage.hpp"
 #include "expression.hpp"
 
 TEST_CASE( "Test TSmessage default constructor", "[TSmessage]" ) {
