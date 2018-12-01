@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QLayout>
+#include <QPushButton>
 
 #include "input_widget.hpp"
 #include "output_widget.hpp"
@@ -121,14 +122,20 @@ class NotebookApp : public QWidget {
 
      private slots:
         void catch_input(QString r);
+        void start_kernal();
+        void stop_kernal();
+        void reset_kernal();
+        void interrupt_kernal();
 
     private:
         InputWidget * in;
         OutputWidget * out;
         Interpreter mrInterpret;
+        Interpreter default_state;
         InputQueue * inputQ = new InputQueue;
         OutputQueue * outputQ = new OutputQueue;
         Consumer c1;
+        QPushButton* startButton, stopButton, resetButton, interuptButton;
 };
 
 #endif
