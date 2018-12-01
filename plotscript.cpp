@@ -90,12 +90,9 @@ class Consumer {
     void resetThread(Interpreter & newinter){
       if(running){
         stopThread();
-        cInterp = newinter;
-        startThread();
       }
-      else{
-        startThread();
-      }
+      cInterp = newinter;
+      startThread();
     }
 };
 
