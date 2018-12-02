@@ -124,12 +124,9 @@ void Consumer::stopThread(){
 void Consumer::resetThread(Interpreter & newinter){
     if(running){
         stopThread();
-        cInterp = newinter;
-        startThread();
     }
-    else{
-        startThread();
-    }
+    cInterp = newinter;
+    startThread();
 }
 
 NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
