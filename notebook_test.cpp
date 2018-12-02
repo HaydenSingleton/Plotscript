@@ -137,7 +137,7 @@ void NotebookTest::testDiscretePlotLayout() {
 
   auto scene = view->scene();
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  // std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
   // first check total number of items
   // 8 lines + 2 points + 7 text = 17

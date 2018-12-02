@@ -190,7 +190,7 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     QObject::connect(startButton, SIGNAL(clicked()), this, SLOT(start_kernal()));
     QObject::connect(stopButton, SIGNAL(clicked()), this, SLOT(stop_kernal()));
     QObject::connect(resetButton, SIGNAL(clicked()), this, SLOT(reset_kernal()));
-    QObject::connect(resetButton, SIGNAL(clicked()), out, SLOT(clear_screen()));
+    // QObject::connect(resetButton, SIGNAL(clicked()), out, SLOT(clear_screen()));
     QObject::connect(interuptButton, SIGNAL(clicked()), this, SLOT(interrupt_kernal()));
 }
 
