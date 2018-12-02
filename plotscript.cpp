@@ -9,6 +9,54 @@
 #include "startup_config.hpp"
 #include "TSmessage.hpp"
 
+#include <csignal>
+#include <cstdlib>
+
+volatile sig_atomic_t global_status_flag = 0;
+#if defined(_WIN64) || defined(_WIN32)
+#include <windows.h>
+BOOL WINAPI interrupt_handler(DWORD fdwCtrlType) {
+
+  switch (fdwCtrlType) {
+  case CTRL_C_EVENT:
+    if (global_status_flag > 0) {
+      exit(EXIT_FAILURE);
+    }
+    ++global_status_flag;
+    return TRUE;
+
+  default:
+    return FALSE;
+  }
+}
+
+inline void install_handler() { SetConsoleCtrlHandler(interrupt_handler, TRUE); }
+
+#elif defined(__APPLE__) || defined(__linux) || defined(__unix) || defined(__posix)
+#include <unistd.h>
+
+void interrupt_handler(int signal_num) {
+
+  if(signal_num == SIGINT){
+    if (global_status_flag > 0) {
+      exit(EXIT_FAILURE);
+    }
+    ++global_status_flag;
+  }
+}
+
+inline void install_handler() {
+
+  struct sigaction sigIntHandler;
+
+  sigIntHandler.sa_handler = interrupt_handler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+
+  sigaction(SIGINT, &sigIntHandler, NULL);
+}
+#endif
+
 typedef TSmessage<std::string> InputQueue;
 typedef std::pair<Expression, std::string> output_type;
 typedef TSmessage<output_type> OutputQueue;
@@ -31,13 +79,10 @@ class Consumer {
     bool running = false;
     std::thread cThread;
   public:
-    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter): cThread() {
+    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter) {
       iqueue = inq;
       oqueue = outq;
       cInterp = inter;
-    }
-    ~Consumer(){
-      stopThread();
     }
     void ThreadFunction() {
         while(isRunning()){
@@ -82,9 +127,7 @@ class Consumer {
         std::string empty;
         iqueue->push(empty);
         cThread.join();
-        if(!iqueue->empty())
-          iqueue->wait_and_pop(empty);
-          assert(iqueue->empty());
+        iqueue->try_pop(empty);
       }
     }
     void resetThread(Interpreter & newinter){
@@ -186,7 +229,7 @@ void repl(Interpreter &interp){
     }
     else if (line == "%exit"){
       c1.stopThread();
-      exit(0);
+      exit(EXIT_SUCCESS);
     }
     if(!c1.isRunning()){
       std::cerr << "Error: interpreter kernel not running" << std::endl;
@@ -204,8 +247,6 @@ void repl(Interpreter &interp){
     }
   }
 
-  // if(cThread.joinable())
-  //   cThread.join();
   delete input;
   delete output;
 }
