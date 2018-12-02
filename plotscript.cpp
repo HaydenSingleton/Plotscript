@@ -87,7 +87,13 @@ class Consumer {
     void ThreadFunction() {
         while(isRunning()){
           std::string line;
-          iqueue->wait_and_pop(line);
+          if (global_status_flag > 0) {
+            std::cerr << "Error: interpreter kernel interrupted" << std::endl;
+            continue;
+          }
+          if(!iqueue->try_pop(line)){
+            continue;
+          }
           std::istringstream expression(line);
 
           if(line == "")

@@ -1,9 +1,140 @@
 #include "notebook_app.hpp"
 
+#include <csignal>
+#include <cstdlib>
+
+volatile sig_atomic_t global_status_flag = 0;
+#if defined(_WIN64) || defined(_WIN32)
+#include <windows.h>
+BOOL WINAPI interrupt_handler(DWORD fdwCtrlType) {
+
+  switch (fdwCtrlType) {
+  case CTRL_C_EVENT:
+    if (global_status_flag > 0) {
+      exit(EXIT_FAILURE);
+    }
+    ++global_status_flag;
+    return TRUE;
+
+  default:
+    return FALSE;
+  }
+}
+
+inline void install_handler() { SetConsoleCtrlHandler(interrupt_handler, TRUE); }
+
+#elif defined(__APPLE__) || defined(__linux) || defined(__unix) || defined(__posix)
+#include <unistd.h>
+
+void interrupt_handler(int signal_num) {
+
+  if(signal_num == SIGINT){
+    if (global_status_flag > 0) {
+      exit(EXIT_FAILURE);
+    }
+    ++global_status_flag;
+  }
+}
+
+inline void install_handler() {
+
+  struct sigaction sigIntHandler;
+
+  sigIntHandler.sa_handler = interrupt_handler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+
+  sigaction(SIGINT, &sigIntHandler, NULL);
+}
+#endif
+
+Consumer::Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter): cThread() {
+    iqueue = inq;
+    oqueue = outq;
+    cInterp = inter;
+}
+Consumer::Consumer(){
+}
+Consumer & Consumer::operator=(Consumer & c){
+    iqueue = c.iqueue;
+    oqueue = c.oqueue;
+    cInterp = c.cInterp;
+    cThread.swap(c.cThread);
+}
+Consumer::~Consumer(){
+    stopThread();
+}
+Consumer::Consumer(Consumer & c){
+    iqueue = c.iqueue;
+    oqueue = c.oqueue;
+    cInterp = c.cInterp;
+    cThread.swap(c.cThread);
+}
+void Consumer::ThreadFunction() {
+    Expression result;
+    std::string error;
+    std::string line;
+    while(isRunning()){
+
+        if(global_status_flag > 0){
+            error = "Error: interpreter kernel interrupted";
+            output_type output = std::make_pair(result, error);
+            oqueue->push(output);
+        }
+        if(!iqueue->try_pop(line)){
+            continue;
+        }
+        std::istringstream expression(line);
+        if(line == "")
+            continue;
+
+        if(!cInterp.parseStream(expression)){
+            error = "Invalid Expression. Could not parse.";
+        }
+        else{
+            try{
+                result = cInterp.evaluate();
+            }
+            catch(const SemanticError & ex){
+                error = ex.what();
+            }
+        }
+        output_type output = std::make_pair(result, error);
+        oqueue->push(output);
+    }
+}
+bool Consumer::isRunning(){
+    return running;
+}
+void Consumer::startThread(){
+    if(!running){
+    running = true;
+    cThread = std::thread(&Consumer::ThreadFunction, this);
+    }
+}
+void Consumer::stopThread(){
+    if(running){
+        running = false;
+        std::string empty;
+        iqueue->push(empty);
+        cThread.join();
+        iqueue->try_pop(empty);
+    }
+}
+void Consumer::resetThread(Interpreter & newinter){
+    if(running){
+        stopThread();
+        cInterp = newinter;
+        startThread();
+    }
+    else{
+        startThread();
+    }
+}
+
 NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     setObjectName("notebook");
 
-     //startup procedure
     std::ifstream startip_str(STARTUP_FILE);
     if(!mrInterpret.parseStream(startip_str)){
         emit send_failure("Error: Invalid Startup Program. Could not parse.");
@@ -25,12 +156,16 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
 
     auto row = new QHBoxLayout();
     auto startButton = new QPushButton(QString("Start Kernal"), this);
+    startButton->setObjectName("start");
     row->addWidget(startButton);
     auto stopButton = new QPushButton(QString("Stop Kernal"), this);
+    stopButton->setObjectName("stop");
     row->addWidget(stopButton);
     auto resetButton = new QPushButton(QString("Reset Kernal"), this);
+    resetButton->setObjectName("reset");
     row->addWidget(resetButton);
     auto interuptButton = new QPushButton(QString("Interrupt"), this);
+    interuptButton->setObjectName("interrupt");
     row->addWidget(interuptButton);
 
     auto layout = new QVBoxLayout(this); // add the widgets to a vertical layout
@@ -66,8 +201,9 @@ void NotebookApp::catch_input(QString s){
 
     if(c1.isRunning()){
         inputQ->push(s.toStdString());
-        ///THREAD STUFF HAPPENS
+        in->setReadOnly(true);
         outputQ->wait_and_pop(results);
+        in->setReadOnly(false);
 
         if(results.second=="")
         {
@@ -95,5 +231,5 @@ void NotebookApp::reset_kernal() {
 }
 
 void NotebookApp::interrupt_kernal() {
-    //TODO
+    emit send_failure("Error: Interpreter kernal is not running");
 }
