@@ -67,6 +67,7 @@ class NotebookApp : public QWidget {
         OutputQueue * outputQ = new OutputQueue;
         Consumer * c1;
         QPushButton* startButton, stopButton, resetButton, interuptButton;
+        bool interupt_signal = false;
 };
 
 #endif

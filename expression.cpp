@@ -782,6 +782,7 @@ Expression Expression::handle_cont_plot(Environment & env){
       throw SemanticError("Error: invalid number of arguments to continuous plot");
 }
 
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST

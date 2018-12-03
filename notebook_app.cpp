@@ -79,11 +79,9 @@ void Consumer::stopThread(){
 void Consumer::resetThread(Interpreter & newinter){
     if(running){
         stopThread();
-        cInterp = newinter;
-        startThread();
     }
-    // cInterp = newinter;
-    // startThread();
+    cInterp = newinter;
+    startThread();
 }
 
 NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
@@ -101,7 +99,9 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
             emit send_failure(ex.what());
         }
     }
+
     default_state = mrInterpret;
+
     c1 = new Consumer(inputQ, outputQ, mrInterpret);
     c1->startThread();
 
@@ -148,14 +148,26 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
 }
 
 void NotebookApp::catch_input(QString s){
+    Interpreter copy = mrInterpret;
     std::string errorMessage;
     Expression result;
     output_type results;
-
     if(c1->isRunning()){
         inputQ->push(s.toStdString());
         in->setReadOnly(true);
-        outputQ->wait_and_pop(results);
+        while(outputQ->empty()){
+            if(interupt_signal){
+                if(inputQ->empty()) {
+                    inputQ->try_pop(errorMessage);
+                }
+                emit send_failure("Error: Interpreter kernal interrupted");
+                mrInterpret = copy;
+                interupt_signal = false;
+                return;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        outputQ->try_pop(results);
         in->setReadOnly(false);
 
         if(results.second=="")
@@ -184,7 +196,5 @@ void NotebookApp::reset_kernal() {
 }
 
 void NotebookApp::interrupt_kernal() {
-    if(c1->isRunning()){
-        emit send_failure("Error: interpreter interrupted");
-    }
+    interupt_signal = true;
 }

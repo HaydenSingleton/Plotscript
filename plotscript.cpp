@@ -88,12 +88,9 @@ class Consumer {
       if(cThread.joinable()) cThread.join();
     }
     void ThreadFunction() {
-        while(isRunning()){
+        while(isRunning() && global_status_flag==0){
           std::string line;
-          // if (global_status_flag > 0) {
-          //   std::cerr << "Error: interpreter kernel interrupted" << std::endl;
-          //   continue;
-          // }
+
           if(!iqueue->try_pop(line)){
             continue;
           }
@@ -208,7 +205,7 @@ int eval_from_command(std::string argexp, Interpreter &interp){
 // A REPL is a repeated read-eval-print loop
 void repl(Interpreter &interp){
 
-  Interpreter default_state = interp;
+  Interpreter copy, default_state = interp;
 
   InputQueue * input = new InputQueue;
   OutputQueue * output = new OutputQueue;
@@ -218,42 +215,54 @@ void repl(Interpreter &interp){
   c1.startThread();
 
   while(!std::cin.eof()){
-
+    copy = interp;
     prompt();
     global_status_flag = 0;
     std::string line = readline();
     output_type result;
 
     if(line.empty()) continue;
-    if(line == "%stop"){
+    else if(line == "%stop"){
       c1.stopThread();
-      continue;
     }
     else if (line == "%start"){
       c1.startThread();
-      continue;
     }
     else if (line == "%reset"){
       c1.resetThread(default_state);
-      continue;
     }
     else if (line == "%exit"){
       c1.stopThread();
       exit(EXIT_SUCCESS);
     }
-    if(!c1.isRunning()){
+    else if(!c1.isRunning()){
       std::cerr << "Error: interpreter kernel not running" << std::endl;
-      continue;
     }
-    p1(line);
-    ////THREAD STUFF HAPPENS
-    output->wait_and_pop(result);
+    else {
+      p1(line);
 
-    if(result.second==""){
-      std::cout << result.first << std::endl;
-    }
-    else{
-      std::cerr << result.second << std::endl;
+      while(output->empty()){
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if (global_status_flag > 0) {
+          if(!input->empty()) {
+            input->try_pop(line);
+          }
+          std::cerr << "Error: interpreter kernel interrupted" << std::endl;
+          c1.resetThread(copy);
+          break;
+        }
+      }
+      //If the operation was NOT interupted, get the result. OTHERWISE prompt repl again
+      if(global_status_flag == 0){
+        output->try_pop(result);
+
+        if(result.second==""){
+          std::cout << result.first << std::endl;
+        }
+        else{
+          std::cerr << result.second << std::endl;
+        }
+      }
     }
   }
 
@@ -264,6 +273,7 @@ void repl(Interpreter &interp){
 int main(int argc, char *argv[])
 {
   install_handler();
+
   Interpreter interp;
   std::ifstream startup_stream(STARTUP_FILE);
   if(!interp.parseStream(startup_stream)){
