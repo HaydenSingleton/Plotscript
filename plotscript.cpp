@@ -13,10 +13,10 @@
 #include <cstdlib>
 
 volatile sig_atomic_t global_status_flag = 0;
+
 #if defined(_WIN64) || defined(_WIN32)
 #include <windows.h>
 BOOL WINAPI interrupt_handler(DWORD fdwCtrlType) {
-
   switch (fdwCtrlType) {
   case CTRL_C_EVENT:
     if (global_status_flag > 0) {
@@ -36,7 +36,6 @@ inline void install_handler() { SetConsoleCtrlHandler(interrupt_handler, TRUE); 
 #include <unistd.h>
 
 void interrupt_handler(int signal_num) {
-
   if(signal_num == SIGINT){
     if (global_status_flag > 0) {
       exit(EXIT_FAILURE);
@@ -84,13 +83,17 @@ class Consumer {
       oqueue = outq;
       cInterp = inter;
     }
+    ~Consumer(){
+      if(iqueue->empty()) iqueue->push("astring");
+      if(cThread.joinable()) cThread.join();
+    }
     void ThreadFunction() {
         while(isRunning()){
           std::string line;
-          if (global_status_flag > 0) {
-            std::cerr << "Error: interpreter kernel interrupted" << std::endl;
-            continue;
-          }
+          // if (global_status_flag > 0) {
+          //   std::cerr << "Error: interpreter kernel interrupted" << std::endl;
+          //   continue;
+          // }
           if(!iqueue->try_pop(line)){
             continue;
           }
@@ -217,6 +220,7 @@ void repl(Interpreter &interp){
   while(!std::cin.eof()){
 
     prompt();
+    global_status_flag = 0;
     std::string line = readline();
     output_type result;
 
@@ -259,6 +263,7 @@ void repl(Interpreter &interp){
 
 int main(int argc, char *argv[])
 {
+  install_handler();
   Interpreter interp;
   std::ifstream startup_stream(STARTUP_FILE);
   if(!interp.parseStream(startup_stream)){

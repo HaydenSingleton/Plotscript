@@ -146,6 +146,7 @@ void OutputWidget::catch_result(Expression e){
 }
 
 void OutputWidget::catch_failure(std::string message) {
+    scene->clear();
     QString msg = QString::fromStdString(message);
     QGraphicsTextItem * output = new QGraphicsTextItem;
     output->setPos(0,0);

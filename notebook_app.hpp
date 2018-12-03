@@ -31,7 +31,7 @@ class Consumer {
   public:
     Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter);
     Consumer();
-    Consumer & operator=(Consumer & c);
+    Consumer & operator=(Consumer & c) noexcept;
     ~Consumer();
     Consumer(Consumer & c);
     void ThreadFunction();
@@ -65,7 +65,7 @@ class NotebookApp : public QWidget {
         Interpreter default_state;
         InputQueue * inputQ = new InputQueue;
         OutputQueue * outputQ = new OutputQueue;
-        Consumer c1;
+        Consumer * c1;
         QPushButton* startButton, stopButton, resetButton, interuptButton;
 };
 
