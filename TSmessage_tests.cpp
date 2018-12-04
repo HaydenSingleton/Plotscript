@@ -47,3 +47,16 @@ TEST_CASE( "Test TSmessage wait and pop", "[TSmessage]" ) {
     REQUIRE(myqueue.empty());
     REQUIRE(a==b);
 }
+
+TEST_CASE( "Test TSmessage clear", "[TSmessage]" ) {
+
+    typedef std::pair<std::string, Expression> Item;
+    TSmessage<Item> myqueue;
+
+    Item a = {"rawr x3", Expression(Atom("uWu"))};
+    REQUIRE(myqueue.empty());
+    myqueue.push(a);
+    REQUIRE(!myqueue.empty());
+    myqueue.clear();
+    REQUIRE(myqueue.empty());
+}

@@ -38,6 +38,13 @@ class TSmessage {
             quew.pop();
         };
 
+        void clear(){
+            std::lock_guard<std::mutex> lock(mew);
+            while(!quew.empty()){
+                quew.pop();
+            }
+        }
+
     private:
         std::queue<T> quew;
         mutable std::mutex mew;
