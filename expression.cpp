@@ -789,7 +789,7 @@ sig_atomic_t global_status_flag = 0;
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
   if(global_status_flag > 0){
-    return Expression(Atom("Error: interpreter kernel interrupted"));
+    return Expression(Atom("\nError: interpreter kernel interrupted"));
   }
 
   if(m_tail.empty()){
