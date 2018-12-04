@@ -790,7 +790,7 @@ sig_atomic_t global_status_flag = 0;
 Expression Expression::eval(Environment & env){
 
   if(global_status_flag > 0){
-    return Expression();
+    throw SemanticError("Error: interpreter kernal interupted");
   }
   else{
     if(m_tail.empty()){

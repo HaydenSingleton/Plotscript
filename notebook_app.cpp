@@ -45,7 +45,7 @@ void Consumer::ThreadFunction() {
             continue;
 
         if(!cInterp.parseStream(expression)){
-            error = "Error Invalid Expression. Could not parse.";
+            error = "Error: Invalid Expression. Could not parse.";
         }
         else{
             try{
@@ -78,10 +78,6 @@ void Consumer::stopThread(){
     }
 }
 void Consumer::resetThread(Interpreter *original){
-    std::string q = "quit";
-    while(iqueue->try_pop(q)){
-        q = "quit";
-    }
     if(running){
         stopThread();
     }
@@ -149,46 +145,34 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     QObject::connect(startButton, SIGNAL(clicked()), this, SLOT(start_kernal()));
     QObject::connect(stopButton, SIGNAL(clicked()), this, SLOT(stop_kernal()));
     QObject::connect(resetButton, SIGNAL(clicked()), this, SLOT(reset_kernal()));
-    QObject::connect(interuptButton, SIGNAL(clicked()), this, SLOT(interrupt_kernal()));
+    QObject::connect(interuptButton, SIGNAL(clicked()), this, SLOT(interupt_kernAl()));
+    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(time_ran_out()));
 }
-
 void NotebookApp::catch_input(QString s){
-    // Interpreter * copy = mrInterpret;
-    std::string errorMessage;
     Expression result;
     output_type results;
-
+    global_status_flag = 0;
     if(c1->isRunning()){
         inputQ->push(s.toStdString());
-        in->setReadOnly(true);
-        while(outputQ->empty()){
-            if(interupt_signal){
-                if(inputQ->empty()) {
-                    inputQ->try_pop(errorMessage);
-                }
-                emit send_failure("Error: Interpreter kernal interrupted");
-                // mrInterpret = copy;
-                interupt_signal = false;
-                return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if(outputQ->try_pop(results)){
+            if(results.second == "") {
+                emit send_result(results.first);
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        outputQ->try_pop(results);
-        in->setReadOnly(false);
-
-        if(results.second == "") {
-            emit send_result(results.first);
+            else {
+                emit send_failure(results.second);
+            }
         }
         else {
-            emit send_failure(results.second);
+            timer->start(0);
         }
     }
     else {
         emit send_failure("Error: Interpreter kernal is not running");
     }
+
     c1->stopThread();
     c1->startThread();
-    // delete copy;
 }
 
 void NotebookApp::start_kernal() {
@@ -204,6 +188,19 @@ void NotebookApp::reset_kernal() {
     c1->resetThread(default_state);
 }
 
-void NotebookApp::interrupt_kernal() {
-    interupt_signal = true;
+void NotebookApp::interupt_kernAl(){
+    global_status_flag = 1;
+}
+
+void NotebookApp::time_ran_out(){
+    output_type results;
+    if(outputQ->try_pop(results)){
+        timer->stop();
+        if(results.second == "") {
+            emit send_result(results.first);
+        }
+        else {
+            emit send_failure(results.second);
+        }
+    }
 }

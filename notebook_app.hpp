@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLayout>
 #include <QPushButton>
+#include <QTimer>
 
 #include "input_widget.hpp"
 #include "output_widget.hpp"
@@ -56,7 +57,8 @@ class NotebookApp : public QWidget {
         void start_kernal();
         void stop_kernal();
         void reset_kernal();
-        void interrupt_kernal();
+        void interupt_kernAl();
+        void time_ran_out();
 
     private:
         InputWidget* in;
@@ -68,6 +70,7 @@ class NotebookApp : public QWidget {
         Consumer* c1;
         QPushButton* startButton, stopButton, resetButton, interuptButton;
         bool interupt_signal = false;
+        QTimer * timer = new QTimer(this);
 };
 
 #endif
