@@ -250,12 +250,12 @@ void repl(Interpreter &interp){
       p1(line);
 
       while(output->empty()){
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (global_status_flag > 0) {
           if(!input->empty()) {
             input->clear();
           }
-          std::cerr << "Error: interpreter kernel interrupted" << std::endl;
+          std::cerr << "Error: interpreter kernel interrupted [1]" << std::endl;
           c1.resetThread(copy);
           break;
         }

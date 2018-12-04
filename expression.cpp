@@ -788,53 +788,55 @@ sig_atomic_t global_status_flag = 0;
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
-  if(global_status_flag > 0){
-    return Expression(Atom("\nError: interpreter kernel interrupted"));
-  }
 
-  if(m_tail.empty()){
-    if (m_head.isSymbol() && m_head.asSymbol() == "list") {
-      std::vector<Expression> a;
-		  return Expression(a);
-	  }
-    if(m_head.isString()){
-      return Expression(m_head);
-    }
-    return handle_lookup(m_head, env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "begin"){
-    return handle_begin(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
-    return handle_define(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
-    return handle_lambda();
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
-    return handle_apply(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
-    return handle_map(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
-    return handle_set_property(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
-    return handle_get_property(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "discrete-plot"){
-    return handle_discrete_plot(env);
-  }
-  else if(m_head.isSymbol() && m_head.asSymbol() == "continuous-plot"){
-    return handle_cont_plot(env);
+  if(global_status_flag > 0){
+    return Expression();
   }
   else{
-    std::vector<Expression> results;
-    for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
-      results.push_back(it->eval(env));
+    if(m_tail.empty()){
+      if (m_head.isSymbol() && m_head.asSymbol() == "list") {
+        std::vector<Expression> a;
+        return Expression(a);
+      }
+      if(m_head.isString()){
+        return Expression(m_head);
+      }
+      return handle_lookup(m_head, env);
     }
-    return apply(m_head, results, env);
+    else if(m_head.isSymbol() && m_head.asSymbol() == "begin"){
+      return handle_begin(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
+      return handle_define(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
+      return handle_lambda();
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
+      return handle_apply(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
+      return handle_map(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
+      return handle_set_property(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
+      return handle_get_property(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "discrete-plot"){
+      return handle_discrete_plot(env);
+    }
+    else if(m_head.isSymbol() && m_head.asSymbol() == "continuous-plot"){
+      return handle_cont_plot(env);
+    }
+    else{
+      std::vector<Expression> results;
+      for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
+        results.push_back(it->eval(env));
+      }
+      return apply(m_head, results, env);
+    }
   }
 }
 

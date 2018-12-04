@@ -171,7 +171,7 @@ void NotebookApp::catch_input(QString s){
                 interupt_signal = false;
                 return;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         outputQ->try_pop(results);
         in->setReadOnly(false);
