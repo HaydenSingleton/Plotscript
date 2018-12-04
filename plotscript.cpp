@@ -83,7 +83,7 @@ class Consumer {
       if(cThread.joinable()) cThread.join();
     }
     void ThreadFunction() {
-        while(isRunning() && global_status_flag==0){
+        while(isRunning() && global_status_flag == 0){
           std::string line;
 
           if(!iqueue->try_pop(line)){
@@ -147,6 +147,11 @@ void prompt(){
 std::string readline(){
   std::string line;
   std::getline(std::cin, line);
+  if (std::cin.fail() || std::cin.eof()) {
+    std::cin.clear(); // reset cin state
+    line.clear(); //clear input string
+    std::cout << "\nError: Interrupted stdin.\n";
+  }
   return line;
 }
 
@@ -210,9 +215,10 @@ void repl(Interpreter &interp){
   c1.startThread();
 
   while(!std::cin.eof()){
-    copy = interp;
-    prompt();
     global_status_flag = 0;
+    copy = interp;
+
+    prompt();
     std::string line = readline();
     output_type result;
 
