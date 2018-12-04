@@ -29,7 +29,7 @@ class Consumer {
     bool running = false;
     std::thread cThread;
   public:
-    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter & inter);
+    Consumer(InputQueue * inq, OutputQueue * outq, Interpreter &inter);
     Consumer();
     Consumer & operator=(Consumer & c) noexcept;
     ~Consumer();
@@ -38,7 +38,7 @@ class Consumer {
     bool isRunning();
     void startThread();
     void stopThread();
-    void resetThread(Interpreter & newinter);
+    void resetThread(Interpreter *i);
 };
 
 class NotebookApp : public QWidget {
@@ -59,13 +59,13 @@ class NotebookApp : public QWidget {
         void interrupt_kernal();
 
     private:
-        InputWidget * in;
-        OutputWidget * out;
-        Interpreter mrInterpret;
-        Interpreter default_state;
-        InputQueue * inputQ = new InputQueue;
-        OutputQueue * outputQ = new OutputQueue;
-        Consumer * c1;
+        InputWidget* in;
+        OutputWidget* out;
+        Interpreter* mrInterpret = new Interpreter;
+        Interpreter* default_state = new Interpreter;
+        InputQueue* inputQ = new InputQueue;
+        OutputQueue* outputQ = new OutputQueue;
+        Consumer* c1;
         QPushButton* startButton, stopButton, resetButton, interuptButton;
         bool interupt_signal = false;
 };

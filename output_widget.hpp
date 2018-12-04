@@ -27,7 +27,7 @@ class OutputWidget: public QWidget {
         QGraphicsScene * scene = new QGraphicsScene(this);
         bool clear_on_print = true;
         void resizeEvent(QResizeEvent *event) override;
-        void drawText(QString str, double, double, double, double);
+        void drawText(QString str, double sf = 1, double rot = 0, double x = 0, double y = 0);
         void drawLine(double, double, double, double, double);
         void drawPoint(double, double, double);
 

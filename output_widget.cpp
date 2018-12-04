@@ -8,6 +8,9 @@ OutputWidget::OutputWidget(QWidget * parent) : QWidget(parent) {
 }
 
 void OutputWidget::catch_result(Expression e){
+    if(clear_on_print){
+        clear_screen();
+    }
 
     if(e.isPoint()) {
         std::pair<double, double> coordinates = e.getPointCoordinates();
@@ -52,12 +55,14 @@ void OutputWidget::catch_result(Expression e){
         }
     }
     else if (e.isList()) {
+        clear_on_print = false;
         for(auto & e_part : e.asVector()){
             catch_result(e_part);
         }
+        clear_on_print = true;
     }
     else if (e.isDP()) {
-
+        clear_on_print = false;
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
         std::vector<Expression> data = e.asVector();
 
@@ -117,10 +122,10 @@ void OutputWidget::catch_result(Expression e){
         drawText(QString::fromStdString(title), textscale, 0, AM, (OU-A));
         drawText(QString::fromStdString(a_label), textscale, 0, AM, (OL+A));
         drawText(QString::fromStdString(o_label), textscale, -90, (AL-B), OM);
-
+        clear_on_print = true;
     }
     else if (e.isCP()){
-
+        clear_on_print = false;
         std::vector<Expression> data = e.asVector();
 
         for(auto & item : data){
@@ -130,10 +135,10 @@ void OutputWidget::catch_result(Expression e){
             }
             else if (item.isPoint()){
                 item.setPointSize(0);
-                std::cout << "A man of your talents-- drawing Points, really?" << std::endl;
             }
             catch_result(item);
         }
+        clear_on_print = true;
     }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
@@ -146,12 +151,9 @@ void OutputWidget::catch_result(Expression e){
 }
 
 void OutputWidget::catch_failure(std::string message) {
-    scene->clear();
     QString msg = QString::fromStdString(message);
-    QGraphicsTextItem * output = new QGraphicsTextItem;
-    output->setPos(0,0);
-    output->setPlainText(msg);
-    scene->addItem(output);
+    drawText(msg);
+
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
@@ -159,6 +161,9 @@ void OutputWidget::catch_failure(std::string message) {
 
 void OutputWidget::clear_screen() {
     scene->clear();
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
 void OutputWidget::resizeEvent(QResizeEvent *event) {

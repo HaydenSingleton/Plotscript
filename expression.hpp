@@ -16,7 +16,9 @@ Defines the Expression type and assiciated functions.
 #include <iostream>
 #include <numeric>
 #include <cassert>
-
+#include <csignal>
+#include <cstdlib>
+extern sig_atomic_t global_status_flag;
 
 // forward declare Environment
 class Environment;

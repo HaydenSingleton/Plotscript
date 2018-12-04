@@ -782,11 +782,15 @@ Expression Expression::handle_cont_plot(Environment & env){
       throw SemanticError("Error: invalid number of arguments to continuous plot");
 }
 
+sig_atomic_t global_status_flag = 0;
 
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
+  if(global_status_flag > 0){
+    return Expression(Atom("Error: interpreter kernal interrupted"));
+  }
 
   if(m_tail.empty()){
     if (m_head.isSymbol() && m_head.asSymbol() == "list") {

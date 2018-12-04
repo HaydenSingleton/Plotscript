@@ -9,11 +9,6 @@
 #include "startup_config.hpp"
 #include "TSmessage.hpp"
 
-#include <csignal>
-#include <cstdlib>
-
-volatile sig_atomic_t global_status_flag = 0;
-
 #if defined(_WIN64) || defined(_WIN32)
 #include <windows.h>
 BOOL WINAPI interrupt_handler(DWORD fdwCtrlType) {
