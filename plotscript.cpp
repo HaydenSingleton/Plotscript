@@ -150,7 +150,7 @@ std::string readline(){
   if (std::cin.fail() || std::cin.eof()) {
     std::cin.clear(); // reset cin state
     line.clear(); //clear input string
-    std::cout << "\nError: Interrupted stdin.\n";
+    // std::cout << "\nError: Interrupted stdin.\n";
   }
   return line;
 }
@@ -215,7 +215,14 @@ void repl(Interpreter &interp){
   c1.startThread();
 
   while(!std::cin.eof()){
+
+    if(global_status_flag > 0){
+      input->clear();
+      output->clear();
+    }
+
     global_status_flag = 0;
+
     copy = interp;
 
     prompt();
@@ -223,7 +230,7 @@ void repl(Interpreter &interp){
     output_type result;
 
     if(line.empty()) continue;
-    else if(line == "%stop"){
+    if(line == "%stop"){
       c1.stopThread();
     }
     else if (line == "%start"){
@@ -246,7 +253,7 @@ void repl(Interpreter &interp){
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (global_status_flag > 0) {
           if(!input->empty()) {
-            input->try_pop(line);
+            input->clear();
           }
           std::cerr << "Error: interpreter kernel interrupted" << std::endl;
           c1.resetThread(copy);
