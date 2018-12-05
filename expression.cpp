@@ -178,7 +178,7 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 
   // must map to a proc
   if(!env.is_proc(op)){
-    throw SemanticError("Error during evaluation: symbol does not name a procedure");
+    throw SemanticError("Error during evaluation: symbol "+op.asString()+" does not name a procedure");
   }
 
     // map from symbol to proc
