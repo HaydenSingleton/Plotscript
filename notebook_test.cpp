@@ -116,8 +116,10 @@ void NotebookTest::testInputWidget(){
 
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
-  // auto scene = view->scene();
 
+  auto scene = view->scene();
+  auto items = scene->items();
+  QCOMPARE(items.size(), 0);
 }
 
 void NotebookTest::testDiscretePlotLayout() {
@@ -137,11 +139,12 @@ void NotebookTest::testDiscretePlotLayout() {
 
   auto scene = view->scene();
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
   // first check total number of items
   // 8 lines + 2 points + 7 text = 17
   auto items = scene->items();
+
+  std::this_thread::sleep_for(std::chrono::microseconds(200));
+
   QCOMPARE(items.size(), 17);
 
   // make them all selectable

@@ -88,8 +88,8 @@ class Consumer {
     void ThreadFunction() {
       bool succ;
       while(isRunning() && global_status_flag == 0){
-        succ = true;
         std::string line;
+        succ = false;
 
         if(!iqueue->try_pop(line)){
           continue;
@@ -108,10 +108,10 @@ class Consumer {
         else{
           try{
             result = cInterp.evaluate();
+            succ = true;
           }
           catch(const SemanticError & ex){
             error = ex.what();
-            succ = false;
           }
         }
 
@@ -253,7 +253,7 @@ void repl(Interpreter &interp){
     }
     else {
       p1(line);
-      // output->wait_and_pop(result);
+
       while(output->empty()){
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (global_status_flag > 0) {

@@ -13,6 +13,11 @@
 Expression run(const std::string & program){
 
   Interpreter interp;
+
+  std::ifstream startip_str(STARTUP_FILE);
+  REQUIRE(interp.parseStream(startip_str));
+  REQUIRE_NOTHROW(interp.evaluate());
+
   std::istringstream iss(program);
 
   bool ok = interp.parseStream(iss);
@@ -32,6 +37,10 @@ bool run_and_expect_error(const std::string & program){
   std::istringstream iss(program);
   Interpreter interp;
 
+  std::ifstream startip_str(STARTUP_FILE);
+  REQUIRE(interp.parseStream(startip_str));
+  REQUIRE_NOTHROW(interp.evaluate());
+
   bool ok = interp.parseStream(iss);
   if(!ok){
     std::cerr << "Failed to parse: " << program << std::endl;
@@ -40,7 +49,7 @@ bool run_and_expect_error(const std::string & program){
 
   REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 
-  return ok;
+  return true;
 }
 
 TEST_CASE( "Test Interpreter parser with expected input", "[interpreter]" ) {
@@ -552,47 +561,32 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
 
 TEST_CASE("Test handle discrete-plot", "[expression]") {
 
-  Interpreter mrInterpret;
-
-  std::ifstream startip_str(STARTUP_FILE);
-  REQUIRE(mrInterpret.parseStream(startip_str));
-  REQUIRE_NOTHROW(mrInterpret.evaluate());
-
   std::string program = R"((discrete-plot (list (list -1 -1) (list 1 1)) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") )))";
-  std::istringstream iss(program);
+  Expression e = run(program);
 
-  bool ok = mrInterpret.parseStream(iss);
-  REQUIRE(ok == true);
-  Expression e;
-  REQUIRE_NOTHROW(e = mrInterpret.evaluate());
   REQUIRE(e.isDP());
   std::vector<Expression> data = e.asVector();
   REQUIRE(data.size() == 17);
   REQUIRE(data[0].isLine());
+
+  program = "(discrete-plot (+ 2 3) (list (list 1)))";
+  REQUIRE(run_and_expect_error(program));
+  program = "(discrete-plot (list (list -1 -1) (list 1 1)) (list (list 1)) (list 2) (list (list 3)))";
+  REQUIRE(run_and_expect_error(program));
 }
 
 TEST_CASE("Test handle continuous-plot", "[expression]") {
 
-  Interpreter mrInterpret;
-
-  std::ifstream startip_str(STARTUP_FILE);
-  REQUIRE(mrInterpret.parseStream(startip_str));
-  REQUIRE_NOTHROW(mrInterpret.evaluate());
-
   std::string program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
+  Expression e = run(program);
 
-  std::istringstream iss(program);
-  bool ok = mrInterpret.parseStream(iss);
-  REQUIRE(ok == true);
-  Expression e;
-  REQUIRE_NOTHROW(e = mrInterpret.evaluate());
   REQUIRE(e.isCP());
   std::vector<Expression> data = e.asVector();
   REQUIRE(data.size() == 60);
   REQUIRE(data[0].isLine());
 
 
-  program = "(begin (continuous-plot * (list -2 2)))";
+  program = "(begin (continuous-plot (* 1) (list -2 2)))";
   REQUIRE(run_and_expect_error(program));
 
   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
@@ -600,5 +594,4 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
 
   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
   REQUIRE(run_and_expect_error(program));
-
 }

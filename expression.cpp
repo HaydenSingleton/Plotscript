@@ -345,19 +345,14 @@ Expression Expression::handle_get_property(Environment & env){
   Expression result;
   if(m_tail.size()==2) {
     if(m_tail[0].isHeadString()){
-      if(!env.is_proc(target.head())){
-          std::string key = m_tail[0].head().asString();
-          if(target.m_properties.find(key)!= target.m_properties.end()){
-            result = target.m_properties.at(key);
-          }
-          else {
-            result.m_type = ExpType::Empty;
-          }
-          return result;
+      std::string key = m_tail[0].head().asString();
+      if(target.m_properties.find(key)!= target.m_properties.end()){
+        result = target.m_properties.at(key);
       }
-      else{
-        throw SemanticError("Error: second argument to get-property must not be a procedure.");
+      else {
+        result.m_type = ExpType::Empty;
       }
+      return result;
     }
     else{
       throw SemanticError("Error: first argument to get-property not a string.");

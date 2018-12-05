@@ -183,12 +183,14 @@ void NotebookApp::interupt_kernAl(){
 
 void NotebookApp::time_ran_out(){
     output_type results; /// Tuple with { Expression e, std::string ex.what(), bool success }
-    if(outputQ->try_pop(results)){
+    if(c1->isRunning() && outputQ->try_pop(results)){
         if(std::get<2>(results)) {
             emit send_result(std::get<0>(results));
         }
         else {
             emit send_failure(std::get<1>(results));
         }
+        c1->stopThread();
+        c1->startThread();
     }
 }
