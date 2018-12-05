@@ -359,7 +359,7 @@ Expression Expression::handle_get_property(Environment & env){
     }
   }
   else{
-    throw SemanticError("Error invalid number of arguments for get-property.");
+    throw SemanticError("Error: invalid number of arguments for get-property.");
   }
 }
 

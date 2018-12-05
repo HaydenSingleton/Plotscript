@@ -154,14 +154,13 @@ void NotebookApp::catch_input(QString s){
     global_status_flag = 0;
     if(c1->isRunning()) {
         inputQ->push(s.toStdString());
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // c1->stopThread();
+        // c1->startThread();
     }
     else {
         emit send_failure("Error: Interpreter kernal is not running");
     }
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    c1->stopThread();
-    c1->startThread();
 }
 
 void NotebookApp::start_kernal() {

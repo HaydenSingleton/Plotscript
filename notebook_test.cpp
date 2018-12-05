@@ -132,7 +132,7 @@ void NotebookTest::testDiscretePlotLayout() {
   )";
 
   input->setPlainText(QString::fromStdString(program));
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier);
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
 
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
