@@ -175,7 +175,7 @@ void OutputWidget::resizeEvent(QResizeEvent *event) {
 
 void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAngle, double X, double Y) {
     QGraphicsTextItem *text = scene->addText(qstr);
-    auto font = QFont("Monospace");
+    auto font = QFont("Courier");
     font.setStyleHint(QFont::TypeWriter);
     font.setPointSize(1);
     text->setFont(font);

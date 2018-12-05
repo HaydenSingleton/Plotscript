@@ -109,11 +109,7 @@ void NotebookTest::initTestCase(){
 }
 
 void NotebookTest::testInputWidget(){
-  QTest::keyClicks(input, "hello world");
-  input->clear();
-  std::string program = "(define x 100)";
-
-  input->setPlainText(QString::fromStdString(program));
+  QTest::keyClicks(input, "(define x 100)");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
 
   auto view = output->findChild<QGraphicsView *>();
@@ -122,6 +118,10 @@ void NotebookTest::testInputWidget(){
   auto scene = view->scene();
   auto items = scene->items();
   QCOMPARE(items.size(), 1);
+
+  QTest::keyClicks(input, "fdasfdsaf");
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QCOMPARE(findText(scene, QPointF(0, 0), 0, QString("Error: Invalid Expression. Could not parse.")), 1);
 }
 
 void NotebookTest::testDiscretePlotLayout() {
