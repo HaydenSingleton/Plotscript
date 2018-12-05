@@ -19,7 +19,7 @@
 
 
 typedef TSmessage<std::string> InputQueue;
-typedef std::pair<Expression, std::string> output_type;
+typedef std::tuple<Expression, std::string, bool> output_type;
 typedef TSmessage<output_type> OutputQueue;
 
 class Consumer {

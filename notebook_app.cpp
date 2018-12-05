@@ -28,18 +28,13 @@ Consumer::Consumer(Consumer & c){
 void Consumer::ThreadFunction() {
     Expression result;
     std::string error;
+    bool succ = true;
+
     std::string line;
     while(isRunning()){
 
-        // if(false){
-        //     error = "Error: interpreter kernel interrupted";
-        //     output_type output = std::make_pair(result, error);
-        //     oqueue->push(output);
-        // }
+        iqueue->wait_and_pop(line);
 
-        if(!iqueue->try_pop(line)){
-            continue;
-        }
         std::istringstream expression(line);
         if(line == "quit")
             continue;
@@ -53,9 +48,10 @@ void Consumer::ThreadFunction() {
             }
             catch(const SemanticError & ex){
                 error = ex.what();
+                succ = false;
             }
         }
-        output_type output = std::make_pair(result, error);
+        output_type output = std::make_tuple(result, error, succ);
         oqueue->push(output);
     }
 }
@@ -156,15 +152,15 @@ void NotebookApp::catch_input(QString s){
         inputQ->push(s.toStdString());
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         if(outputQ->try_pop(results)){
-            if(results.second == "") {
-                emit send_result(results.first);
+            if(std::get<2>(results)) {
+                emit send_result(std::get<0>(results));
             }
             else {
-                emit send_failure(results.second);
+                emit send_failure(std::get<1>(results));
             }
         }
         else {
-            timer->start(0);
+            timer->start(1);
         }
     }
     else {
@@ -196,11 +192,11 @@ void NotebookApp::time_ran_out(){
     output_type results;
     if(outputQ->try_pop(results)){
         timer->stop();
-        if(results.second == "") {
-            emit send_result(results.first);
+        if(std::get<2>(results)) {
+            emit send_result(std::get<0>(results));
         }
         else {
-            emit send_failure(results.second);
+            emit send_failure(std::get<1>(results));
         }
     }
 }

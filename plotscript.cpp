@@ -52,7 +52,7 @@ inline void install_handler() {
 #endif
 
 typedef TSmessage<std::string> InputQueue;
-typedef std::pair<Expression, std::string> output_type;
+typedef std::tuple<Expression, std::string, bool> output_type;
 typedef TSmessage<output_type> OutputQueue;
 
 class Producer {
@@ -79,39 +79,45 @@ class Consumer {
       cInterp = inter;
     }
     ~Consumer(){
-      if(iqueue->empty()) iqueue->push("astring");
-      if(cThread.joinable()) cThread.join();
+      if(cThread.joinable()) {
+        std::string temp;
+        iqueue->push(temp);
+        cThread.join();
+      }
     }
     void ThreadFunction() {
-        while(isRunning() && global_status_flag == 0){
-          std::string line;
+      bool succ;
+      while(isRunning() && global_status_flag == 0){
+        succ = true;
+        std::string line;
 
-          if(!iqueue->try_pop(line)){
-            continue;
-          }
-          std::istringstream expression(line);
-
-          if(line == "")
-            continue;
-
-          Expression result;
-          std::string error;
-
-          if(!cInterp.parseStream(expression)){
-            error = "Invalid Expression. Could not parse.";
-          }
-          else{
-            try{
-              result = cInterp.evaluate();
-            }
-            catch(const SemanticError & ex){
-              error = ex.what();
-            }
-          }
-
-          output_type output = std::make_pair(result, error);
-          oqueue->push(output);
+        if(!iqueue->try_pop(line)){
+          continue;
         }
+        std::istringstream expression(line);
+
+        if(line == "")
+          continue;
+
+        Expression result;
+        std::string error;
+
+        if(!cInterp.parseStream(expression)){
+          error = "Invalid Expression. Could not parse.";
+        }
+        else{
+          try{
+            result = cInterp.evaluate();
+          }
+          catch(const SemanticError & ex){
+            error = ex.what();
+            succ = false;
+          }
+        }
+
+        output_type output = std::make_tuple(result, error, succ);
+        oqueue->push(output);
+      }
     }
     bool isRunning(){
       return running;
@@ -259,17 +265,15 @@ void repl(Interpreter &interp){
       //If the operation was NOT interupted, get the result. OTHERWISE prompt repl again
       if(global_status_flag == 0){
         output->try_pop(result);
-
-        if(result.second==""){
-          std::cout << result.first << std::endl;
+        if(std::get<2>(result)) {
+            std::cout << std::get<0>(result) << std::endl;
         }
-        else{
-          std::cerr << result.second << std::endl;
+        else {
+            std::cerr << std::get<1>(result) << std::endl;
         }
       }
     }
   }
-
   delete input;
   delete output;
 }
