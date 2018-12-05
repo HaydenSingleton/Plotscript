@@ -36,10 +36,18 @@ void Consumer::ThreadFunction() {
         iqueue->wait_and_pop(line);
 
         std::istringstream expression(line);
-        if(line == "quit")
+        if(line == "quit"){
             continue;
+        }
+
+       ;
+        if(std::all_of(line.begin(), line.end(),isspace)){
+            continue;
+        }
 
         succ = false;
+        error = "";
+
         if(!cInterp.parseStream(expression)){
             error = "Error: Invalid Expression. Could not parse.";
         }
