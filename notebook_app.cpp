@@ -28,7 +28,7 @@ Consumer::Consumer(Consumer & c){
 void Consumer::ThreadFunction() {
     Expression result;
     std::string error;
-    bool succ = true;
+    bool succ;
 
     std::string line;
     while(isRunning()){
@@ -39,16 +39,17 @@ void Consumer::ThreadFunction() {
         if(line == "quit")
             continue;
 
+        succ = false;
         if(!cInterp.parseStream(expression)){
             error = "Error: Invalid Expression. Could not parse.";
         }
         else{
             try{
                 result = cInterp.evaluate();
+                succ = true;
             }
             catch(const SemanticError & ex){
                 error = ex.what();
-                succ = false;
             }
         }
         output_type output = std::make_tuple(result, error, succ);
@@ -69,7 +70,8 @@ void Consumer::stopThread(){
         running = false;
         std::string quit = "quit";
         iqueue->push(quit);
-        cThread.join();
+        if(cThread.joinable())
+            cThread.join();
         iqueue->try_pop(quit);
     }
 }
@@ -125,6 +127,9 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     layout->addWidget(out, 1);
     setLayout(layout);
 
+    timer = new QTimer(this);
+    timer->start(100);
+
     // connect input to this notebook for evaluating
     QObject::connect(in, SIGNAL(send_input(QString)), this, SLOT(catch_input(QString)));
 
@@ -145,28 +150,16 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(time_ran_out()));
 }
 void NotebookApp::catch_input(QString s){
-    Expression result;
-    output_type results;
+
     global_status_flag = 0;
-    if(c1->isRunning()){
+    if(c1->isRunning()) {
         inputQ->push(s.toStdString());
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        if(outputQ->try_pop(results)){
-            if(std::get<2>(results)) {
-                emit send_result(std::get<0>(results));
-            }
-            else {
-                emit send_failure(std::get<1>(results));
-            }
-        }
-        else {
-            timer->start(1);
-        }
     }
     else {
         emit send_failure("Error: Interpreter kernal is not running");
     }
 
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     c1->stopThread();
     c1->startThread();
 }
@@ -189,9 +182,8 @@ void NotebookApp::interupt_kernAl(){
 }
 
 void NotebookApp::time_ran_out(){
-    output_type results;
+    output_type results; /// Tuple with { Expression e, std::string ex.what(), bool success }
     if(outputQ->try_pop(results)){
-        timer->stop();
         if(std::get<2>(results)) {
             emit send_result(std::get<0>(results));
         }

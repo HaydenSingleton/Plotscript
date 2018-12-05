@@ -70,7 +70,7 @@ class NotebookApp : public QWidget {
         Consumer* c1;
         QPushButton* startButton, stopButton, resetButton, interuptButton;
         bool interupt_signal = false;
-        QTimer * timer = new QTimer(this);
+        QTimer * timer;
 };
 
 #endif
