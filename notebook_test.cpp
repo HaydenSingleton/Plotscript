@@ -89,6 +89,7 @@ private slots:
 
   void initTestCase();
   void testInputWidget();
+  void testOutputWidget();
   void testDiscretePlotLayout();
   void testContinuousPlotLayout();
 
@@ -105,10 +106,11 @@ void NotebookTest::initTestCase(){
   QVERIFY2(input, "Could not find input widget");
   QVERIFY2(output, "Could not find output widget");
   QVERIFY2(widget.objectName() == "notebook", "Notebook object name incorrect");
-  // widget.show();
+  widget.show();
 }
 
-void NotebookTest::testInputWidget(){
+void NotebookTest::testInputWidget() {
+  input->clear();
   QTest::keyClicks(input, "(define x 100)");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
 
@@ -118,10 +120,33 @@ void NotebookTest::testInputWidget(){
   auto scene = view->scene();
   auto items = scene->items();
   QCOMPARE(items.size(), 1);
+  input->clear();
+}
 
+void NotebookTest::testOutputWidget(){
+
+  QTest::keyClicks(input, "(set-property \"size\" 0.5 (make-point 0 0))");
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+
+  auto view = output->findChild<QGraphicsView *>();
+  QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
+
+  auto scene = view->scene();
+  auto items = scene->items();
+  QCOMPARE(items.size(), 1);
+
+  input->clear();
   QTest::keyClicks(input, "fdasfdsaf");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
   QCOMPARE(findText(scene, QPointF(0, 0), 0, QString("Error: Invalid Expression. Could not parse.")), 1);
+  QCOMPARE(items.size(), 1);
+
+   input->clear();
+  QTest::keyClicks(input, "(set-property \"text-rotation\" (/ pi 2) (set-property \"size\" 10 (make-text \"Hello World\")))");
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QCOMPARE(findText(scene, QPointF(0, 0), 90, QString("Hello World")), 1);
+  QCOMPARE(items.size(), 1);
+
 }
 
 void NotebookTest::testDiscretePlotLayout() {
@@ -269,29 +294,11 @@ void NotebookTest::testContinuousPlotLayout() {
   // check ordinate max label
   QCOMPARE(findText(scene, QPointF(xmin-2, -ymax), 0, QString("5")), 1);
 
-  // // check the bounding box bottom
-  // QCOMPARE(findLines(scene, QRectF(xmin, -ymin, 20, 0), 0.1), 1);
-
-  // // check the bounding box top
-  // QCOMPARE(findLines(scene, QRectF(xmin, -ymax, 20, 0), 0.1), 1);
-
-  // // check the bounding box left and (-1, -1) stem
-  // QCOMPARE(findLines(scene, QRectF(xmin, -ymax, 0, 20), 0.1), 2);
-
-  // // check the bounding box right and (1, 1) stem
-  // QCOMPARE(findLines(scene, QRectF(xmax, -ymax, 0, 20), 0.1), 2);
-
   // check the abscissa axis
   QCOMPARE(findLines(scene, QRectF(xmin, 0, 20, 0), 0.1), 1);
 
   // check the ordinate axis
   QCOMPARE(findLines(scene, QRectF(0, -ymax, 0, 20), 0.1), 1);
-
-  // // check the point at (-1,-1)
-  // QCOMPARE(findPoints(scene, QPointF(-10, 12.5), 0.6), 1);
-
-  // // check the point at (1,1)
-  // QCOMPARE(findPoints(scene, QPointF(10, -12.5), 0.6), 1);
 }
 
 QTEST_MAIN(NotebookTest)

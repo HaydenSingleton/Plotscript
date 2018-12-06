@@ -36,17 +36,13 @@ void Consumer::ThreadFunction() {
         iqueue->wait_and_pop(line);
 
         std::istringstream expression(line);
-        if(line == "quit"){
-            continue;
-        }
-
-       ;
-        if(std::all_of(line.begin(), line.end(),isspace)){
+        if(line == "quit" || std::all_of(line.begin(), line.end(),isspace)){
             continue;
         }
 
         succ = false;
         error = "";
+        output_type output;
 
         if(!cInterp.parseStream(expression)){
             error = "Error: Invalid Expression. Could not parse.";
@@ -60,7 +56,7 @@ void Consumer::ThreadFunction() {
                 error = ex.what();
             }
         }
-        output_type output = std::make_tuple(result, error, succ);
+        output = std::make_tuple(result, error, succ);
         oqueue->push(output);
     }
 }
@@ -163,8 +159,6 @@ void NotebookApp::catch_input(QString s){
     if(c1->isRunning()) {
         inputQ->push(s.toStdString());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        // c1->stopThread();
-        // c1->startThread();
     }
     else {
         emit send_failure("Error: Interpreter kernal is not running");

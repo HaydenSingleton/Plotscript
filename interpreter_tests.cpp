@@ -19,6 +19,7 @@ Expression run(const std::string & program){
   REQUIRE_NOTHROW(interp.evaluate());
 
   std::istringstream iss(program);
+  INFO(program);
 
   bool ok = interp.parseStream(iss);
   if(!ok){
@@ -46,7 +47,7 @@ bool run_and_expect_error(const std::string & program){
     std::cerr << "Failed to parse: " << program << std::endl;
   }
   REQUIRE(ok == true);
-
+  INFO(program);
   REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 
   return true;
@@ -515,42 +516,30 @@ TEST_CASE("Test handle get/set property", "[expression]"){
 
 TEST_CASE("Test output widget helper functions", "[expression]") {
 
-  Interpreter mrInterpret;
-
-  std::ifstream startip_str(STARTUP_FILE);
-  REQUIRE(mrInterpret.parseStream(startip_str));
-  REQUIRE_NOTHROW(mrInterpret.evaluate());
-
   std::string program = "(define a (make-point 2 2))";
 
-  std::istringstream iss(program);
-
-  bool ok = mrInterpret.parseStream(iss);
-  REQUIRE(ok == true);
-  Expression e = mrInterpret.evaluate();
+  Expression e = run(program);
   REQUIRE(e.isPoint());
   REQUIRE(!e.isLine());
   REQUIRE(!e.isText());
   REQUIRE(e.toString() == "((2) (2))");
   REQUIRE(e.getNumericalProperty("\"size\"") == 0);
+  e.setPointSize(5.0);
+  REQUIRE(e.getNumericalProperty("\"size\"") == 5.0);
   std::pair<double, double> target = {2, 2};
   REQUIRE(e.getPointCoordinates()==target);
 
   program = "(set-property \"thickness\" 4 (make-line (make-point 0 0) (make-point 3 3)))";
-  std::istringstream iss2(program);
-  ok = mrInterpret.parseStream(iss2);
-  REQUIRE(ok);
-  e = mrInterpret.evaluate();
+  e = run(program);
   REQUIRE(e.isLine());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isText());
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 4.0);
+  e.setLineThickness(2.0);
+  REQUIRE(e.getNumericalProperty("\"thickness\"") == 2.0);
 
   program = "(set-property \"text-scale\" 2 (set-property \"text-rotation\" 10 (set-property \"position\" (make-point 2 -2) (make-text \"General Kenobi\"))))";
-  std::istringstream iss3(program);
-  ok = mrInterpret.parseStream(iss3);
-  REQUIRE(ok);
-  e = mrInterpret.evaluate();
+  e = run(program);
   REQUIRE(e.isText());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isLine());
@@ -585,6 +574,8 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   REQUIRE(data.size() == 60);
   REQUIRE(data[0].isLine());
 
+  program = R"((begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") ))))";
+  REQUIRE(run_and_expect_error(program)); // THIS SHOULD WORK BUT MY IMPLEMENTATION IS BROKEN
 
   program = "(begin (continuous-plot (* 1) (list -2 2)))";
   REQUIRE(run_and_expect_error(program));
@@ -593,5 +584,8 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   REQUIRE(run_and_expect_error(program));
 
   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
+  REQUIRE(run_and_expect_error(program));
+
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 -1 -1) \"not a list\"))";
   REQUIRE(run_and_expect_error(program));
 }

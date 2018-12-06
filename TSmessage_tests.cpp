@@ -40,10 +40,12 @@ TEST_CASE( "Test TSmessage wait and pop", "[TSmessage]" ) {
     typedef std::pair<std::string, Expression> Item;
     TSmessage<Item> myqueue;
 
-    Item a = {"rawr x3", Expression(Atom("uWu"))}, b;
+    Item a = {"rawr x3", Expression(Atom("uWu"))}, b, c;
     REQUIRE(a!=b);
     myqueue.push(a);
+    myqueue.push(b);
     myqueue.wait_and_pop(b);
+    myqueue.wait_and_pop(c);
     REQUIRE(myqueue.empty());
     REQUIRE(a==b);
 }

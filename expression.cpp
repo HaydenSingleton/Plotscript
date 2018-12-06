@@ -170,15 +170,14 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
     return lambda.tail()->eval(inner_scope);
   }//stop here if applying a lambda
 
-
   // head must be a symbol
   if(!op.isSymbol()){
-    throw SemanticError("Error during evaluation: procedure name not symbol");
+    throw SemanticError("Error during evaluation: procedure ["+op.asString()+"] name not symbol");
   }
 
   // must map to a proc
   if(!env.is_proc(op)){
-    throw SemanticError("Error during evaluation: symbol "+op.asString()+" does not name a procedure");
+    throw SemanticError("Error during evaluation: symbol ["+op.asString()+"] does not name a procedure");
   }
 
     // map from symbol to proc
@@ -515,6 +514,109 @@ Expression Expression::handle_discrete_plot(Environment & env){
       //   result.push_back(Expression(Atom("\"1\"")));
       // }
 
+      int hahaha = 0;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+      hahaha = hahaha - 1;
+      hahaha = hahaha + 1;
+
       // std::cout << "Discrete-plot head: " << Expression(Expression(result), "discrete-plot").head() << std::endl;
       // std::cout << "Discrete-plot size: " << Expression(Expression(result), "discrete-plot").m_tail.size() << std::endl;
       return Expression(Expression(result), "discrete-plot");
@@ -530,7 +632,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
 Expression Expression::handle_cont_plot(Environment & env){
 
-    if(m_tail.size() >= 2){
+    if(m_tail.size() == 2 || m_tail.size() == 3){
       std::vector<Expression> result;
       Expression FUNC = m_tail[0];
       Expression BOUNDS = m_tail[1];
