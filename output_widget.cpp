@@ -16,7 +16,7 @@ void OutputWidget::catch_result(Expression e){
         std::pair<double, double> coordinates = e.getPointCoordinates();
         double diam = e.getNumericalProperty("\"size\"");
         if(diam < 0){
-            catch_failure("Error in make-point call: diameter not positive");
+            catch_failure("Error: in make-point call: diameter not positive");
             return;
         }
         drawPoint(coordinates.first, coordinates.second, diam);
@@ -29,7 +29,7 @@ void OutputWidget::catch_result(Expression e){
             std::pair<double, double> Y = p2.getPointCoordinates();
             double thicc = e.getNumericalProperty("\"thickness\"");
             if(thicc < 0){
-                catch_failure("Error in make-line call: thickness value not positive");
+                catch_failure("Error: in make-line call: thickness value not positive");
                 return;
             }
             drawLine(X.first, X.second, Y.first, Y.second, thicc);
@@ -50,7 +50,7 @@ void OutputWidget::catch_result(Expression e){
             drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
         }
         else {
-            catch_failure("Error in make-text: not a valid property in list for make-text");
+            catch_failure("Error: in make-text: not a valid property in list for make-text");
             return;
         }
     }

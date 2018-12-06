@@ -151,6 +151,8 @@ NotebookApp::NotebookApp(QWidget *parent) : QWidget(parent) {
     QObject::connect(stopButton, SIGNAL(clicked()), this, SLOT(stop_kernal()));
     QObject::connect(resetButton, SIGNAL(clicked()), this, SLOT(reset_kernal()));
     QObject::connect(interuptButton, SIGNAL(clicked()), this, SLOT(interupt_kernAl()));
+
+    //
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(time_ran_out()));
 }
 void NotebookApp::catch_input(QString s){

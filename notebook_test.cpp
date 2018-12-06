@@ -92,6 +92,12 @@ private slots:
   void testOutputWidget();
   void testDiscretePlotLayout();
   void testContinuousPlotLayout();
+  void testGetNotAKey();
+  void testSetPropertyInval();
+  void testUndefined();
+  void testMakeText();
+  void testMakeMath();
+  void testMakeTitle();
 
 private:
   NotebookApp widget;
@@ -112,7 +118,7 @@ void NotebookTest::initTestCase(){
 void NotebookTest::testInputWidget() {
   input->clear();
   QTest::keyClicks(input, "(define x 100)");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
 
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
@@ -126,7 +132,7 @@ void NotebookTest::testInputWidget() {
 void NotebookTest::testOutputWidget(){
 
   QTest::keyClicks(input, "(set-property \"size\" 0.5 (make-point 0 0))");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
 
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
@@ -137,13 +143,13 @@ void NotebookTest::testOutputWidget(){
 
   input->clear();
   QTest::keyClicks(input, "fdasfdsaf");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
   QCOMPARE(findText(scene, QPointF(0, 0), 0, QString("Error: Invalid Expression. Could not parse.")), 1);
   QCOMPARE(items.size(), 1);
 
    input->clear();
   QTest::keyClicks(input, "(set-property \"text-rotation\" (/ pi 2) (set-property \"size\" 10 (make-text \"Hello World\")))");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 1000);
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
   QCOMPARE(findText(scene, QPointF(0, 0), 90, QString("Hello World")), 1);
   QCOMPARE(items.size(), 1);
 
@@ -299,6 +305,60 @@ void NotebookTest::testContinuousPlotLayout() {
 
   // check the ordinate axis
   QCOMPARE(findLines(scene, QRectF(0, -ymax, 0, 20), 0.1), 1);
+}
+
+void NotebookTest::testGetNotAKey() {
+	QString program = "(get-property \"notAKey\" (0))";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "NONE");
+}
+
+void NotebookTest::testSetPropertyInval() {
+	QString program = "(set-property \"notAKey\" (0))";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "Error during evaluation: invalid number of set-property arguments to define");
+}
+
+void NotebookTest::testUndefined() {
+	QString program = "(x)";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "Error during evaluation: unknown symbol");
+}
+
+void NotebookTest::testMakeText() {
+	QString program = "(make-text \"Hello World\")";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "Hello World");
+}
+
+void NotebookTest::testMakeMath() {
+	QString program = "(cos pi)";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "(-1)");
+}
+
+void NotebookTest::testMakeTitle() {
+	QString program = "(begin (define title \"The Title\") (title))";
+	input->setPlainText(program);
+	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
+	auto view = output->findChild<QGraphicsView *>();
+	QVERIFY2(view, "(\"The Title\")");
 }
 
 QTEST_MAIN(NotebookTest)
