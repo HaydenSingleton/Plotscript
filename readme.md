@@ -1,7 +1,9 @@
 Introduction
 -------------
+**This project was built on code written by my professor, Christopher L. Wyatt (https://ece.vt.edu/people/profile/wyatt).**
 
-The starter code for the semester project implements the basic language interpreter for a language we will call Plot Script (plotscript) in less than 700 lines of code. It also includes unit and integration tests for the base implementation, as well as a driver program implementing a read-eval-print loop. These pages define the base language and document its implementation. **You will need to read and understand this code in order to be able to modify it.**
+This semester long project implements the basic language interpreter for a simple interpreted language called Plot Script (plotscript). It includes unit and integration tests for the base implementation, a driver program implementing a command line read-eval-print loop, and a program which uses Qt to draw a basic GUI for more complex output. These are called (plotscript) and (notebook) respectively.
+These pages define the base language and document its implementation.
 
 Plot Script Overview
 ---------------------
@@ -67,7 +69,7 @@ The process of AST construction then uses the token list to build the AST. Every
 Initial Plot Script Language Specification
 --------------------------------------------
 
-Our initial plotscript language is relatively simple (you will be extending it during the course of the semester). It can be specified as follows.
+The inital specifications of the code which each student recieved at the beginning of the semester. All changes from this form were made by myself while completting each "milestone", which were sets of progressivley greater required functionality throughout the semester. The inital state of the program can specified as follows.
 
 An _Atom_ has a type and a value. The type may be one of None, Number, or Symbol. The type ``None`` indicates the expression has no value. The possible values of a Number are any IEEE double floating point value, strictly parsed with no trailing characters. The possible values of a Symbol is any string, not containing white-space, not possible to parse as a Number, not beginning with a numerical digit, and not one of the _special_ _forms_ defined below.
 
@@ -123,7 +125,7 @@ The C++ code implementing the plotscript interpreter is divided into the followi
 Driver Program Specification
 -----------------------------------
 
-The interpreter module needs some user interface code to be useful to a user. The starter code includes a command-line application that compiles to an executable named ``plotscript.exe`` on Windows and just ``plotscript`` on mac/linux. The executable is usable in one of three ways:
+The interpreter module needs some user interface code to be useful to a user. The project includes a command-line application that compiles to an executable named ``plotscript.exe`` on Windows and just ``plotscript`` on mac/linux. The GUI is similarly compiled to ``notebook.exe`` and ``notebook``.  The plotscript executable is usable in one of three ways:
 
 To execute short simple programs, pass a flag ``-e`` followed by a quoted string with the program. For example (> is the prompt):
 
@@ -192,32 +194,8 @@ plotscript> (- 12 10)
 Unit Tests
 -------------
 
-Each module of code above has a set of unit tests covering its functionality using Catch, e.g. basic tests for the interpreter module are included in the file ``interpreter_tests.cpp``. These tests are built as part of the overall project using CMake as described below. These are examples of the kind of tests you will be writing during the semester.
+Each module of code above has a set of unit tests covering its functionality using Catch, e.g. basic tests for the interpreter module are included in the file ``interpreter_tests.cpp``. These tests are built as part of the overall project using CMake as described below.
 
-Using CMake to build and test the software
---------------------------------------------
-
-The repository contains a ``CMakeLists.txt`` file that sets up the tests and builds the plotscript executable. 
-
-In the virtual machine this translates to the following:
-
-```
-> cd ~
-> cmake /vagrant
-> make
-> make test
-```
-
-This treats the source directory as the shared host directory (``/vagrant``) and places the build in the home directory of the virtual machine user (``/home/vagrant``). Using CMake on your host system will vary slightly by platform and compiler/IDE.
-
-The reference environment also includes tools for memory and coverage analysis. To run them (after doing the above):
-
-```
-> make memtest
-> make coverage
-```
-
-We will discuss these tools in class.
 
 Notes
 ------
