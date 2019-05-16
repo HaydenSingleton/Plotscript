@@ -514,13 +514,6 @@ Expression Expression::handle_discrete_plot(Environment & env){
       //   result.push_back(Expression(Atom("\"1\"")));
       // }
 
-      int hahaha = 0;
-      hahaha = hahaha + 1;
-      hahaha = hahaha - 1;
-
-
-      // std::cout << "Discrete-plot head: " << Expression(Expression(result), "discrete-plot").head() << std::endl;
-      // std::cout << "Discrete-plot size: " << Expression(Expression(result), "discrete-plot").m_tail.size() << std::endl;
       return Expression(Expression(result), "discrete-plot");
     }
     else {
@@ -553,7 +546,6 @@ Expression Expression::handle_cont_plot(Environment & env){
       temp = {FUNC, BOUNDS};
       y_bounds = Expression(Atom("map"), temp).eval(env).asVector();
 
-      // std::cout << "x_bounds: " << x_bounds << "\ny_bounds: " << y_bounds << std::endl;
       double N = 20, A = 3, B = 3, C = 2, D = 2;
       double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
 
@@ -566,8 +558,6 @@ Expression Expression::handle_cont_plot(Environment & env){
       // // Create scale factors using the max and min edges of the data
       xscale = N/(AU-AL);
       yscale = N/(OU-OL)  * -1;
-
-      // std::cout << "x scale: " << xscale << "\ny scale: " << yscale << std::endl;
 
       // // Scale bounds of the box
       xmin = AL * xscale;
@@ -653,7 +643,8 @@ Expression Expression::handle_cont_plot(Environment & env){
         result.push_back(yaxis.eval(env));
       }
 
-      size_t M = 50; // Number of data points
+      // Number of data points for a continuous plot
+      size_t M = 50;
 
       double stepsize = (AU-AL)/M;
 
@@ -742,7 +733,6 @@ Expression Expression::handle_cont_plot(Environment & env){
 
 
           temp.clear();
-          // std::cout << "option: " << opt.m_tail[0].head().asString() << std::endl;
 
           if(opt.m_tail[0].head().asString() == "\"title\""){
             temp.push_back(Expression(Atom(xmiddle)));
@@ -756,10 +746,8 @@ Expression Expression::handle_cont_plot(Environment & env){
             temp.push_back(Expression(Atom(xmin-B)));
             temp.push_back(Expression(Atom(ymiddle)));
           }
-          assert(temp.size()==2);
-          // std::cout << "assertion passed" << std::endl;
+
           textPos = Expression(Atom("make-point"), temp).eval(env);
-          // std::cout << "Position: " << textPos << std::endl;
           temp.clear();
           temp = { Expression(Atom(opt.m_tail[1].head().asString())) };
           textItem = Expression(Atom("make-text"), temp);
@@ -767,9 +755,6 @@ Expression Expression::handle_cont_plot(Environment & env){
           temp = {Expression(Atom("\"position\"")), textPos, textItem};
           ffffff = Expression(Atom("\"set-property\""), temp);
 
-
-          // textItem.setTextPosition(textPos);
-          // textItem.m_properties["\"position\""] = textPos;
           result.push_back(ffffff.eval(env));
         }
 
