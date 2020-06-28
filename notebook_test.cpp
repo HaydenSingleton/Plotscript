@@ -92,8 +92,8 @@ private slots:
   void testOutputWidget();
   void testDiscretePlotLayout();
   void testContinuousPlotLayout();
-  void testGetNotAKey();
-  void testSetPropertyInval();
+  void testGetPropertyErrors();
+  void testSetPropertyErrors();
   void testUndefined();
   void testMakeText();
   void testMakeMath();
@@ -147,7 +147,7 @@ void NotebookTest::testOutputWidget(){
   QCOMPARE(findText(scene, QPointF(0, 0), 0, QString("Error: Invalid Expression. Could not parse.")), 1);
   QCOMPARE(items.size(), 1);
 
-   input->clear();
+  input->clear();
   QTest::keyClicks(input, "(set-property \"text-rotation\" (/ pi 2) (set-property \"size\" 10 (make-text \"Hello World\")))");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
   QCOMPARE(findText(scene, QPointF(0, 0), 90, QString("Hello World")), 1);
@@ -307,8 +307,10 @@ void NotebookTest::testContinuousPlotLayout() {
   QCOMPARE(findLines(scene, QRectF(0, -ymax, 0, 20), 0.1), 1);
 }
 
-void NotebookTest::testGetNotAKey() {
-	QString program = "(get-property \"notAKey\" (0))";
+void NotebookTest::testGetPropertyErrors() {
+
+
+	QString program = "(get-property \"notAKey\" (0)";
 	input->setPlainText(program);
 	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
 
@@ -316,13 +318,19 @@ void NotebookTest::testGetNotAKey() {
 	QVERIFY2(view, "NONE");
 }
 
-void NotebookTest::testSetPropertyInval() {
-	QString program = "(set-property \"notAKey\" (0))";
+void NotebookTest::testSetPropertyErrors() {
+	QString program = "(set-property (100) (0))";
 	input->setPlainText(program);
 	QTest::keyPress(input, Qt::Key_Return, Qt::ShiftModifier, 10);
 
 	auto view = output->findChild<QGraphicsView *>();
-	QVERIFY2(view, "Error during evaluation: invalid number of set-property arguments to define");
+	QVERIFY2(view, "Error: first argument to set-property not a string.");
+
+  input->clear();
+  QTest::keyClicks(input, "(set-property \"text-rotation\" (/ pi 2) \"extra-argument\")" );
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+  QVERIFY2(view, "Error invalid number of arguments for set-property.");
+
 }
 
 void NotebookTest::testUndefined() {
