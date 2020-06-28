@@ -46,13 +46,13 @@ public:
   Expression(const Expression & a);
 
   /// constructor for list
-  Expression(const std::vector<Expression> & a);
+  Expression(ConstIteratorType & a);
 
   /// constructor for lambda type
-  Expression(const std::vector<Expression> & args, Expression & func);
+  Expression(ConstIteratorType & args, Expression & func);
 
   /// constructor for special cases like graphics items
-  Expression(const Atom & head, const std::vector<Expression> & tail);
+  Expression(const Atom & head, ConstIteratorType & tail);
 
   //Constructor for plots
   Expression(const Expression & a, std::string t);
@@ -80,17 +80,6 @@ public:
 
   /// return a const-iterator to the tail end
   ConstIteratorType tailConstEnd() const noexcept;
-
-  /// convienience member to determine if head atom is a number
-  bool isHeadNumber() const noexcept;
-
-  /// convienience member to determine if head atom is a symbol
-  bool isHeadSymbol() const noexcept;
-
-  /// convenience member to determine if the head atom is a comlex number
-  bool isHeadComplex() const noexcept;
-
-  bool isHeadString() const noexcept;
 
   /// member when determines if the expression has no type
   bool isNone() const noexcept;

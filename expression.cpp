@@ -9,6 +9,7 @@
 Expression::Expression()
 {}
 
+// Basic constructor
 Expression::Expression(const Atom & a): m_head(a)
 {}
 
@@ -81,22 +82,6 @@ Atom & Expression::head(){
 
 const Atom & Expression::head() const{
   return m_head;
-}
-
-bool Expression::isHeadNumber() const noexcept{
-  return m_head.isNumber();
-}
-
-bool Expression::isHeadSymbol() const noexcept{
-  return m_head.isSymbol();
-}
-
-bool Expression::isHeadComplex() const noexcept{
-  return m_head.isComplex();
-}
-
-bool Expression::isHeadString() const noexcept{
-  return m_head.isString();
 }
 
 bool Expression::isNone() const noexcept {
@@ -225,7 +210,7 @@ Expression Expression::handle_define(Environment & env){
   }
 
   // tail[0] must be symbol
-  if(!m_tail[0].isHeadSymbol()){
+  if(!m_tail[0].head().isSymbol()){
     throw SemanticError("Error during handle define: first argument to define not symbol");
   }
 
@@ -319,9 +304,9 @@ Expression Expression::handle_map(Environment & env){
 }
 
 Expression Expression::handle_set_property(Environment & env){
-   Expression result = m_tail[2].eval(env);
    if(m_tail.size()==3) {
-    if(m_tail[0].isHeadString()){
+    Expression result = m_tail[2].eval(env);
+    if(m_tail[0].head().isString()){
       std::string key = m_tail[0].head().asString();
       if(result.m_properties.find(key) != result.m_properties.end()){
         result.m_properties.erase(key);
@@ -332,18 +317,18 @@ Expression Expression::handle_set_property(Environment & env){
     else{
       throw SemanticError("Error: first argument to set-property not a string.");
     }
+        return result;
   }
   else{
     throw SemanticError("Error invalid number of arguments for set-property.");
   }
-  return result;
 }
 
 Expression Expression::handle_get_property(Environment & env){
   Expression target = m_tail[1].eval(env);
   Expression result;
   if(m_tail.size()==2) {
-    if(m_tail[0].isHeadString()){
+    if(m_tail[0].head().isString()){
       std::string key = m_tail[0].head().asString();
       if(target.m_properties.find(key)!= target.m_properties.end()){
         result = target.m_properties.at(key);
@@ -831,7 +816,7 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
     return out;
   }
 
-  if(!exp.isHeadComplex()) {
+  if(!exp.head().isComplex()) {
     out << "(";
   }
 
@@ -847,7 +832,7 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
       out << " ";
     }
   }
-  if(!exp.isHeadComplex()) {
+  if(!exp.head().isComplex()) {
     out << ")";
   }
 
@@ -884,7 +869,7 @@ std::string Expression::toString() const noexcept{
     out << "NONE";
   }
   else {
-    if(!this->isHeadComplex()) {
+    if(!this->head().isComplex()) {
       out << "(";
     }
 
@@ -900,7 +885,7 @@ std::string Expression::toString() const noexcept{
         out << " ";
       }
     }
-    if(!this->isHeadComplex()) {
+    if(!this->head().isComplex()) {
       out << ")";
     }
   }

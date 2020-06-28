@@ -98,8 +98,8 @@ TEST_CASE( "Test get built-in procedure", "[environment]" ) {
 	args.emplace_back(a);
 	args.emplace_back(b);
 	Expression result = padd(args);
-	REQUIRE(result.isHeadComplex());
-	REQUIRE(Expression(c).isHeadComplex());
+	REQUIRE(result.head().isComplex());
+	REQUIRE(Expression(c).head().isComplex());
 	REQUIRE(result == Expression(Atom(c)));
     REQUIRE(result != Expression(Atom(b)));
     REQUIRE(result.head() != Atom(b));
