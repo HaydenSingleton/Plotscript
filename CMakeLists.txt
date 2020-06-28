@@ -100,23 +100,29 @@ enable_testing()
 add_test(unit_tests unit_tests)
 
 # Enable coverage on tests
-message("-- Enabling test coverage")
-set(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
-set_target_properties(interpreter PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
-set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
-target_link_libraries(unit_tests interpreter pthread gcov)
-target_link_libraries(plotscript interpreter pthread gcov)
-add_custom_target(coverage
-  COMMAND ${CMAKE_COMMAND} -E env "ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
-  ${CMAKE_CURRENT_SOURCE_DIR}/scripts/coverage.sh)
+if(UNIX)
+  message("-- Enabling test coverage")
+  set(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+  set_target_properties(interpreter PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
+  set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
+  target_link_libraries(unit_tests interpreter pthread gcov)
+  target_link_libraries(plotscript interpreter pthread gcov)
+  add_custom_target(coverage
+    COMMAND ${CMAKE_COMMAND} -E env "ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/coverage.sh)
+endif()
 
 # Enable memory checking on tests
-message("-- Enabling memory checks")
-add_custom_target(memtest
-  COMMAND valgrind ${CMAKE_BINARY_DIR}/unit_tests)
+if(UNIX)
+  message("-- Enabling memory checks")
+  add_custom_target(memtest
+    COMMAND valgrind ${CMAKE_BINARY_DIR}/unit_tests)
+endif()
 
 # Enable tui tests
-add_test(plotscript_test python3 ${CMAKE_SOURCE_DIR}/scripts/integration_test.py)
+if(UNIX)
+  add_test(plotscript_test python3 ${CMAKE_SOURCE_DIR}/scripts/integration_test.py)
+endif()
 
 # --------------------------------------------------------
 # Build the notebook executable and tests if Qt is available
