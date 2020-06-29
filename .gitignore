@@ -5,4 +5,7 @@
 .vs/plotscript-HaydenSingleton/v15/*
 .vscode
 build/*
-Coverage_Report/
+html/*
+latex/*
+doc/*
+Coverage_Report/*
