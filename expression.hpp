@@ -46,16 +46,16 @@ public:
   Expression(const Expression & a);
 
   /// constructor for list
-  Expression(ConstIteratorType & a);
+  Expression(const std::vector<Expression> & listItems);
 
   /// constructor for lambda type
-  Expression(ConstIteratorType & args, Expression & func);
+  Expression(const std::vector<Expression> & args, Expression & func);
 
-  /// constructor for special cases like graphics items
-  Expression(const Atom & head, ConstIteratorType & tail);
+  // /// constructor for special cases like graphics items
+  // Expression(const Atom & head, const std::vector<Expression> & args);
 
   //Constructor for plots
-  Expression(const Expression & a, std::string t);
+  Expression(const Expression & front, const std::vector<Expression> & back);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);

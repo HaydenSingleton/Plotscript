@@ -1,5 +1,4 @@
 #include "catch.hpp"
-
 #include "expression.hpp"
 
 TEST_CASE( "Test default expression", "[expression]" ) {

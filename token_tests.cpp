@@ -21,7 +21,7 @@ TEST_CASE( "Test Token creation", "[token]" ) {
 
   Token tkq("\"a quote\"");
 
-  REQUIRE(tkq.type()==Token::QUOTE);
+  REQUIRE(tkq.type()==Token::STRING);
   REQUIRE(tkq.asString() == "\"a quote\"");
 }
 

@@ -370,7 +370,6 @@ Expression conj(const std::vector<Expression> & args) {
 
 Expression list(const std::vector<Expression> & args) {
 	std::vector<Expression> result = args;
-  // assert(Expression(result).isList());
 	return Expression(result);
 };
 
@@ -393,13 +392,13 @@ Expression first(const std::vector<Expression> & args) {
 	}
 };
 
-Expression rest(const ConstIteratorTypeConst & args) {
+Expression rest(const std::vector<Expression> & args) {
   if(nargs_equal(args, 1)) {
     if(!args[0].isList())
       throw SemanticError("Error: in call to rest: not a list argument.");
     else {
       if(args[0] != Expression()) {
-        ConstIteratorTypeConst result;
+        std::vector<Expression> result;
         auto e = args[0].tailConstBegin();
         e++;
         while(e != args[0].tailConstEnd()){
@@ -415,7 +414,7 @@ Expression rest(const ConstIteratorTypeConst & args) {
       throw SemanticError("Error: in call to rest: invalid number of arguments.");
 };
 
-Expression length(const ConstIteratorTypeConst & args) {
+Expression length(const std::vector<Expression> & args) {
   if(nargs_equal(args, 1)) {
     if(!args[0].isList())
       throw SemanticError("Error: argument to length is not a list.");
@@ -428,12 +427,12 @@ Expression length(const ConstIteratorTypeConst & args) {
     throw SemanticError("Error: invalid number of arguments for length.");
 };
 
-Expression append(const ConstIteratorTypeConst & args) {
+Expression append(const std::vector<Expression> & args) {
   if(nargs_equal(args, 2)) {
     if(!args[0].isList())
       throw SemanticError("Error: first argument not a list.");
     else {
-      ConstIteratorTypeConst result;
+      std::vector<Expression> result;
       for(auto e = args[0].tailConstBegin(); e != args[0].tailConstEnd(); e++){
         result.emplace_back(*e);
       }
@@ -445,7 +444,7 @@ Expression append(const ConstIteratorTypeConst & args) {
     throw SemanticError("Error: invalid number of arguments for append.");
 };
 
-Expression join(const ConstIteratorTypeConst & args) {
+Expression join(const std::vector<Expression> & args) {
   if(nargs_equal(args, 2)) {
     if(!args[0].isList() || !args[1].isList())
       throw SemanticError("Error: an argument to join not a list.");
@@ -562,7 +561,7 @@ bool Environment::is_proc(const Atom & sym) const{
 
 Procedure Environment::get_proc(const Atom & sym) const{
 
-  // Procedure proc = default_proc;
+  Procedure proc = default_proc;
 
   if(sym.isSymbol()){
     auto result = envmap.find(sym.asSymbol());

@@ -1,9 +1,5 @@
 #include "token.hpp"
 
-// system includes
-#include <cctype>
-#include <iostream>
-
 // define constants for special characters
 const char OPENCHAR = '(';
 const char CLOSECHAR = ')';
@@ -12,12 +8,8 @@ const char QUOTECHAR = '"';
 
 Token::Token(TokenType t): m_type(t){}
 
-Token::Token(const std::string & str): value(str) {
-  if(str[0] != QUOTECHAR){
-    m_type = STRING;
-  }
-  else
-    m_type = QUOTE;
+Token::Token(const std::string & str): value(str), m_type(STRING) {
+
 }
 
 Token::TokenType Token::type() const{
@@ -31,12 +23,8 @@ std::string Token::asString() const{
       return "(";
     case CLOSE:
       return ")";
-    case STRING:
-      return value;
-    case QUOTE:
-      return value;
     }
-    return "";
+    return value;
 }
 
 
@@ -78,7 +66,9 @@ TokenSequenceType tokenize(std::istream & seq){
 	      token.push_back(c);
         c = seq.get();
       }
-      if(seq.eof()) break;
+      if(seq.eof()) {
+        break;
+      }
       token.push_back(QUOTECHAR); // push last ending quote
       store_ifnot_empty(token, tokens);
     }

@@ -25,9 +25,9 @@ Expression::Expression(const Expression & a) {
 }
 
 // Constructor for lists
-Expression::Expression(const std::vector<Expression> & a){
+Expression::Expression(const std::vector<Expression> & items){
   m_type = ExpType::List;
-  m_tail = a;
+  m_tail = items;
 }
 
 //Constructor for Lambda functions
@@ -37,26 +37,18 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
   m_tail.push_back(func);
 }
 
-//Constructor for special cases
-Expression::Expression(const Atom & head, const std::vector<Expression> & tail) : m_head(head) {
-  m_type = ExpType::None;
-  for(auto e : tail){
+//Constructor for plots
+Expression::Expression(const Expression & front, const std::vector<Expression> & back){
+
+  // m_type = ExpType::None;
+  
+  m_head = front.head();
+
+  m_properties = front.m_properties;
+  for(auto e : front.m_tail){
     m_tail.push_back(e);
   }
-}
-
-//Constructor for plots
-Expression::Expression(const Expression & a, std::string t){
-  if(t == "discrete-plot") {
-    m_type = ExpType::DP;
-  }
-  else if (t == "continuous-plot"){
-    m_type = ExpType::CP;
-  }
-  if(!a.m_head.isNone())
-    m_tail.push_back(a.m_head);
-  m_properties = a.m_properties;
-  for(auto e : a.m_tail){
+  for(auto e : back){
     m_tail.push_back(e);
   }
 }
@@ -216,25 +208,24 @@ Expression Expression::handle_define(Environment & env){
 
   // but tail[0] must not be a special-form or procedure
   std::string s = m_tail[0].head().asSymbol();
-  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list")){
+  if((s == "define") || (s == "begin") || (s == "lambda") || (s == "list")) {
     throw SemanticError("Error during handle define: attempt to redefine a special-form");
   }
-
-  if(env.is_proc(m_tail[0].head())){
+  else if(env.is_proc(m_tail[0].head())) {
     throw SemanticError("Error during handle define: attempt to redefine a built-in procedure");
   }
-
-  // eval tail[1]
-  Expression result = m_tail[1].eval(env);
-
-  if((s=="pi"||(s=="e")||s=="I")){
+  else if((s=="pi"||(s=="e")||s=="I")) {
     throw SemanticError("Error during handle define: attempt to redefine a built-in symbol");
   }
+  else {
+    // eval tail[1]
+    Expression result = m_tail[1].eval(env);
 
-  //and add to env
-  env.add_exp(m_tail[0].head(), result);
+    //and add to env
+    env.add_exp(m_tail[0].head(), result);
 
-  return result;
+    return result;
+  }
 }
 
 Expression Expression::handle_lambda(){
@@ -303,10 +294,14 @@ Expression Expression::handle_map(Environment & env){
   return Expression(return_args);
 }
 
-Expression Expression::handle_set_property(Environment & env){
+Expression Expression::handle_set_property(Environment & env) {
+
+  Expression result;
+
    if(m_tail.size()==3) {
-    Expression result = m_tail[2].eval(env);
-    if(m_tail[0].head().isString()){
+    if(m_tail[0].head().isString()) {
+
+      result = m_tail[2].eval(env);
       std::string key = m_tail[0].head().asString();
       if(result.m_properties.find(key) != result.m_properties.end()){
         result.m_properties.erase(key);
@@ -317,11 +312,12 @@ Expression Expression::handle_set_property(Environment & env){
     else{
       throw SemanticError("Error: first argument to set-property not a string.");
     }
-        return result;
   }
   else{
     throw SemanticError("Error invalid number of arguments for set-property.");
   }
+
+  return result;
 }
 
 Expression Expression::handle_get_property(Environment & env){
@@ -499,7 +495,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
       //   result.push_back(Expression(Atom("\"1\"")));
       // }
 
-      return Expression(Expression(result), "discrete-plot");
+      return Expression(result);
     }
     else {
       throw SemanticError("Error: An argument to discrete-plot is not a list");
@@ -745,7 +741,7 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       }
 
-      return Expression(Expression(result), "continuous-plot");
+      return Expression(result);
     }
     else
       throw SemanticError("Error: invalid number of arguments to continuous plot");
@@ -763,7 +759,7 @@ Expression Expression::eval(Environment & env){
   }
   else{
     if(m_tail.empty()){
-      if (m_head.isSymbol() && m_head.asSymbol() == "list") {
+      if (m_head.asSymbol() == "list") {
         std::vector<Expression> a;
         return Expression(a);
       }
@@ -772,31 +768,31 @@ Expression Expression::eval(Environment & env){
       }
       return handle_lookup(m_head, env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "begin"){
+    else if(m_head.asSymbol() == "begin"){
       return handle_begin(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "define"){
+    else if(m_head.asSymbol() == "define"){
       return handle_define(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "lambda"){
+    else if(m_head.asSymbol() == "lambda"){
       return handle_lambda();
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "apply"){
+    else if(m_head.asSymbol() == "apply"){
       return handle_apply(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "map"){
+    else if(m_head.asSymbol() == "map"){
       return handle_map(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "set-property"){
+    else if(m_head.asSymbol() == "set-property"){
       return handle_set_property(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "get-property"){
+    else if(m_head.asSymbol() == "get-property"){
       return handle_get_property(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "discrete-plot"){
+    else if(m_head.asSymbol() == "discrete-plot"){
       return handle_discrete_plot(env);
     }
-    else if(m_head.isSymbol() && m_head.asSymbol() == "continuous-plot"){
+    else if(m_head.asSymbol() == "continuous-plot"){
       return handle_cont_plot(env);
     }
     else{
@@ -895,7 +891,7 @@ std::string Expression::toString() const noexcept{
 
 bool Expression::isPoint() const noexcept{
   for(auto &p : m_properties){
-    if(p.first == "\"object-name\""){
+    if(p.first == "object-name"){
       return p.second == Expression(Atom("\"point\""));
     }
   }
@@ -904,7 +900,7 @@ bool Expression::isPoint() const noexcept{
 
 bool Expression::isLine() const noexcept{
   for(auto &p : m_properties){
-    if(p.first == "\"object-name\""){
+    if(p.first == "object-name"){
       return p.second == Expression(Atom("\"line\""));
     }
   }
@@ -946,8 +942,8 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
 
 std::vector<Expression> Expression::asVector() const noexcept {
     std::vector<Expression> result;
-    if(m_head.asString() != ""){
-      result.emplace_back(m_head);
+    if(!m_head.isNone()){
+      result.push_back(m_head);
     }
     for(auto e : m_tail){
       result.emplace_back(e);

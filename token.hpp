@@ -6,7 +6,7 @@ Defines the Token and TokenSequence types, and associated functions.
 
 #include <deque>
 #include <istream>
-#include<future>
+#include <future>
 
 /*! \class Token
   \brief Value class representing a token.
@@ -22,7 +22,6 @@ public:
   enum TokenType { OPEN,  //< open tag, aka '('
 		   CLOSE, //< close tag, aka ')'
 		   STRING, //< string tag
-       QUOTE //< same a str but a whole quote
   };
 
   /// construct a token of type t (if string default to empty value)

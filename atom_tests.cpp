@@ -52,25 +52,25 @@ TEST_CASE( "Test atom constructors", "[atom]" ) {
 
   {
     INFO("Copy Constructor");
-    Atom a("hi");
-    Atom b(1.0);
-    Atom f("\"string my guy\"");
 
+    Atom a("hi");
     Atom c = a;
     REQUIRE(!a.isNone());
     REQUIRE(!c.isNumber());
     REQUIRE(c.isSymbol());
 
+    Atom b(1.0);
     Atom d = b;
     REQUIRE(!a.isNone());
     REQUIRE(d.isNumber());
     REQUIRE(!d.isSymbol());
 
+    Atom f("\"string my guy\"");
     Atom e = f;
-    REQUIRE(!e.isNone());
-    REQUIRE(!e.isNumber());
-    REQUIRE(!e.isSymbol());
-    REQUIRE(e.isString());
+    REQUIRE((!e.isNone() && !f.isNone()));
+    REQUIRE((!e.isNumber() && !f.isNumber()));
+    REQUIRE((!e.isSymbol() && !f.isSymbol()));
+    REQUIRE((e.isString() && f.isString()));
   }
 }
 

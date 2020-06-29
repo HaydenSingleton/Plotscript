@@ -574,8 +574,8 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   REQUIRE(data.size() == 60);
   REQUIRE(data[0].isLine());
 
-  program = R"((begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") ))))";
-  REQUIRE(run_and_expect_error(program)); // THIS SHOULD WORK BUT MY IMPLEMENTATION IS BROKEN
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list \"title\" \"The Title\") (list \"abscissa-label\" \"X Label\") (list \"ordinate-label\" \"Y Label\") )))";
+  Expression r = run(program);
 
   program = "(begin (continuous-plot (* 1) (list -2 2)))";
   REQUIRE(run_and_expect_error(program));
