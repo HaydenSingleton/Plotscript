@@ -37,7 +37,6 @@ Atom::Atom(const std::string & value): Atom() {
 
 Atom::Atom(const Atom & x): Atom(){
 
-  
   if(x.isNumber()){
     setNumber(x.numberValue);
   }

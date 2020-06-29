@@ -51,26 +51,30 @@ TEST_CASE( "Test atom constructors", "[atom]" ) {
   }
 
   {
-    INFO("Copy Constructor");
+    INFO("Copy constructor");
 
     Atom a("hi");
-    Atom c = a;
+    Atom c(a);
     REQUIRE(!a.isNone());
     REQUIRE(!c.isNumber());
     REQUIRE(c.isSymbol());
 
     Atom b(1.0);
-    Atom d = b;
+    Atom d(b);
     REQUIRE(!a.isNone());
     REQUIRE(d.isNumber());
     REQUIRE(!d.isSymbol());
 
     Atom f("\"string my guy\"");
-    Atom e = f;
-    REQUIRE((!e.isNone() && !f.isNone()));
-    REQUIRE((!e.isNumber() && !f.isNumber()));
-    REQUIRE((!e.isSymbol() && !f.isSymbol()));
-    REQUIRE((e.isString() && f.isString()));
+    Atom e(f);
+    REQUIRE(!e.isNone());
+    REQUIRE(!f.isNone());
+    REQUIRE(!e.isNumber());
+    REQUIRE(!f.isNumber());
+    REQUIRE(!e.isSymbol()); 
+    REQUIRE(!f.isSymbol());
+    REQUIRE(e.isString());
+    REQUIRE( f.isString());
   }
 }
 
@@ -146,11 +150,11 @@ TEST_CASE( "Test atom assignments", "[atom]" ) {
   {
     INFO("number to string");
     Atom a("\"hi\"");
-    Atom b(1.0);
+    Atom b;
     b = a;
     REQUIRE(b.isString());
     REQUIRE(b.asSymbol() == "\"hi\"");
-    REQUIRE(b.asString() == "\"hi\"");
+    REQUIRE_FALSE(b.isNone());
   }
 
   {

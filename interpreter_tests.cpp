@@ -292,10 +292,10 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 
 TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
 
-  std::vector<std::string> programs = {"(@ none)", // so such procedure
-				       "(- 1 1 2)", // too many arguments
-				       "(define begin 1)", // redefine special form
-				       "(define pi 3.14)"}; // redefine builtin symbol
+  std::vector<std::string> programs = { "(@ none)", // so such procedure
+                                        "(- 1 1 2)", // too many arguments
+                                        "(define begin 1)", // redefine special form
+                                        "(define pi 3.14)"}; // redefine builtin symbol
     for(auto s : programs){
       Interpreter interp;
 
@@ -554,9 +554,8 @@ TEST_CASE("Test handle discrete-plot", "[expression]") {
   Expression e = run(program);
 
   REQUIRE(e.isDP());
-  std::vector<Expression> data = e.asVector();
-  REQUIRE(data.size() == 17);
-  REQUIRE(data[0].isLine());
+  REQUIRE(e.tailLength() == 17);
+  REQUIRE(e.tailConstBegin()->isLine());
 
   program = "(discrete-plot (+ 2 3) (list (list 1)))";
   REQUIRE(run_and_expect_error(program));
@@ -570,11 +569,10 @@ TEST_CASE("Test handle continuous-plot", "[expression]") {
   Expression e = run(program);
 
   REQUIRE(e.isCP());
-  std::vector<Expression> data = e.asVector();
-  REQUIRE(data.size() == 60);
-  REQUIRE(data[0].isLine());
+  REQUIRE(e.tailLength() == 60);
+  REQUIRE(e.tailConstBegin()->isLine());
 
-  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list \"title\" \"The Title\") (list \"abscissa-label\" \"X Label\") (list \"ordinate-label\" \"Y Label\") )))";
+  program = R"(define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label")) )";
   Expression r = run(program);
 
   program = "(begin (continuous-plot (* 1) (list -2 2)))";

@@ -12,9 +12,14 @@ TEST_CASE( "Test default expression", "[expression]" ) {
 TEST_CASE( "Test double expression", "[expression]" ) {
 
   Expression exp(6.023);
+  Expression exp2(Atom(6.023));
+
 
   REQUIRE(exp.head().isNumber());
   REQUIRE(!exp.head().isSymbol());
+
+  REQUIRE(exp2.head().isNumber());
+  REQUIRE(!exp2.head().isSymbol());
 }
 
 

@@ -39,8 +39,6 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 
 //Constructor for plots
 Expression::Expression(const Expression & front, const std::vector<Expression> & back){
-
-  // m_type = ExpType::None;
   
   m_head = front.head();
 
@@ -523,9 +521,9 @@ Expression Expression::handle_cont_plot(Environment & env){
       }
 
       std::vector<Expression> x_bounds, y_bounds, temp;
-      x_bounds = BOUNDS.eval(env).asVector();
+      x_bounds = BOUNDS.eval(env).m_tail;
       temp = {FUNC, BOUNDS};
-      y_bounds = Expression(Atom("map"), temp).eval(env).asVector();
+      y_bounds = Expression(Atom("map"), temp).eval(env).m_tail;
 
       double N = 20, A = 3, B = 3, C = 2, D = 2;
       double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
@@ -638,7 +636,7 @@ Expression Expression::handle_cont_plot(Environment & env){
       }
 
       temp = {FUNC, Expression(Atom("list"), domain_exp)};
-      range_exp = Expression(Atom("map"), temp).eval(env).asVector();
+      range_exp = Expression(Atom("map"), temp).eval(env).m_tail;
 
       Expression point;
       std::vector<Expression> points;
@@ -942,6 +940,7 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
 
 std::vector<Expression> Expression::asVector() const noexcept {
     std::vector<Expression> result;
+
     if(!m_head.isNone()){
       result.push_back(m_head);
     }
