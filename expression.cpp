@@ -38,18 +38,18 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 }
 
 //Constructor for plots
-Expression::Expression(const Expression & front, const std::vector<Expression> & back){
+// // Expression::Expression(const Expression & front, const std::vector<Expression> & back){
   
-  m_head = front.head();
+//   m_head = front.head();
 
-  m_properties = front.m_properties;
-  for(auto e : front.m_tail){
-    m_tail.push_back(e);
-  }
-  for(auto e : back){
-    m_tail.push_back(e);
-  }
-}
+//   m_properties = front.m_properties;
+//   for(auto e : front.m_tail){
+//     m_tail.push_back(e);
+//   }
+//   for(auto e : back){
+//     m_tail.push_back(e);
+//   }
+// }
 
 Expression & Expression::operator=(const Expression & a){
 
