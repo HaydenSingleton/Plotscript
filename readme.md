@@ -43,6 +43,9 @@ The outermost expression is a _special_ _form_ named ``begin``, that simply eval
 
 There are two equivalent views of the above syntax, as a list of lists or equivalently as a tree, called the _abstract_ _syntax_ _tree_ or AST.
 
+<center>
+![](doc/ast.png)
+<center>
 
 When viewed as an AST,  the evaluation of the program (the outer-most expression), corresponds to a _post-order_ traversal of the tree, where the children are considered in order left-to-right. Each leaf expression evaluates to itself if it is a literal or, if a symbol, to the expression it maps to in the environment. Then the special-form or procedure is evaluated with its arguments. This continues in the post-order traversal until the root of the AST is evaluated, giving the final result of the program, in this case the expression consisting of a single atom, the numerical value of pi (the max of 1 and pi). If at any time during the traversal this process cannot be completed, the program is invalid and an error is emitted (this will be specified more concretely below). Such an invalid program might be syntactically correct, but not semantically correct. For example suppose the programmer forgot to define a value for ``a``, as in
 
