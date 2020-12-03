@@ -43,9 +43,6 @@ The outermost expression is a _special_ _form_ named ``begin``, that simply eval
 
 There are two equivalent views of the above syntax, as a list of lists or equivalently as a tree, called the _abstract_ _syntax_ _tree_ or AST.
 
-<center>
-![](ast.png)
-</center>
 
 When viewed as an AST,  the evaluation of the program (the outer-most expression), corresponds to a _post-order_ traversal of the tree, where the children are considered in order left-to-right. Each leaf expression evaluates to itself if it is a literal or, if a symbol, to the expression it maps to in the environment. Then the special-form or procedure is evaluated with its arguments. This continues in the post-order traversal until the root of the AST is evaluated, giving the final result of the program, in this case the expression consisting of a single atom, the numerical value of pi (the max of 1 and pi). If at any time during the traversal this process cannot be completed, the program is invalid and an error is emitted (this will be specified more concretely below). Such an invalid program might be syntactically correct, but not semantically correct. For example suppose the programmer forgot to define a value for ``a``, as in
 
@@ -113,7 +110,7 @@ See the directory ``tests`` in the repository an example plotscript program demo
 Modules
 --------
 
-The C++ code implementing the plotscript interpreter is divided into the following modules, consisting of a header and implementation pair (.hpp and .cpp). See the associated linked pages for details.
+The C++ code implementing the plotscript interpreter is divided into the following modules, consisting of a header and implementation pair (.hpp and .cpp).
 
 * Atom Module (``atom.hpp``, ``atom.cpp``): This module defines the variant type used to hold Atoms.
 * Expression Module (``expression.hpp``, ``expression.cpp``): This module defines a class named ``Expression``, forming a node in the AST.
@@ -125,7 +122,7 @@ The C++ code implementing the plotscript interpreter is divided into the followi
 Driver Program Specification
 -----------------------------------
 
-The interpreter module needs some user interface code to be useful to a user. The project includes a command-line application that compiles to an executable named ``plotscript.exe`` on Windows and just ``plotscript`` on mac/linux. The GUI is similarly compiled to ``notebook.exe`` and ``notebook``.  The plotscript executable is usable in one of three ways:
+The interpreter module needs some user interface code to be useful to a user. The project includes a command-line application that compiles to an executable named ``plotscript.exe`` on Windows and ``plotscript`` on mac/linux. The GUI is similarly compiled to ``notebook.exe`` and ``notebook``.  The plotscript executable is usable in one of three ways:
 
 To execute short simple programs, pass a flag ``-e`` followed by a quoted string with the program. For example (> is the prompt):
 
@@ -194,10 +191,4 @@ plotscript> (- 12 10)
 Unit Tests
 -------------
 
-Each module of code above has a set of unit tests covering its functionality using Catch, e.g. basic tests for the interpreter module are included in the file ``interpreter_tests.cpp``. These tests are built as part of the overall project using CMake as described below.
-
-
-Notes
-------
-
-[1]: This distinction is not always clear, many interpreters do compile to machine code or to a virtual machine. These are called just-in-time or JITing interpreters.
+Each module of code above has a set of unit tests covering its functionality using Catch, e.g. basic tests for the interpreter module are included in the file ``interpreter_tests.cpp``. These tests are built as part of the overall project using CMake.
