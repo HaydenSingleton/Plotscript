@@ -6,11 +6,11 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-Expression::Expression()
+Expression::Expression(): m_type(ExpType::Empty)
 {}
 
 // Basic constructor
-Expression::Expression(const Atom & a): m_head(a)
+Expression::Expression(const Atom & a): m_head(a), m_type(ExpType::None)
 {}
 
 // recursive copy
@@ -37,19 +37,24 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
   m_tail.push_back(func);
 }
 
-//Constructor for plots
-// // Expression::Expression(const Expression & front, const std::vector<Expression> & back){
+// Constructor for special cases like graphics items
+Expression::Expression(const Atom & t, const std::vector<Expression> & back){
   
-//   m_head = front.head();
+  std::string type = t.asString();
+  if (type == "DP") {
+    m_type = ExpType::DP;
+  }
+  else if (type == "CP") {
+    m_type = ExpType::CP;
+  }
+  else {
+    m_type = ExpType::None;
+  }
 
-//   m_properties = front.m_properties;
-//   for(auto e : front.m_tail){
-//     m_tail.push_back(e);
-//   }
-//   for(auto e : back){
-//     m_tail.push_back(e);
-//   }
-// }
+  for(auto e : back){
+    m_tail.push_back(e);
+  }
+}
 
 Expression & Expression::operator=(const Expression & a){
 
@@ -319,9 +324,9 @@ Expression Expression::handle_set_property(Environment & env) {
 }
 
 Expression Expression::handle_get_property(Environment & env){
-  Expression target = m_tail[1].eval(env);
-  Expression result;
+  Expression target, result;
   if(m_tail.size()==2) {
+    target = m_tail[1].eval(env);
     if(m_tail[0].head().isString()){
       std::string key = m_tail[0].head().asString();
       if(target.m_properties.find(key)!= target.m_properties.end()){
@@ -493,7 +498,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
       //   result.push_back(Expression(Atom("\"1\"")));
       // }
 
-      return Expression(result);
+      return Expression(Atom("DP"), result);
     }
     else {
       throw SemanticError("Error: An argument to discrete-plot is not a list");
@@ -739,7 +744,7 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       }
 
-      return Expression(result);
+      return Expression(Atom("CP"), result);
     }
     else
       throw SemanticError("Error: invalid number of arguments to continuous plot");
@@ -887,9 +892,21 @@ std::string Expression::toString() const noexcept{
   return out.str();
 }
 
+std::string Expression::getProperties() const {
+
+    std::ostringstream out;
+
+    for (auto &p : m_properties) {
+      out << p.first << " " << p.second.toString() << "\n";
+    }
+
+    return out.str();
+
+}
+
 bool Expression::isPoint() const noexcept{
-  for(auto &p : m_properties){
-    if(p.first == "object-name"){
+ for(auto &p : m_properties){
+    if(p.first.compare("object-name")){
       return p.second == Expression(Atom("\"point\""));
     }
   }
@@ -898,7 +915,7 @@ bool Expression::isPoint() const noexcept{
 
 bool Expression::isLine() const noexcept{
   for(auto &p : m_properties){
-    if(p.first == "object-name"){
+    if(p.first.compare("object-name")){
       return p.second == Expression(Atom("\"line\""));
     }
   }
@@ -908,7 +925,7 @@ bool Expression::isLine() const noexcept{
 bool Expression::isText() const noexcept{
   const std::string target_property("\"object-name\"");
   for(auto &p : m_properties){
-    if(p.first == target_property){
+    if(p.first.compare(target_property)){
       return p.second == Expression(Atom("\"text\""));
     }
   }

@@ -52,7 +52,7 @@ public:
   Expression(const std::vector<Expression> & args, Expression & func);
 
   // /// constructor for special cases like graphics items
-  // Expression(const Atom & head, const std::vector<Expression> & args);
+  Expression(const Atom & head, const std::vector<Expression> & args);
 
   //Constructor for plots
   Expression(const Expression & front, const std::vector<Expression> & back);
@@ -107,6 +107,7 @@ public:
 
   /// helper methods for output widget
   std::string toString() const noexcept;
+  std::string getProperties() const;
   bool isPoint() const noexcept;
   bool isLine() const noexcept;
   bool isText() const noexcept;
@@ -129,7 +130,8 @@ private:
 
   // state variable of the expression
   enum class ExpType {None, List, Lambda, Empty, DP, CP};
-  ExpType m_type = ExpType::None;
+
+  ExpType m_type;
 
   // list of the expression's properties
   std::map<std::string, Expression> m_properties;
