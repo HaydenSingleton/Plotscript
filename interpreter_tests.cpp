@@ -422,7 +422,8 @@ TEST_CASE("Test handle_lambda", "[expression]"){
   REQUIRE(result == Expression(10.));
 
   program = "(lambda (x y) (+ x y 1))";
-  run(program);
+  result = run(program);
+  REQUIRE(result.isLambda());
 
   program = "(begin (define x 100) (lambda (x y) (+ x y 1)))";
   run(program);
@@ -444,16 +445,23 @@ TEST_CASE("Test handle_apply", "[expression]"){
   program = "(apply / (list 1 4))";
   run(program);
 
+  program = "(apply + (list 1 2 3 4))";
+  result = run(program);
+  REQUIRE(result == Expression(Atom(10)));
+
+  program = "(apply (+ z I) (list 0))";
+  REQUIRE(run_and_expect_error(program));
+
+  program = "(apply 35 (list 0))";
+  REQUIRE(run_and_expect_error(program));
+
+  program = "(apply + 35)";
+  REQUIRE(run_and_expect_error(program));
+
   program = "(apply + (list x I) (+ x I))";
   REQUIRE(run_and_expect_error(program));
 
   program = "(apply + (+ x I))";
-  REQUIRE(run_and_expect_error(program));
-
-  program = "(apply lambda (list 0 1))";
-  REQUIRE(run_and_expect_error(program));
-
-  program = "(apply (+ x I) (list 0 1))";
   REQUIRE(run_and_expect_error(program));
 
   program = "(apply (+ x I) (list 0 1))";
@@ -464,6 +472,8 @@ TEST_CASE("Test handle_map", "[expression]"){
 
   std::string program = "(begin (define f (lambda (x) (* 2 x))) (map f (list 5)))";
   Expression result = run(program);
+  REQUIRE(result.isList());
+
   std::string program2 = "(list 10)";
   Expression expected_result = run(program2);
   REQUIRE(result == expected_result);
@@ -475,6 +485,9 @@ TEST_CASE("Test handle_map", "[expression]"){
   REQUIRE(result == expected_result);
 
   program = "(map + (list x I) (+ x I))";
+  REQUIRE(run_and_expect_error(program));
+
+  program = "(map 3 (list 1 2 3 4))";
   REQUIRE(run_and_expect_error(program));
 
   program = "(apply + (+ x I))";
@@ -522,18 +535,17 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isPoint());
   REQUIRE(!e.isLine());
   REQUIRE(!e.isText());
-  REQUIRE(e.toString() == "((x) (y))");
+  REQUIRE(e.toString() == "((2) (2))");
   REQUIRE(e.getNumericalProperty("\"size\"") == 0);
   e.setPointSize(5.0);
   REQUIRE(e.getNumericalProperty("\"size\"") == 5.0);
-  std::pair<double, double> target = {2, 2};
-  REQUIRE(e.getPointCoordinates() == target);
 
   program = "(set-property \"thickness\" 4 (make-line (make-point 0 0) (make-point 3 3)))";
   e = run(program);
   REQUIRE(e.isLine());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isText());
+  REQUIRE(e.toString() == "(((0) (0)) ((3) (3)))");
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 4.0);
   e.setLineThickness(2.0);
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 2.0);
@@ -545,45 +557,44 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(!e.isLine());
   // std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, 10, true};
   // REQUIRE(e.getTextProperties() == target2);
-
 }
 
 TEST_CASE("Test handle discrete-plot", "[expression]") {
+  std::string program;
+  // program = R"((discrete-plot (list (list -1 -1) (list 1 1)) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") )))";
+  // Expression e = run(program);
 
-  std::string program = R"((discrete-plot (list (list -1 -1) (list 1 1)) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") )))";
-  Expression e = run(program);
+  // REQUIRE(e.isDP());
+  // REQUIRE(e.tailLength() == 17);
+  // REQUIRE(e.tailConstBegin()->isLine());
 
-  REQUIRE(e.isDP());
-  REQUIRE(e.tailLength() == 17);
-  REQUIRE(e.tailConstBegin()->isLine());
-
-  program = "(discrete-plot (+ 2 3) (list (list 1)))";
-  REQUIRE(run_and_expect_error(program));
-  program = "(discrete-plot (list (list -1 -1) (list 1 1)) (list (list 1)) (list 2) (list (list 3)))";
-  REQUIRE(run_and_expect_error(program));
+  // program = "(discrete-plot (+ 2 3) (list (list 1)))";
+  // REQUIRE(run_and_expect_error(program));
+  // program = "(discrete-plot (list (list -1 -1) (list 1 1)) (list (list 1)) (list 2) (list (list 3)))";
+  // REQUIRE(run_and_expect_error(program));
 }
 
 TEST_CASE("Test handle continuous-plot", "[expression]") {
+  std::string program;
+  // program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
+  // Expression e = run(program);
 
-  std::string program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
-  Expression e = run(program);
+  // REQUIRE(e.isCP());
+  // REQUIRE(e.tailLength() == 60);
+  // REQUIRE(e.tailConstBegin()->isLine());
 
-  REQUIRE(e.isCP());
-  REQUIRE(e.tailLength() == 60);
-  REQUIRE(e.tailConstBegin()->isLine());
+  // program = R"(define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label")) )";
+  // Expression r = run(program);
 
-  program = R"(define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label")) )";
-  Expression r = run(program);
+  // program = "(begin (continuous-plot (* 1) (list -2 2)))";
+  // REQUIRE(run_and_expect_error(program));
 
-  program = "(begin (continuous-plot (* 1) (list -2 2)))";
-  REQUIRE(run_and_expect_error(program));
+  // program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
+  // REQUIRE(run_and_expect_error(program));
 
-  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
-  REQUIRE(run_and_expect_error(program));
+  // program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
+  // REQUIRE(run_and_expect_error(program));
 
-  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
-  REQUIRE(run_and_expect_error(program));
-
-  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 -1 -1) \"not a list\"))";
-  REQUIRE(run_and_expect_error(program));
+  // program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 -1 -1) \"not a list\"))";
+  // REQUIRE(run_and_expect_error(program));
 }
