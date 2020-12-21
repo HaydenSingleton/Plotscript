@@ -196,7 +196,6 @@ Expression Expression::handle_begin(Environment & env){
   return result;
 }
 
-
 Expression Expression::handle_define(Environment & env){
 
   // check expected tail size
@@ -761,50 +760,50 @@ Expression Expression::eval(Environment & env){
     throw SemanticError("Error: interpreter kernal interupted");
   }
   else{
+    if (m_head.asSymbol() == "list") {
+        return Expression(this->m_tail);
+    }
     if(m_tail.empty()){
-      if (m_head.asSymbol() == "list") {
-        std::vector<Expression> a;
-        return Expression(a);
-      }
       if(m_head.isString()){
         return Expression(m_head);
       }
-      return handle_lookup(m_head, env);
+      else {
+        return handle_lookup(m_head, env);
+      }
     }
-    else if(m_head.asSymbol() == "begin"){
+    if(m_head.asSymbol() == "begin"){
       return handle_begin(env);
     }
-    else if(m_head.asSymbol() == "define"){
+    if(m_head.asSymbol() == "define"){
       return handle_define(env);
     }
-    else if(m_head.asSymbol() == "lambda"){
+    if(m_head.asSymbol() == "lambda"){
       return handle_lambda();
     }
     else if(m_head.asSymbol() == "apply"){
       return handle_apply(env);
     }
-    else if(m_head.asSymbol() == "map"){
+    if(m_head.asSymbol() == "map"){
       return handle_map(env);
     }
-    else if(m_head.asSymbol() == "set-property"){
+    if(m_head.asSymbol() == "set-property"){
       return handle_set_property(env);
     }
-    else if(m_head.asSymbol() == "get-property"){
+    if(m_head.asSymbol() == "get-property"){
       return handle_get_property(env);
     }
-    else if(m_head.asSymbol() == "discrete-plot"){
+    if(m_head.asSymbol() == "discrete-plot"){
       return handle_discrete_plot(env);
     }
-    else if(m_head.asSymbol() == "continuous-plot"){
+    if(m_head.asSymbol() == "continuous-plot"){
       return handle_cont_plot(env);
     }
-    else{
-      std::vector<Expression> results;
-      for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
-        results.push_back(it->eval(env));
-      }
-      return apply(m_head, results, env);
+
+    std::vector<Expression> results;
+    for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
+      results.push_back(it->eval(env));
     }
+    return apply(m_head, results, env);
   }
 }
 
@@ -923,7 +922,7 @@ bool Expression::isLine() const noexcept{
 }
 
 bool Expression::isText() const noexcept{
-  const std::string target_property("\"object-name\"");
+  const std::string target_property("object-name");
   for(auto &p : m_properties){
     if(p.first.compare(target_property)){
       return p.second == Expression(Atom("\"text\""));
@@ -951,6 +950,7 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
     double y = point.getPointCoordinates().second;
     return {x, y, sf, rot, true};
   }
+
   // Error case
   return {0, 0, 1, 0, false};
 }
@@ -977,33 +977,16 @@ double Expression::getNumericalProperty(std::string prop) const noexcept {
 }
 
 std::pair<double, double> Expression::getPointCoordinates() const noexcept {
-  double x, y;
-  std::string repl = this->toString();
+  double x = 0.0;
+  double y = 0.0;
 
-  repl = repl.substr(2, repl.length() - 3);
-  std::string xcor = repl.substr(0, repl.find_first_of(')')), ycor = repl.substr(repl.find_first_of('('), repl.find_last_of(')')).substr(1);
-  ycor.pop_back();
-
-  if(xcor.size() > 6){
-    xcor = 0.0;
-  }
-  if(ycor.size() > 6){
-    ycor = 0.0;
+  std::cout << *this << "\n";
+  
+  if (m_properties.find("object-name") != m_properties.end()) {
+    x = m_tail[0].head().asNumber();
+    x = m_tail[1].head().asNumber();
   }
 
-  if(xcor.find('.')!=std::string::npos){
-    x = std::stod(xcor);
-  }
-  else if(xcor.size()!=0){
-    x = (double)std::stoi(xcor);
-  }
-
-  if(ycor.find('.')!=std::string::npos){
-      y = std::stod(ycor);
-  }
-  else if(ycor.size()!=0){
-      y = (double)std::stoi(ycor);
-  }
   std::pair<double, double> result = {x, y};
   return result;
 }
