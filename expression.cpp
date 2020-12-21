@@ -230,7 +230,17 @@ Expression Expression::handle_define(Environment & env){
   }
 }
 
-Expression Expression::handle_lambda(){
+Expression Expression::handle_list(Environment & env){
+
+  std::vector<Expression> listItems;
+  for(auto e = m_tail.begin(); e != m_tail.end(); e++){
+    listItems.push_back(e->eval(env));
+  }
+
+  return Expression(listItems);
+}
+
+Expression Expression::handle_lambda() {
 
   std::vector<Expression> argument_template;
   argument_template.emplace_back(Expression(m_tail[0].head()));
@@ -239,6 +249,7 @@ Expression Expression::handle_lambda(){
   }
 
   Expression return_exp = Expression(argument_template, m_tail[1]);
+  assert(return_exp.m_type == ExpType::Lambda);
   return return_exp;
 }
 
@@ -273,13 +284,21 @@ Expression Expression::handle_apply(Environment & env){
 Expression Expression::handle_map(Environment & env){
 
   if(m_tail.size() != 2){
-    throw SemanticError("Error during apply: invalid number of arguments to define");
+    throw SemanticError("Error during map: invalid number of arguments");
   }
+
+  Atom op =  m_tail[0].head();
+  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
+    Expression arg1 = m_tail[0].eval(env);
+    if(!arg1.isLambda())
+      throw SemanticError("Error: first argument to map not a procedure");
+  }
+
 
   Expression list_evaled = m_tail[1].eval(env);
 
   if(!list_evaled.isList()){
-    throw SemanticError("Error during apply: second argument to apply not a list");
+    throw SemanticError("Error: second argument to apply not a list");
   }
 
   std::vector<Expression> return_args;
@@ -761,7 +780,7 @@ Expression Expression::eval(Environment & env){
   }
   else{
     if (m_head.asSymbol() == "list") {
-        return Expression(this->m_tail);
+      return handle_list(env);   
     }
     if(m_tail.empty()){
       if(m_head.isString()){
@@ -818,11 +837,8 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
     out << "(";
   }
 
-  out << exp.head();
-
-  if(exp.tailLength() > 0 && exp.isNone()){
-      out << " ";
-  }
+  if (exp.isNone())
+    out << exp.head();
 
   for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
     out << *e;
@@ -979,12 +995,12 @@ double Expression::getNumericalProperty(std::string prop) const noexcept {
 std::pair<double, double> Expression::getPointCoordinates() const noexcept {
   double x = 0.0;
   double y = 0.0;
-
-  std::cout << *this << "\n";
   
   if (m_properties.find("object-name") != m_properties.end()) {
-    x = m_tail[0].head().asNumber();
-    x = m_tail[1].head().asNumber();
+    if (m_properties.at("object-name") == Expression(Atom("point"))) {
+      x = m_tail[0].head().asNumber();
+      x = m_tail[1].head().asNumber();
+    }
   }
 
   std::pair<double, double> result = {x, y};

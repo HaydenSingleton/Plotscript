@@ -55,7 +55,7 @@ public:
   Expression(const Atom & head, const std::vector<Expression> & args);
 
   //Constructor for plots
-  Expression(const Expression & front, const std::vector<Expression> & back);
+  // Expression(const Expression & front, const std::vector<Expression> & back);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
@@ -87,7 +87,7 @@ public:
   /// member when determines if the expression is a list
   bool isList() const noexcept;
 
-  /// member when determines if the expression is a list
+  /// member when determines if the expression is a Lambda function
   bool isLambda() const noexcept;
 
   /// member when determines if the expression is actually empty
@@ -143,6 +143,7 @@ private:
   Expression handle_lookup(const Atom & head, const Environment & env);
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
+  Expression handle_list(Environment & env);
   Expression handle_lambda();
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
