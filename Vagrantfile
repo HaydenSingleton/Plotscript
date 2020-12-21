@@ -36,12 +36,16 @@ BOOTSTRAP
 #-----------------------------------------------------------------------
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "hashicorp/bionic64"
 
   # get rid of annoying console.log file and start the GUI 
   config.vm.provider "virtualbox" do |vb|
     vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
+    # Display the VirtualBox GUI when booting the machine
     vb.gui = true
+
+    # Customize the amount of memory on the VM:
+    vb.memory = "1024"
   end
 
   # setup the VM
