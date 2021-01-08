@@ -26,6 +26,7 @@ Expression::Expression(const Expression & a) {
 
 // Constructor for lists
 Expression::Expression(const std::vector<Expression> & items): m_tail(items) {
+  m_type = ExpType::Procedure;
   m_head = Atom("List");
 }
 
@@ -33,13 +34,15 @@ Expression::Expression(const std::vector<Expression> & items): m_tail(items) {
 Expression::Expression(const std::vector<Expression> & args, Expression & func) {
 
   m_type = ExpType::Procedure;
+  m_head = Atom("Lambda");
   m_tail.push_back(args);
   m_tail.push_back(func);
 }
 
 // Constructor for graphics items
 Expression::Expression(const Atom & t, const std::vector<Expression> & back){
-    
+  
+  m_type = ExpType::Graphic;
   for(auto e : back){
     m_tail.push_back(e);
   }
@@ -49,6 +52,7 @@ Expression::Expression(const Atom & t, const std::vector<Expression> & back){
 // Constructor for plots
 Expression::Expression(std::string type, const std::vector<Expression> & back) {
 
+  m_type = ExpType::Graphic;
   m_head = Atom(type);
 
   for(auto e : back){
@@ -89,11 +93,11 @@ bool Expression::isList() const noexcept {
 }
 
 bool Expression::isLambda() const noexcept {
-  return (m_type == ExpType::Procedure);
+  return (m_head == Atom("Lambda"));
 }
 
 bool Expression::isEmpty() const noexcept {
-  return false;
+  return *this == Expression();
 }
 
 bool Expression::isDP() const noexcept {
@@ -132,8 +136,7 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
 
 Expression apply(const Atom & op, const std::vector<Expression> & args, const Environment & env){
 
-  //op holds a lambda
-  if(env.is_exp(op)){
+  if ( env.get_exp(op).head().asSymbol() == "Lambda") {
     Environment inner_scope = env;
 
     Expression lambda = inner_scope.get_exp(op);
@@ -149,19 +152,19 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
     }
 
     return lambda.tail()->eval(inner_scope);
-  }//stop here if applying a lambda
+  }
 
   // head must be a symbol
   if(!op.isSymbol()){
-    throw SemanticError("Error during evaluation: procedure ["+op.asString()+"] name not symbol");
+    throw SemanticError("Error during evaluation: procedure "+op.asString()+" is not a symbol");
   }
 
   // must map to a proc
   if(!env.is_proc(op)){
-    throw SemanticError("Error during evaluation: symbol ["+op.asString()+"] does not name a procedure");
+    throw SemanticError("Error during evaluation: symbol "+op.asString()+" does not name a procedure");
   }
 
-    // map from symbol to proc
+  // map from symbol to proc
   Procedure proc = env.get_proc(op);
 
   // call proc with args
@@ -241,7 +244,7 @@ Expression Expression::handle_list(Environment & env){
   return Expression(listItems);
 }
 
-Expression Expression::handle_lambda() {
+Expression Expression::handle_lambda(Environment & env) {
 
   std::vector<Expression> argument_template;
   argument_template.emplace_back(Expression(m_tail[0].head()));
@@ -250,32 +253,31 @@ Expression Expression::handle_lambda() {
   }
 
   Expression return_exp = Expression(argument_template, m_tail[1]);
-  assert(return_exp.m_type == ExpType::Procedure);
   return return_exp;
 }
 
 Expression Expression::handle_apply(Environment & env){
 
   if(m_tail.size() != 2){
-    throw SemanticError("Error during apply: invalid number of arguments to define");
+    throw SemanticError("Error during apply: invalid number of arguments");
   }
 
   Atom op =  m_tail[0].head();
-
-  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
-    Expression arg1 = m_tail[0].eval(env);
-    if(!arg1.isLambda())
-      throw SemanticError("Error during apply: first argument to apply not a procedure");
+  if ( env.get_exp(op).head().asSymbol() == "Lambda" ) {
+  }
+  else {
+    if(!env.is_proc(op) || m_tail[0].tailLength() > 0){ 
+      throw SemanticError("Error: first argument to apply not a procedure");
+    }
   }
 
-  Expression list_evaled = m_tail[1].eval(env);
-
-  if(!list_evaled.isList()){
-    throw SemanticError("Error during apply: second argument to apply not a list");
+  Expression arguments = m_tail[1].eval(env);
+  if(!arguments.isList()){
+    throw SemanticError("Error: second argument to apply not a list");
   }
 
   std::vector<Expression> list_args;
-  for(auto e = list_evaled.tailConstBegin(); e != list_evaled.tailConstEnd(); e++){
+  for(auto e = arguments.tailConstBegin(); e != arguments.tailConstEnd(); e++){
     list_args.push_back(*e);
   }
 
@@ -289,15 +291,16 @@ Expression Expression::handle_map(Environment & env){
   }
 
   Atom op =  m_tail[0].head();
-  if(!env.is_proc(op) || m_tail[0].tailLength() != 0){
-    Expression arg1 = m_tail[0].eval(env);
-    if(!arg1.isLambda())
+  if ( env.get_exp(op).head().asSymbol() == "Lambda" ) {
+  }
+  else {
+    if(!env.is_proc(op) || m_tail[0].tailLength() > 0){ 
       throw SemanticError("Error: first argument to map not a procedure");
+    }
   }
 
 
   Expression list_evaled = m_tail[1].eval(env);
-
   if(!list_evaled.isList()){
     throw SemanticError("Error: second argument to apply not a list");
   }
@@ -451,7 +454,6 @@ Expression Expression::handle_discrete_plot(Environment & env){
       result.push_back(botLine.eval(env));
 
       // Add draw axis lines if either zero line is within the boundaries
-
       if(0 < OU && 0 > OL){
         Expression xAxisStart, xAxisEnd;
         xy = {Expression(xmax), Expression(0.0)};
@@ -479,7 +481,9 @@ Expression Expression::handle_discrete_plot(Environment & env){
       }
 
       // Add all data points and stem lines
-      Expression new_point, stem_bottom, stemline; double x,y; std::vector<Expression> p1p2;
+      Expression new_point, stem_bottom, stemline; 
+      double x,y; 
+      std::vector<Expression> p1p2;
 
       /* If the bottom of the graph is above the orign,
       draw the stemlines down to the bottom line only */
@@ -513,11 +517,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
         result.push_back(opt.m_tail[1]);
       }
 
-      // if(OPTIONS.m_tail.size() < 8){
-      //   result.push_back(Expression(Atom("\"1\"")));
-      // }
-
-      return Expression(Atom("DP"), result);
+      return Expression("DP", result);
     }
     else {
       throw SemanticError("Error: An argument to discrete-plot is not a list");
@@ -798,7 +798,7 @@ Expression Expression::eval(Environment & env){
       return handle_define(env);
     }
     if(m_head.asSymbol() == "lambda"){
-      return handle_lambda();
+      return handle_lambda(env);
     }
     else if(m_head.asSymbol() == "apply"){
       return handle_apply(env);
@@ -818,37 +818,38 @@ Expression Expression::eval(Environment & env){
     if(m_head.asSymbol() == "continuous-plot"){
       return handle_cont_plot(env);
     }
-
-    std::vector<Expression> results;
-    for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
-      results.push_back(it->eval(env));
-    }
-    return apply(m_head, results, env);
   }
+
+  std::vector<Expression> results;
+  for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
+    results.push_back(it->eval(env));
+  }
+  return apply(m_head, results, env);
 }
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
-  if(exp.isEmpty()){
-    out << "NONE";
-    return out;
-  }
-
-  if(!exp.head().isComplex()) {
-    out << "(";
-  }
-
-  if (exp.isNone())
-    out << exp.head();
-
-  for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
-    out << *e;
-    if((e + 1) != exp.tailConstEnd()){
-      out << " ";
+  if(!exp.isEmpty()){
+    if(!exp.head().isComplex()) {
+      out << "(";
     }
-  }
-  if(!exp.head().isComplex()) {
-    out << ")";
+
+    if (exp.isNone()) {
+      out << exp.head().asString();
+    }
+
+    // if (exp.tailLength() > 0)
+    //   out << " ";
+
+    for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
+      out << *e;
+      if((e + 1) != exp.tailConstEnd()){
+        out << " ";
+      }
+    }
+    if(!exp.head().isComplex()) {
+      out << ")";
+    }
   }
 
   return out;
@@ -888,12 +889,8 @@ std::string Expression::toString() const noexcept{
       out << "(";
     }
 
-    if (head().asString() != "List") {
+    if (m_type != ExpType::Procedure) {
       out << this->head().asString();
-    }
-
-    if(this->tailLength() > 0 && this->isNone()){
-        out << " ";
     }
 
     for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){

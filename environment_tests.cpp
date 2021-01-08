@@ -530,13 +530,3 @@ TEST_CASE("Testing range procedure", "[environment]") {
     std::vector<Expression> not_3_args = { Expression(10) };
     REQUIRE_THROWS_AS(prange(not_3_args), SemanticError);
 }
-
-TEST_CASE("Testing graphics item constructors", "[environment]") {
-
-  Environment env;
-
-  
-
-
-
-}

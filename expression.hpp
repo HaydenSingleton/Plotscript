@@ -129,7 +129,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {Exp, Procedure, None};
+  enum class ExpType {Graphic, Procedure, None};
 
   ExpType m_type;
 
@@ -144,7 +144,7 @@ private:
   Expression handle_define(Environment & env);
   Expression handle_begin(Environment & env);
   Expression handle_list(Environment & env);
-  Expression handle_lambda();
+  Expression handle_lambda(Environment & env);
   Expression handle_apply(Environment & env);
   Expression handle_map(Environment & env);
   Expression handle_set_property(Environment & env);
