@@ -377,7 +377,7 @@ Expression first(const std::vector<Expression> & args) {
 
 	if (nargs_equal(args, 1)) {
 		if(args[0].isList()) {
-			if (args[0] != Expression()) {
+			if (args[0].tailLength() > 0) {
 				Expression result = *args[0].tailConstBegin();
 				return Expression(result);
 			}
@@ -397,7 +397,7 @@ Expression rest(const std::vector<Expression> & args) {
     if(!args[0].isList())
       throw SemanticError("Error: in call to rest: not a list argument.");
     else {
-      if(args[0] != Expression()) {
+      if(args[0].tailLength() > 0) {
         std::vector<Expression> result;
         auto e = args[0].tailConstBegin();
         e++;

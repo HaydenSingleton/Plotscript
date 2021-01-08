@@ -51,11 +51,11 @@ public:
   /// constructor for lambda type
   Expression(const std::vector<Expression> & args, Expression & func);
 
-  // /// constructor for special cases like graphics items
+  /// constructor for special cases like graphics items
   Expression(const Atom & head, const std::vector<Expression> & args);
 
-  //Constructor for plots
-  // Expression(const Expression & front, const std::vector<Expression> & back);
+  /// Constructor for plots
+  Expression(std::string type, const std::vector<Expression> & back);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
@@ -93,10 +93,10 @@ public:
   /// member when determines if the expression is actually empty
   bool isEmpty() const noexcept;
 
-  // Check and change exp type for discrete-plots
+  // Check exp type for discrete-plots
   bool isDP() const noexcept;
 
-  // Check and change exp type for continuous-plots
+  // Check exp type for continuous-plots
   bool isCP() const noexcept;
 
   /// Evaluate expression using a post-order traversal (recursive)
@@ -129,7 +129,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda, Empty, DP, CP};
+  enum class ExpType {Exp, Procedure, None};
 
   ExpType m_type;
 

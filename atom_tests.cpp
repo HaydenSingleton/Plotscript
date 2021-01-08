@@ -9,7 +9,8 @@ TEST_CASE( "Test atom constructors", "[atom]" ) {
     Atom a;
 
     REQUIRE(a.isNone());
-    REQUIRE(!a.isNumber());
+    REQUIRE(a.operator==(Atom()));
+    REQUIRE(!a.isString());
     REQUIRE(!a.isSymbol());
   }
 

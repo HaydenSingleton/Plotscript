@@ -6,7 +6,7 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-Expression::Expression(): m_type(ExpType::Empty)
+Expression::Expression(): m_type(ExpType::None)
 {}
 
 // Basic constructor
@@ -25,35 +25,36 @@ Expression::Expression(const Expression & a) {
 }
 
 // Constructor for lists
-Expression::Expression(const std::vector<Expression> & items){
-  m_type = ExpType::List;
-  m_tail = items;
+Expression::Expression(const std::vector<Expression> & items): m_tail(items) {
+  m_head = Atom("List");
 }
 
 //Constructor for Lambda functions
 Expression::Expression(const std::vector<Expression> & args, Expression & func) {
-  m_type = ExpType::Lambda;
+
+  m_type = ExpType::Procedure;
   m_tail.push_back(args);
   m_tail.push_back(func);
 }
 
-// Constructor for special cases like graphics items
+// Constructor for graphics items
 Expression::Expression(const Atom & t, const std::vector<Expression> & back){
+    
+  for(auto e : back){
+    m_tail.push_back(e);
+  }
   
-  std::string type = t.asString();
-  if (type == "DP") {
-    m_type = ExpType::DP;
-  }
-  else if (type == "CP") {
-    m_type = ExpType::CP;
-  }
-  else {
-    m_type = ExpType::None;
-  }
+}
+
+// Constructor for plots
+Expression::Expression(std::string type, const std::vector<Expression> & back) {
+
+  m_head = Atom(type);
 
   for(auto e : back){
     m_tail.push_back(e);
   }
+
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -84,23 +85,23 @@ bool Expression::isNone() const noexcept {
 }
 
 bool Expression::isList() const noexcept {
-	return (m_type == ExpType::List);
+	return (m_head == Atom("List"));
 }
 
 bool Expression::isLambda() const noexcept {
-  return (m_type == ExpType::Lambda);
+  return (m_type == ExpType::Procedure);
 }
 
 bool Expression::isEmpty() const noexcept {
-  return (m_type == ExpType::Empty);
+  return false;
 }
 
 bool Expression::isDP() const noexcept {
-  return (m_type == ExpType::DP);
+  return false;
 }
 
 bool Expression::isCP() const noexcept {
-  return (m_type == ExpType::CP);
+  return false;
 }
 
 void Expression::append(const Atom & a){
@@ -249,7 +250,7 @@ Expression Expression::handle_lambda() {
   }
 
   Expression return_exp = Expression(argument_template, m_tail[1]);
-  assert(return_exp.m_type == ExpType::Lambda);
+  assert(return_exp.m_type == ExpType::Procedure);
   return return_exp;
 }
 
@@ -350,9 +351,9 @@ Expression Expression::handle_get_property(Environment & env){
       if(target.m_properties.find(key)!= target.m_properties.end()){
         result = target.m_properties.at(key);
       }
-      else {
-        result.m_type = ExpType::Empty;
-      }
+      // else {
+      //   result.m_type = ExpType::Empty;
+      // }
       return result;
     }
     else{
@@ -887,7 +888,9 @@ std::string Expression::toString() const noexcept{
       out << "(";
     }
 
-    out << this->head().asString();
+    if (head().asString() != "List") {
+      out << this->head().asString();
+    }
 
     if(this->tailLength() > 0 && this->isNone()){
         out << " ";

@@ -22,13 +22,10 @@ Atom::Atom(const Token & token): Atom(){
       setNumber(temp);
     }
   }
-  // else assume symbol
   else if(!std::isdigit(token.asString()[0]) ){ 
-    // make sure does not start with number
-    
+      // else assume symbol
       setSymbol(token.asString());
   }
- 
 }
 
 Atom::Atom(const std::string & value): Atom() {
@@ -69,7 +66,7 @@ Atom & Atom::operator=(const Atom & x){
 
 Atom::~Atom(){
 
-  // we need to ensure the destructor of the symbol string is called
+  //ensure the destructor of the symbol string is called
   if(m_type == SymbolKind){
     stringValue.~basic_string();
   }

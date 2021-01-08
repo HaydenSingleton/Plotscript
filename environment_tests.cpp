@@ -410,7 +410,7 @@ TEST_CASE("Testing first procedure", "[environment]") {
     std::vector<Expression> not_a_list = { Expression(std::complex<double>(1,0)) };
     REQUIRE_THROWS_AS(pfirst(not_a_list), SemanticError);
 
-    std::vector<Expression> l = { };
+    std::vector<Expression> l = {};
     std::vector<Expression> empty_list = { plist(l) };
     REQUIRE_THROWS_AS(pfirst(empty_list), SemanticError);
 
@@ -529,4 +529,14 @@ TEST_CASE("Testing range procedure", "[environment]") {
 
     std::vector<Expression> not_3_args = { Expression(10) };
     REQUIRE_THROWS_AS(prange(not_3_args), SemanticError);
+}
+
+TEST_CASE("Testing graphics item constructors", "[environment]") {
+
+  Environment env;
+
+  
+
+
+
 }
