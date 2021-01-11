@@ -129,9 +129,9 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {Graphic, Procedure, None};
+  enum class ExpType {None, Empty, List, Lambda, DP, CP};
 
-  ExpType m_type;
+  ExpType m_type = ExpType::None;
 
   // list of the expression's properties
   std::map<std::string, Expression> m_properties;

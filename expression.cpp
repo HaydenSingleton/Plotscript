@@ -6,7 +6,7 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
-Expression::Expression(): m_type(ExpType::None)
+Expression::Expression(): m_type(ExpType::Empty)
 {}
 
 // Basic constructor
@@ -17,8 +17,10 @@ Expression::Expression(const Atom & a): m_head(a), m_type(ExpType::None)
 Expression::Expression(const Expression & a) {
 
   m_head = a.m_head;
+
   m_type = a.m_type;
   m_properties = a.m_properties;
+  
   for(auto e : a.m_tail){
     m_tail.push_back(e);
   }
@@ -26,23 +28,21 @@ Expression::Expression(const Expression & a) {
 
 // Constructor for lists
 Expression::Expression(const std::vector<Expression> & items): m_tail(items) {
-  m_type = ExpType::Procedure;
-  m_head = Atom("List");
+  m_type = ExpType::List;
 }
 
 //Constructor for Lambda functions
 Expression::Expression(const std::vector<Expression> & args, Expression & func) {
 
-  m_type = ExpType::Procedure;
-  m_head = Atom("Lambda");
+  m_type = ExpType::Lambda;
+
   m_tail.push_back(args);
   m_tail.push_back(func);
 }
 
 // Constructor for graphics items
 Expression::Expression(const Atom & t, const std::vector<Expression> & back){
-  
-  m_type = ExpType::Graphic;
+
   for(auto e : back){
     m_tail.push_back(e);
   }
@@ -52,7 +52,13 @@ Expression::Expression(const Atom & t, const std::vector<Expression> & back){
 // Constructor for plots
 Expression::Expression(std::string type, const std::vector<Expression> & back) {
 
-  m_type = ExpType::Graphic;
+  if (type == "CP") {
+    m_type = ExpType::CP;
+  }
+  else if (type == "DP") {
+    m_type == ExpType::DP;
+  }
+
   m_head = Atom(type);
 
   for(auto e : back){
@@ -72,6 +78,7 @@ Expression & Expression::operator=(const Expression & a){
       for(auto e : a.m_tail)
         m_tail.push_back(e);
   }
+
   return *this;
 }
 
@@ -89,23 +96,23 @@ bool Expression::isNone() const noexcept {
 }
 
 bool Expression::isList() const noexcept {
-	return (m_head == Atom("List"));
+	return (m_type == ExpType::List);
 }
 
 bool Expression::isLambda() const noexcept {
-  return (m_head == Atom("Lambda"));
+  return (m_type == ExpType::Lambda);
 }
 
 bool Expression::isEmpty() const noexcept {
-  return *this == Expression();
+  return (m_type == ExpType::Empty);
 }
 
 bool Expression::isDP() const noexcept {
-  return false;
+  return m_type == ExpType::DP;
 }
 
 bool Expression::isCP() const noexcept {
-  return false;
+  return m_type == ExpType::CP;
 }
 
 void Expression::append(const Atom & a){
@@ -136,7 +143,7 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept{
 
 Expression apply(const Atom & op, const std::vector<Expression> & args, const Environment & env){
 
-  if ( env.get_exp(op).head().asSymbol() == "Lambda") {
+  if ( env.get_exp(op).isLambda() ) {
     Environment inner_scope = env;
 
     Expression lambda = inner_scope.get_exp(op);
@@ -263,7 +270,7 @@ Expression Expression::handle_apply(Environment & env){
   }
 
   Atom op =  m_tail[0].head();
-  if ( env.get_exp(op).head().asSymbol() == "Lambda" ) {
+  if ( env.get_exp(op).isLambda() ) {
   }
   else {
     if(!env.is_proc(op) || m_tail[0].tailLength() > 0){ 
@@ -354,9 +361,9 @@ Expression Expression::handle_get_property(Environment & env){
       if(target.m_properties.find(key)!= target.m_properties.end()){
         result = target.m_properties.at(key);
       }
-      // else {
-      //   result.m_type = ExpType::Empty;
-      // }
+      else {
+        result.m_type = ExpType::Empty;
+      }
       return result;
     }
     else{
@@ -763,7 +770,7 @@ Expression Expression::handle_cont_plot(Environment & env){
 
       }
 
-      return Expression(Atom("CP"), result);
+      return Expression("CP", result);
     }
     else
       throw SemanticError("Error: invalid number of arguments to continuous plot");
@@ -784,12 +791,7 @@ Expression Expression::eval(Environment & env){
       return handle_list(env);   
     }
     if(m_tail.empty()){
-      if(m_head.isString()){
-        return Expression(m_head);
-      }
-      else {
-        return handle_lookup(m_head, env);
-      }
+      return handle_lookup(m_head, env);
     }
     if(m_head.asSymbol() == "begin"){
       return handle_begin(env);
@@ -837,9 +839,6 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
     if (exp.isNone()) {
       out << exp.head().asString();
     }
-
-    // if (exp.tailLength() > 0)
-    //   out << " ";
 
     for(auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e){
       out << *e;
@@ -889,9 +888,7 @@ std::string Expression::toString() const noexcept{
       out << "(";
     }
 
-    if (m_type != ExpType::Procedure) {
-      out << this->head().asString();
-    }
+    out << this->head().asString();
 
     for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){
       out << *e;
