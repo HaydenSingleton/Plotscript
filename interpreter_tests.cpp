@@ -559,7 +559,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
 
 TEST_CASE("Test handle discrete-plot", "[expression]") {
   std::string program;
-  program = R"((discrete-plot (list (list -1 -1) (list 1 1)) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label") )))";
+  program = R"( (discrete-plot (list (list -1 -1) (list 1 1)) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label"))) )";
   Expression e = run(program);
 
   REQUIRE(e.isDP());

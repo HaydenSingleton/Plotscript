@@ -52,7 +52,7 @@ public:
   Expression(const std::vector<Expression> & args, Expression & func);
 
   /// constructor for special cases like graphics items
-  Expression(const Atom & head, const std::vector<Expression> & args);
+  Expression(const Atom & head, const Expression & a, const Expression & b=Expression());
 
   /// Constructor for plots
   Expression(std::string type, const std::vector<Expression> & back);
@@ -129,7 +129,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, Empty, List, Lambda, DP, CP};
+  enum class ExpType {None, Empty, List, Lambda, Graphic, DP, CP};
 
   ExpType m_type = ExpType::None;
 
