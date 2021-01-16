@@ -553,8 +553,8 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isText());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isLine());
-  // std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, 10, true};
-  // REQUIRE(e.getTextProperties() == target2);
+  std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, 10, true};
+  REQUIRE(e.getTextProperties() == target2);
 }
 
 TEST_CASE("Test handle discrete-plot", "[expression]") {
