@@ -53,14 +53,8 @@ Expression::Expression(const Atom & t, const Expression &a, const Expression &b)
 // Constructor for plots
 Expression::Expression(std::string type, const std::vector<Expression> & back) {
 
-  if (type == "CP") {
-    m_type = ExpType::CP;
-  }
-  else if (type == "DP") {
-    m_type == ExpType::DP;
-  }
-
   m_head = Atom(type);
+  m_type = ExpType::Graphic;
 
   for(auto e : back){
     m_tail.push_back(e);
@@ -105,15 +99,15 @@ bool Expression::isLambda() const noexcept {
 }
 
 bool Expression::isEmpty() const noexcept {
-  return tailLength() == 0 && m_head == Atom();
+  return tailLength() == 0 && m_head == Atom() && m_type == ExpType::None;
 }
 
 bool Expression::isDP() const noexcept {
-  return m_type == ExpType::DP;
+  return m_type == ExpType::Graphic && m_head.asSymbol() == "DP";
 }
 
 bool Expression::isCP() const noexcept {
-  return m_type == ExpType::CP;
+  return m_type == ExpType::Graphic && m_head.asSymbol() == "CP";
 }
 
 void Expression::append(const Atom & a){
@@ -164,12 +158,12 @@ Expression apply(const Atom & op, const std::vector<Expression> & args, const En
 
   // head must be a symbol
   if(!op.isSymbol()){
-    throw SemanticError("Error during evaluation: procedure "+op.asString()+" is not a symbol");
+    throw SemanticError("Error during evaluation: not a symbol");
   }
 
   // must map to a proc
   if(!env.is_proc(op)){
-    throw SemanticError("Error during evaluation: symbol "+op.asString()+" does not name a procedure");
+    throw SemanticError("Error during evaluation: symbol does not name a procedure");
   }
 
   // map from symbol to proc
@@ -361,11 +355,9 @@ Expression Expression::handle_get_property(Environment & env){
       std::string key = m_tail[0].head().asString();
       if(target.m_properties.find(key)!= target.m_properties.end()){
         result = target.m_properties.at(key);
+        return result;
       }
-      else {
-        result.m_type = ExpType::Empty;
-      }
-      return result;
+      return Expression();
     }
     else{
       throw SemanticError("Error: first argument to get-property not a string.");
@@ -382,30 +374,36 @@ Expression Expression::handle_discrete_plot(Environment & env){
     throw SemanticError("Error: invalid number of arguments for discrete-plot");
   }
 
-  std::vector<Expression> result;
   Expression DATA = m_tail[0].eval(env);
   Expression OPTIONS = m_tail[1].eval(env);
 
   if (! DATA.isList() || ! OPTIONS.isList() ) {
     throw SemanticError("Error: An argument to discrete-plot is not a list");
   }
+  std::vector<Expression> result;
 
   // Constants used to create bounding box and graph
   double N = 20;
 
   // Find the max and min values of x and y inside DATA
   double xmax = -999, xmin = 999, ymax = -999, ymin = 999;
+  double xval, yval;
   for(auto & point : DATA.m_tail){
-    if(point.m_tail[0].head().asNumber() > xmax)
-      xmax = point.m_tail[0].head().asNumber();
-    if(point.m_tail[0].head().asNumber() < xmin)
-      xmin = point.m_tail[0].head().asNumber();
 
-    if(point.m_tail[1].head().asNumber() > ymax)
-      ymax = point.m_tail[1].head().asNumber();
-    if(point.m_tail[1].head().asNumber() < ymin)
-      ymin = point.m_tail[1].head().asNumber();
+    xval = point.m_tail[0].head().asNumber();
+    yval = point.m_tail[1].head().asNumber();
+
+    if(xval > xmax)
+      xmax = xval;
+    if(xval < xmin)
+      xmin = xval;
+
+    if(yval > ymax)
+      ymax = yval;
+    if(yval < ymin)
+      ymin = yval;
   }
+
   // Create scale factors using the max and min edges of the data
   double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
   double AL = xmin, AU = xmax, OL = ymin, OU = ymax;
@@ -417,6 +415,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
   ymax *= yscale * -1;
 
   double xmiddle = (xmax+xmin)/2, ymiddle = (ymin-ymax)/2;
+
+  std::cout << "Scaled" << std::endl;
 
   // Make an expression for each point of the bounding box
   Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
@@ -430,24 +430,26 @@ Expression Expression::handle_discrete_plot(Environment & env){
   botMid = Expression(Atom("make-point"), Expression(xmiddle), Expression(ymin));
   botRight = Expression(Atom("make-point"), Expression(xmax), Expression(ymin));
 
-  // Make an expression to hold each line of the bounding rect
-  Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
- 
-  leftLine = Expression(Atom("make-line"), topLeft, botLeft);
+  std::cout << "Box points" << std::endl;
+
+  // Make an expression to hold each line of the bounding rect 
+  Expression leftLine = Expression(Atom("make-line"), topLeft, botLeft);
   result.push_back(leftLine.eval(env));
 
-  rightLine = Expression(Atom("make-line"), topRight, botRight);
+  Expression rightLine = Expression(Atom("make-line"), topRight, botRight);
   result.push_back(rightLine.eval(env));
 
-  topLine = Expression(Atom("make-line"), topLeft, topRight);
+  Expression topLine = Expression(Atom("make-line"), topLeft, topRight);
   result.push_back(topLine.eval(env));
 
-  botLine = Expression(Atom("make-line"), botLeft, botRight);
+  Expression botLine = Expression(Atom("make-line"), botLeft, botRight);
   result.push_back(botLine.eval(env));
+
+  std::cout << "Box lines" << std::endl;
 
   // Add draw axis lines if either zero line is within the boundaries
   if(0 < OU && 0 > OL){
-    Expression xAxisStart, xAxisEnd;
+    Expression xAxisStart, xAxisEnd, xaxis;
     xAxisStart = Expression(Atom("make-point"), Expression(xmax), Expression(0.0));
     xAxisEnd = Expression(Atom("make-point"), Expression(xmin), Expression(0.0));
     xaxis = Expression(Atom("make-line"), xAxisStart, xAxisEnd);
@@ -455,13 +457,15 @@ Expression Expression::handle_discrete_plot(Environment & env){
   }
 
   if(0 < AU && 0 > AL){
-    Expression yAxisStart, yAxisEnd;
+    Expression yAxisStart, yAxisEnd, yaxis;
     yAxisStart = Expression(Atom("make-point"), Expression(0.0), Expression(ymax));
     yAxisEnd = Expression(Atom("make-point"), Expression(0.0), Expression(ymin));
 
     yaxis = Expression(Atom("make-line"), yAxisStart, yAxisEnd);
     result.push_back(yaxis.eval(env));
   }
+
+  std::cout << "Made bounding box" << std::endl;
 
   // Add all data points and stem lines
   Expression new_point, stem_bottom, stemline; 
@@ -485,17 +489,24 @@ Expression Expression::handle_discrete_plot(Environment & env){
     result.push_back(stemline.eval(env));
   }
 
+  std::cout << "Added data points/stem lines" << std::endl;
+
   // Add the bounds of the data as strings
   result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
   result.push_back(Expression(Atom("\""+Atom(AU).asString()+"\"")));
   result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
   result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
 
+  std::cout << "Added labels" << std::endl;
+
   // Add each option to the output
   for(auto &opt : OPTIONS.m_tail){
     result.push_back(opt.m_tail[1]);
   }
 
+  std::cout << "Added options" << std::endl;
+
+  std::cout << "Making DP from result vector" << std::endl;
   return Expression("DP", result);
 }
 
@@ -695,60 +706,59 @@ Expression Expression::handle_cont_plot(Environment & env){
 
 sig_atomic_t global_status_flag = 0;
 
-// this is a simple recursive version. the iterative version is more
-// difficult with the ast data structure used (no parent pointer).
-// this limits the practical depth of our AST
 Expression Expression::eval(Environment & env){
 
   if(global_status_flag > 0){
     throw SemanticError("Error: interpreter kernal interupted");
   }
-  else{
-    if (m_head.asSymbol() == "list") {
-      return handle_list(env);   
-    }
-    if(m_tail.empty()){
-      return handle_lookup(m_head, env);
-    }
-    if(m_head.asSymbol() == "begin"){
-      return handle_begin(env);
-    }
-    if(m_head.asSymbol() == "define"){
-      return handle_define(env);
-    }
-    if(m_head.asSymbol() == "lambda"){
-      return handle_lambda(env);
-    }
-    else if(m_head.asSymbol() == "apply"){
-      return handle_apply(env);
-    }
-    if(m_head.asSymbol() == "map"){
-      return handle_map(env);
-    }
-    if(m_head.asSymbol() == "set-property"){
-      return handle_set_property(env);
-    }
-    if(m_head.asSymbol() == "get-property"){
-      return handle_get_property(env);
-    }
-    if(m_head.asSymbol() == "discrete-plot"){
-      return handle_discrete_plot(env);
-    }
-    if(m_head.asSymbol() == "continuous-plot"){
-      return handle_cont_plot(env);
-    }
+
+  if (m_head.asSymbol() == "list") {
+    return handle_list(env);   
+  }
+  if(m_tail.empty()){
+    return handle_lookup(m_head, env);
+  }
+  if(m_head.asSymbol() == "begin"){
+    return handle_begin(env);
+  }
+  if(m_head.asSymbol() == "define"){
+    return handle_define(env);
+  }
+  if(m_head.asSymbol() == "lambda"){
+    return handle_lambda(env);
+  }
+  else if(m_head.asSymbol() == "apply"){
+    return handle_apply(env);
+  }
+  if(m_head.asSymbol() == "map"){
+    return handle_map(env);
+  }
+  if(m_head.asSymbol() == "set-property"){
+    return handle_set_property(env);
+  }
+  if(m_head.asSymbol() == "get-property"){
+    return handle_get_property(env);
+  }
+  if(m_head.asSymbol() == "discrete-plot"){
+    return handle_discrete_plot(env);
+  }
+  if(m_head.asSymbol() == "continuous-plot"){
+    return handle_cont_plot(env);
   }
 
   std::vector<Expression> results;
   for(Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
     results.push_back(it->eval(env));
-  }
+  } 
   return apply(m_head, results, env);
 }
 
 std::ostream & operator<<(std::ostream & out, const Expression & exp){
 
-  if(!exp.isEmpty()){
+  if(exp.isEmpty()){
+      out << "NONE";
+  }
+  else {
     if(!exp.head().isComplex()) {
       out << "(";
     }
@@ -767,8 +777,35 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
       out << ")";
     }
   }
-
   return out;
+}
+
+std::string Expression::toString() const noexcept{
+
+  std::ostringstream out;
+
+  if(isEmpty()){
+    out << "NONE";
+  }
+  else {
+    if(!head().isComplex()) {
+      out << "(";
+    }
+
+    out << head().asString();
+
+    for(auto e = tailConstBegin(); e != tailConstEnd(); ++e){
+      out << *e;
+      if((e + 1) != tailConstEnd()){
+        out << " ";
+      }
+    }
+    if(!head().isComplex()) {
+      out << ")";
+    }
+  }
+
+  return out.str();
 }
 
 bool Expression::operator==(const Expression & exp) const noexcept{
@@ -791,34 +828,6 @@ bool Expression::operator==(const Expression & exp) const noexcept{
 bool operator!=(const Expression & left, const Expression & right) noexcept{
 
   return !(left == right);
-}
-
-std::string Expression::toString() const noexcept{
-
-  std::ostringstream out;
-
-  if(this->isEmpty()){
-    out << "NONE";
-  }
-  else {
-    if(!this->head().isComplex()) {
-      out << "(";
-    }
-
-    out << this->head().asString();
-
-    for(auto e = this->tailConstBegin(); e != this->tailConstEnd(); ++e){
-      out << *e;
-      if((e + 1) != this->tailConstEnd()){
-        out << " ";
-      }
-    }
-    if(!this->head().isComplex()) {
-      out << ")";
-    }
-  }
-
-  return out.str();
 }
 
 std::string Expression::getProperties() const {
@@ -863,25 +872,27 @@ bool Expression::isText() const noexcept{
 
 std::tuple<double, double, double, double, bool> Expression::getTextProperties() const noexcept{
   double sf = 1;
+  double x = 0.0;
+  double y = 0.0;
+  double rot = 0;
+
   if(m_properties.find("\"text-scale\"") != m_properties.end()) {
     sf = m_properties.at("\"text-scale\"").head().asNumber();
     if(sf < 1)
       sf = 1;
   }
 
-  double rot = 0;
   if(m_properties.find("\"text-rotation\"") != m_properties.end()) {
     rot = m_properties.at("\"text-rotation\"").head().asNumber();
   }
 
   if(m_properties.find("\"position\"") != m_properties.end()){
     Expression point = m_properties.at("\"position\"");
-    double x = point.getPointCoordinates().first;
-    double y = point.getPointCoordinates().second;
+    std::tie(x, y) = point.getPointCoordinates();
     return {x, y, sf, rot, true};
   }
 
-  // Error case
+  // default values
   return {0, 0, 1, 0, false};
 }
 
@@ -910,11 +921,9 @@ std::pair<double, double> Expression::getPointCoordinates() const noexcept {
   double x = 0.0;
   double y = 0.0;
   
-  if (m_properties.find("object-name") != m_properties.end()) {
-    if (m_properties.at("object-name") == Expression(Atom("point"))) {
-      x = m_tail[0].head().asNumber();
-      x = m_tail[1].head().asNumber();
-    }
+  if (isPoint()) {
+    x = m_tail[0].head().asNumber();
+    y = m_tail[1].head().asNumber();
   }
 
   std::pair<double, double> result = {x, y};
