@@ -43,7 +43,7 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 // Constructor for graphics items
 Expression::Expression(const Atom & t, const Expression &a, const Expression &b){
 
-  m_type == ExpType::Graphic;
+  m_type = ExpType::Graphic;
 
   m_tail.push_back(a);
   if (!b.isEmpty())
@@ -51,15 +51,10 @@ Expression::Expression(const Atom & t, const Expression &a, const Expression &b)
 }
 
 // Constructor for plots
-Expression::Expression(std::string type, const std::vector<Expression> & back) {
+Expression::Expression(std::string type, const std::vector<Expression> & back): m_tail(back) {
 
   m_head = Atom(type);
-  m_type = ExpType::Graphic;
-
-  for(auto e : back){
-    m_tail.push_back(e);
-  }
-
+  m_type = ExpType::Plot;
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -103,11 +98,11 @@ bool Expression::isEmpty() const noexcept {
 }
 
 bool Expression::isDP() const noexcept {
-  return m_type == ExpType::Graphic && m_head.asSymbol() == "DP";
+  return m_type == ExpType::Plot && m_head.asSymbol() == "DP";
 }
 
 bool Expression::isCP() const noexcept {
-  return m_type == ExpType::Graphic && m_head.asSymbol() == "CP";
+  return m_type == ExpType::Plot && m_head.asSymbol() == "CP";
 }
 
 void Expression::append(const Atom & a){
@@ -413,10 +408,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
   ymin *= yscale * -1;
   xmax *= xscale;
   ymax *= yscale * -1;
-
-  double xmiddle = (xmax+xmin)/2, ymiddle = (ymin-ymax)/2;
-
-  std::cout << "Scaled" << std::endl;
+  double xmiddle = (xmax+xmin)/2;
+  double ymiddle = (ymin-ymax)/2;
 
   // Make an expression for each point of the bounding box
   Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
@@ -430,22 +423,15 @@ Expression Expression::handle_discrete_plot(Environment & env){
   botMid = Expression(Atom("make-point"), Expression(xmiddle), Expression(ymin));
   botRight = Expression(Atom("make-point"), Expression(xmax), Expression(ymin));
 
-  std::cout << "Box points" << std::endl;
-
   // Make an expression to hold each line of the bounding rect 
   Expression leftLine = Expression(Atom("make-line"), topLeft, botLeft);
-  result.push_back(leftLine.eval(env));
-
+  result.push_back(leftLine);
   Expression rightLine = Expression(Atom("make-line"), topRight, botRight);
-  result.push_back(rightLine.eval(env));
-
+  result.push_back(rightLine);
   Expression topLine = Expression(Atom("make-line"), topLeft, topRight);
-  result.push_back(topLine.eval(env));
-
+  result.push_back(topLine);
   Expression botLine = Expression(Atom("make-line"), botLeft, botRight);
-  result.push_back(botLine.eval(env));
-
-  std::cout << "Box lines" << std::endl;
+  result.push_back(botLine);
 
   // Add draw axis lines if either zero line is within the boundaries
   if(0 < OU && 0 > OL){
@@ -453,7 +439,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
     xAxisStart = Expression(Atom("make-point"), Expression(xmax), Expression(0.0));
     xAxisEnd = Expression(Atom("make-point"), Expression(xmin), Expression(0.0));
     xaxis = Expression(Atom("make-line"), xAxisStart, xAxisEnd);
-    result.push_back(xaxis.eval(env));
+    result.push_back(xaxis);
   }
 
   if(0 < AU && 0 > AL){
@@ -462,10 +448,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
     yAxisEnd = Expression(Atom("make-point"), Expression(0.0), Expression(ymin));
 
     yaxis = Expression(Atom("make-line"), yAxisStart, yAxisEnd);
-    result.push_back(yaxis.eval(env));
+    result.push_back(yaxis);
   }
-
-  std::cout << "Made bounding box" << std::endl;
 
   // Add all data points and stem lines
   Expression new_point, stem_bottom, stemline; 
@@ -485,11 +469,9 @@ Expression Expression::handle_discrete_plot(Environment & env){
     stem_bottom = Expression(Atom("make-point"), Expression(x), Expression(stembottomy));
     stemline = Expression(Atom("make-line"), new_point, stem_bottom);
 
-    result.push_back(new_point.eval(env));
-    result.push_back(stemline.eval(env));
+    result.push_back(new_point);
+    result.push_back(stemline);
   }
-
-  std::cout << "Added data points/stem lines" << std::endl;
 
   // Add the bounds of the data as strings
   result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
@@ -497,16 +479,10 @@ Expression Expression::handle_discrete_plot(Environment & env){
   result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
   result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
 
-  std::cout << "Added labels" << std::endl;
-
   // Add each option to the output
   for(auto &opt : OPTIONS.m_tail){
     result.push_back(opt.m_tail[1]);
   }
-
-  std::cout << "Added options" << std::endl;
-
-  std::cout << "Making DP from result vector" << std::endl;
   return Expression("DP", result);
 }
 

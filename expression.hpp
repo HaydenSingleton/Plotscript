@@ -129,7 +129,7 @@ private:
   std::vector<Expression> m_tail;
 
   // state variable of the expression
-  enum class ExpType {None, List, Lambda, Graphic};
+  enum class ExpType {None, List, Lambda, Graphic, Plot};
 
   ExpType m_type = ExpType::None;
 

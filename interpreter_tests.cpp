@@ -564,7 +564,6 @@ TEST_CASE("Test handle discrete-plot", "[expression]") {
 
   REQUIRE(e.isDP());
   REQUIRE(e.tailLength() == 17);
-  REQUIRE(e.tailConstBegin()->isLine());
 
   program = "(discrete-plot (+ 2 3) (list (list 1)))";
   REQUIRE(run_and_expect_error(program));
