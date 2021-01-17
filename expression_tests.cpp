@@ -5,8 +5,7 @@ TEST_CASE( "Test default expression", "[expression]" ) {
 
   Expression exp;
 
-  REQUIRE(exp.isNone());
-
+  REQUIRE(exp.isEmpty());
   REQUIRE(!exp.head().isNumber());
   REQUIRE(!exp.head().isSymbol());
 }
@@ -43,13 +42,14 @@ TEST_CASE( "Test string expression", "[expression]") {
 
 TEST_CASE( "Test constructor default", "[expression]") {
   Expression a = Expression();
-  REQUIRE(a.isNone());
+  REQUIRE(a.isEmpty());
+  REQUIRE(!a.isNone());
 }
 
 TEST_CASE( "Test constructor basic", "[expression]") {
   Expression a = Expression(1);
+  REQUIRE(a.isNone());
   Expression b = Expression(Atom(1));
-
   REQUIRE(a == b);
 }
 
@@ -71,12 +71,9 @@ TEST_CASE( "Test constructor lambda", "[expression]") {
 
 }
 
-TEST_CASE( "Test constructor graphics", "[expression]") {
-
-}
-
-
 TEST_CASE( "Test constructor plots", "[expression]") {
-
+  std::vector<Expression> contents = {};
+  Expression a("DP", contents);
+  REQUIRE(a.isDP());
 }
 
