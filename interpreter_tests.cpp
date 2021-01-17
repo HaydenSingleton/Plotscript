@@ -571,27 +571,27 @@ TEST_CASE("Test handle discrete-plot", "[expression]") {
   REQUIRE(run_and_expect_error(program));
 }
 
-// TEST_CASE("Test handle continuous-plot", "[expression]") {
-//   std::string program;
-//   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
-//   Expression e = run(program);
+TEST_CASE("Test handle continuous-plot", "[expression]") {
+  std::string program;
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2)))";
+  Expression e = run(program);
 
-//   REQUIRE(e.isCP());
-//   REQUIRE(e.tailLength() == 60);
-//   REQUIRE(e.tailConstBegin()->isLine());
+  REQUIRE(e.isCP());
+  REQUIRE(e.tailLength() == 60);
+  REQUIRE(e.tailConstBegin()->isLine());
 
-//   program = R"(define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label")) )";
-//   Expression r = run(program);
+  program = R"(define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list -2 2) (list (list "title" "The Title") (list "abscissa-label" "X Label") (list "ordinate-label" "Y Label")) )";
+  Expression r = run(program);
 
-//   program = "(begin (continuous-plot (* 1) (list -2 2)))";
-//   REQUIRE(run_and_expect_error(program));
+  program = "(begin (continuous-plot (* 1) (list -2 2)))";
+  REQUIRE(run_and_expect_error(program));
 
-//   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
-//   REQUIRE(run_and_expect_error(program));
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f 5) )";
+  REQUIRE(run_and_expect_error(program));
 
-//   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
-//   REQUIRE(run_and_expect_error(program));
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 1) (list 1 1 1) (list 0)) )";
+  REQUIRE(run_and_expect_error(program));
 
-//   program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 -1 -1) \"not a list\"))";
-//   REQUIRE(run_and_expect_error(program));
-// }
+  program = "(begin (define f (lambda (x) (+ (* 2 x) 1))) (continuous-plot f (list 1 1 -1 -1) \"not a list\"))";
+  REQUIRE(run_and_expect_error(program));
+}
