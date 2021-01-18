@@ -533,7 +533,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isPoint());
   REQUIRE(!e.isLine());
   REQUIRE(!e.isText());
-  REQUIRE(e.toString() == "((2) (2))");
+
   REQUIRE(e.getNumericalProperty("\"size\"") == 0);
   e.setPointSize(5.0);
   REQUIRE(e.getNumericalProperty("\"size\"") == 5.0);
@@ -543,7 +543,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isLine());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isText());
-  REQUIRE(e.toString() == "(((0) (0)) ((3) (3)))");
+
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 4.0);
   e.setLineThickness(2.0);
   REQUIRE(e.getNumericalProperty("\"thickness\"") == 2.0);
@@ -553,7 +553,7 @@ TEST_CASE("Test output widget helper functions", "[expression]") {
   REQUIRE(e.isText());
   REQUIRE(!e.isPoint());
   REQUIRE(!e.isLine());
-  std::tuple<double, double, double, double, bool> target2 = {2, -2, 2, 10, true};
+  std::tuple<double, double, double, double> target2 = {2, -2, 2, 10};
   REQUIRE(e.getTextProperties() == target2);
 }
 
