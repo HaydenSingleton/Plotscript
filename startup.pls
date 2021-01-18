@@ -23,11 +23,7 @@
 		(lambda (str)
 			(set-property "position" (make-point 0 0)
 				(set-property "object-name" "text"
-					(set-property  "text-scale" 1
-						(set-property "rotation" 0
-							(str)
-						)
-					)
+					(str)
 				)
 			)
 		)
