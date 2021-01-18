@@ -465,27 +465,34 @@ Expression join(const std::vector<Expression> & args) {
 
 Expression range(const std::vector<Expression> & args) {
 
-  if(nargs_equal(args, 3)) {
-    if (args[2].head().asNumber() <= 0)
-      throw SemanticError("Error: negative or zero increment in range");
-  }
-  else if (!nargs_equal(args, 2)) {
-    throw SemanticError("Error: invalid number of arguments for range function.");
-  }
-
   for (auto &arg: args) {
-      if (!arg.head().isNumber()) {
-        throw SemanticError("Error: an argument is not a number.");
-      }
+    if (!arg.head().isNumber()) {
+      throw SemanticError("Error: an argument is not a number.");
+    }
   }
-
   if (args[0].head().asNumber() > args[1].head().asNumber())
     throw SemanticError("Error: begin greater than end in range");
 
   std::vector<Expression> result;
-  for(double i = args[0].head().asNumber(); i <= args[1].head().asNumber(); i += args[2].head().asNumber()){
-    result.emplace_back(Expression(Atom(i)));
+  double start, stop, step;
+  start = args[0].head().asNumber();
+  stop = args[1].head().asNumber();
+
+  if(nargs_equal(args, 3)) {
+    if (args[2].head().asNumber() <= 0)
+      throw SemanticError("Error: negative or zero increment in range");
+    step = args[2].head().asNumber();
   }
+  else if (!nargs_equal(args, 2)) {
+    throw SemanticError("Error: invalid number of arguments for range function.");
+  }
+  else {
+    step = 1.0;
+  }
+
+  for(double i = start; i <= stop; i += step) {
+    result.push_back(Expression(Atom(i)));
+  } 
   return Expression(result);
 };
 
@@ -508,13 +515,13 @@ Environment & Environment::operator=(const Environment & a){
 bool Environment::is_known(const Atom & sym) const{
   if(!sym.isSymbol()) return false;
 
-  return envmap.find(sym.asSymbol()) != envmap.end();
+  return envmap.find(sym.asString()) != envmap.end();
 }
 
 void Environment::__shadowing_helper(const Atom & sym, const Expression & new_sym_val){
 
-  if(this->envmap.find(sym.asSymbol()) != this->envmap.end()){
-    this->envmap.erase(sym.asSymbol());
+  if(this->envmap.find(sym.asString()) != this->envmap.end()){
+    this->envmap.erase(sym.asString());
   }
   this->add_exp(sym, new_sym_val);
  }
@@ -522,7 +529,7 @@ void Environment::__shadowing_helper(const Atom & sym, const Expression & new_sy
 bool Environment::is_exp(const Atom & sym) const{
   if(!sym.isSymbol()) return false;
 
-  auto result = envmap.find(sym.asSymbol());
+  auto result = envmap.find(sym.asString());
   return (result != envmap.end()) && (result->second.type == ExpressionType);
 }
 
@@ -535,7 +542,7 @@ Expression Environment::get_exp(const Atom & sym) const{
   Expression exp;
 
   if(sym.isSymbol()){
-    auto result = envmap.find(sym.asSymbol());
+    auto result = envmap.find(sym.asString());
     if((result != envmap.end()) && (result->second.type == ExpressionType)){
       exp = result->second.exp;
     }
@@ -551,17 +558,17 @@ void Environment::add_exp(const Atom & sym, const Expression & exp){
     }
 
     // error if overwriting symbol map
-    if(envmap.find(sym.asSymbol()) != envmap.end()){
-        envmap.erase(sym.asSymbol());
+    if(envmap.find(sym.asString()) != envmap.end()){
+        envmap.erase(sym.asString());
     }
 
-    envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
+    envmap.emplace(sym.asString(), EnvResult(ExpressionType, exp));
 }
 
 bool Environment::is_proc(const Atom & sym) const{
   if(!sym.isSymbol()) return false;
 
-  auto result = envmap.find(sym.asSymbol());
+  auto result = envmap.find(sym.asString());
   return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
@@ -570,7 +577,7 @@ Procedure Environment::get_proc(const Atom & sym) const{
   Procedure proc = default_proc;
 
   if(sym.isSymbol()){
-    auto result = envmap.find(sym.asSymbol());
+    auto result = envmap.find(sym.asString());
     if((result != envmap.end()) && (result->second.type == ProcedureType)){
       return result->second.proc;
     }
