@@ -464,23 +464,29 @@ Expression join(const std::vector<Expression> & args) {
 };
 
 Expression range(const std::vector<Expression> & args) {
+
   if(nargs_equal(args, 3)) {
-    if(!args[0].head().isNumber() || !args[1].head().isNumber() || !args[2].head().isNumber())
-      throw SemanticError("Error: an argument is not a number.");
-    else if (args[0].head().asNumber() > args[1].head().asNumber())
-      throw SemanticError("Error: begin greater than end in range");
-    else if (args[2].head().asNumber() <= 0)
+    if (args[2].head().asNumber() <= 0)
       throw SemanticError("Error: negative or zero increment in range");
-    else {
-      std::vector<Expression> result;
-      for(double i = args[0].head().asNumber(); i <= args[1].head().asNumber(); i += args[2].head().asNumber()){
-        result.emplace_back(Expression(Atom(i)));
-      }
-      return Expression(result);
-    }
   }
-  else
+  else if (!nargs_equal(args, 2)) {
     throw SemanticError("Error: invalid number of arguments for range function.");
+  }
+
+  for (auto &arg: args) {
+      if (!arg.head().isNumber()) {
+        throw SemanticError("Error: an argument is not a number.");
+      }
+  }
+
+  if (args[0].head().asNumber() > args[1].head().asNumber())
+    throw SemanticError("Error: begin greater than end in range");
+
+  std::vector<Expression> result;
+  for(double i = args[0].head().asNumber(); i <= args[1].head().asNumber(); i += args[2].head().asNumber()){
+    result.emplace_back(Expression(Atom(i)));
+  }
+  return Expression(result);
 };
 
 const double PI = std::atan2(0, -1);
