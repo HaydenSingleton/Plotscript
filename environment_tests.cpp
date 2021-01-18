@@ -529,4 +529,8 @@ TEST_CASE("Testing range procedure", "[environment]") {
 
     std::vector<Expression> not_3_args = { Expression(10) };
     REQUIRE_THROWS_AS(prange(not_3_args), SemanticError);
+
+    std::vector<Expression> two_arg = { Expression(1), Expression(3) };
+    resultList = { Expression(1), Expression(2), Expression(3) };
+    REQUIRE(prange(two_arg) == Expression(resultList));
 }
