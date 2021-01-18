@@ -11,7 +11,7 @@ Defines the Atom type and associated functions.
 #include <sstream>
 #include <cctype>
 #include <cmath>
-
+#include <algorithm>
 
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or the default type None.
@@ -63,10 +63,10 @@ public:
   /// value of Atom as a number, return 0 if not a Number
   double asNumber() const noexcept;
 
-  /// value of Atom as a number, returns empty-string if not a Symbol
-  std::string asSymbol() const noexcept;
+  /// string value of Atom (with quotes removed), returns empty-string if not a Symbol
+  std::string asSymbol() noexcept;
 
-  /// value of Atom as a string, returns empty-string if NoneKind
+  /// value inside Atom as a String, returns empty-string if NoneKind
   std::string asString() const noexcept;
 
   /// value of Atom as a comlex number, returns 0 if not a complex number

@@ -154,7 +154,8 @@ TEST_CASE( "Test atom assignments", "[atom]" ) {
     Atom b;
     b = a;
     REQUIRE(b.isString());
-    REQUIRE(b.asSymbol() == "\"hi\"");
+    REQUIRE(b.asSymbol() == "hi");
+    REQUIRE(b.asString() == "\"hi\"");
     REQUIRE_FALSE(b.isNone());
   }
 
@@ -191,6 +192,7 @@ TEST_CASE( "Test atom assignments", "[atom]" ) {
     Atom y("\"str\"");
     REQUIRE(y.isString());
     REQUIRE(y.asString()=="\"str\"");
+    REQUIRE(y.asSymbol()=="str");
     x = y;
     REQUIRE(x.isString());
     REQUIRE(x.asString()=="\"str\"");

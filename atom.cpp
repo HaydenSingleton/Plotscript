@@ -1,9 +1,10 @@
 #include "atom.hpp"
 
-Atom::Atom(): m_type(NoneKind) {}
+Atom::Atom() {
+  m_type = Type::NoneKind;
+}
 
 Atom::Atom(double value){
-
   setNumber(value);
 }
 
@@ -124,15 +125,16 @@ double Atom::asNumber() const noexcept{
 }
 
 
-std::string Atom::asSymbol() const noexcept{
+std::string Atom::asSymbol() noexcept{
 
-  std::string result;
+  std::string s;
 
   if(m_type == SymbolKind){
-    result = stringValue;
+    s = stringValue;
+    s.erase(remove( s.begin(), s.end(), '\"' ),s.end());
   }
 
-  return result;
+  return s;
 }
 
 std::string Atom::asString() const noexcept{
@@ -212,7 +214,7 @@ std::ostream & operator<<(std::ostream & out, const Atom & a){
     out << a.asNumber();
   }
   if(a.isSymbol() || a.isString()){
-    out << a.asSymbol();
+    out << a.asString();
   }
   if(a.isComplex()){
     out << a.asComplex();
