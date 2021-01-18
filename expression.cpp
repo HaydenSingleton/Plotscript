@@ -25,8 +25,9 @@ Expression::Expression(const Expression & a) {
 }
 
 // Constructor for lists
-Expression::Expression(const std::vector<Expression> & items): m_tail(items) {
+Expression::Expression(const std::vector<Expression> & items) {
   m_type = ExpType::List;
+  m_tail = items;
 }
 
 //Constructor for Lambda functions
@@ -37,15 +38,12 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
   m_tail.push_back(func);
 }
 
-// Constructor for graphics items
-// Expression::Expression( ){
-// }
-
 // Constructor for plots
-Expression::Expression(std::string type, const std::vector<Expression> & back): m_tail(back) {
+Expression::Expression(std::string type, const std::vector<Expression> & data) {
 
   m_type = ExpType::Plot;
   m_head = Atom(type);
+  m_tail = data;
 }
 
 Expression & Expression::operator=(const Expression & a){
@@ -85,21 +83,20 @@ bool Expression::isLambda() const noexcept {
 }
 
 bool Expression::isEmpty() const noexcept {
-  return tailLength() == 0 && m_type == ExpType::None;
+  return m_type == ExpType::None;
 }
 
 bool Expression::isDP() const noexcept {
-  return m_type == ExpType::Plot && m_head.asSymbol() == "DP";
+  return m_type == ExpType::Plot && m_head.asString() == "DP";
 }
 
 bool Expression::isCP() const noexcept {
-  return m_type == ExpType::Plot && m_head.asSymbol() == "CP";
+  return m_type == ExpType::Plot && m_head.asString() == "CP";
 }
 
 void Expression::append(const Atom & a){
   m_tail.emplace_back(a);
 }
-
 
 Expression * Expression::tail(){
   Expression * ptr = nullptr;
@@ -109,6 +106,10 @@ Expression * Expression::tail(){
   }
 
   return ptr;
+}
+
+std::vector<Expression> Expression::contents() const noexcept {
+  return m_tail;
 }
 
 size_t Expression::tailLength() const noexcept{
@@ -167,7 +168,7 @@ Expression Expression::handle_lookup(const Atom & head, const Environment & env)
 	      return env.get_exp(head);
       }
       else {
-	      throw SemanticError("Error during handle lookup: unknown symbol " + head.asSymbol());
+	      throw SemanticError("Error during handle lookup: unknown symbol " + head.asString());
       }
     }
     else if(head.isNumber() || head.isComplex() || head.isString()){
@@ -498,8 +499,8 @@ Expression Expression::handle_cont_plot(Environment & env){
   }
 
   std::vector<Expression> x_bounds, y_bounds;
-  x_bounds = BOUNDS.eval(env).asVector();
-  y_bounds = apply(Atom("map"), {FUNC, BOUNDS}, env).asVector();
+  x_bounds = BOUNDS.eval(env).m_tail;
+  y_bounds = apply(Atom("map"), {FUNC, BOUNDS}, env).m_tail;
 
   double N = 20, A = 3, B = 3, C = 2, D = 2;
   double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
@@ -747,34 +748,6 @@ std::ostream & operator<<(std::ostream & out, const Expression & exp){
   return out;
 }
 
-std::string Expression::toString() const noexcept{
-
-  std::ostringstream out;
-
-  if(isEmpty()){
-    out << "NONE";
-  }
-  else {
-    if(!head().isComplex()) {
-      out << "(";
-    }
-
-    out << head().asString();
-
-    for(auto e = tailConstBegin(); e != tailConstEnd(); ++e){
-      out << *e;
-      if((e + 1) != tailConstEnd()){
-        out << " ";
-      }
-    }
-    if(!head().isComplex()) {
-      out << ")";
-    }
-  }
-
-  return out.str();
-}
-
 bool Expression::operator==(const Expression & exp) const noexcept{
 
   bool result = (m_head == exp.m_head);
@@ -795,17 +768,6 @@ bool Expression::operator==(const Expression & exp) const noexcept{
 bool operator!=(const Expression & left, const Expression & right) noexcept{
 
   return !(left == right);
-}
-
-std::string Expression::getProperties() const {
-
-    std::ostringstream out;
-
-    for (auto &p : m_properties) {
-      out << p.first << " " << p.second.toString() << "\n";
-    }
-
-    return out.str();
 }
 
 bool Expression::isPoint() const noexcept{
@@ -836,11 +798,9 @@ bool Expression::isText() const noexcept{
   return false;
 }
 
-std::tuple<double, double, double, double, bool> Expression::getTextProperties() const noexcept{
-  double sf = 1;
-  double x = 0.0;
-  double y = 0.0;
-  double rot = 0;
+std::tuple<double, double, double, double> Expression::getTextProperties() const noexcept{
+  double x, y;
+  double sf = 1, rot = 0;
 
   if(m_properties.find("\"text-scale\"") != m_properties.end()) {
     sf = m_properties.at("\"text-scale\"").head().asNumber();
@@ -854,24 +814,14 @@ std::tuple<double, double, double, double, bool> Expression::getTextProperties()
 
   if(m_properties.find("\"position\"") != m_properties.end()){
     Expression point = m_properties.at("\"position\"");
-    std::tie(x, y) = point.getPointCoordinates();
-    return {x, y, sf, rot, true};
+    std::vector<Expression> cor = point.contents();
+    x = cor[0].head().asNumber();
+    y = cor[1].head().asNumber();
+    return {x, y, sf, rot};
   }
 
   // default values
-  return {0, 0, 1, 0, false};
-}
-
-std::vector<Expression> Expression::asVector() const noexcept {
-    std::vector<Expression> result;
-
-    if(!m_head.isNone()){
-      result.push_back(m_head);
-    }
-    for(auto e : m_tail){
-      result.emplace_back(e);
-    }
-    return result;
+  return {0, 0, 1, 0};
 }
 
 double Expression::getNumericalProperty(std::string prop) const noexcept {
@@ -881,19 +831,6 @@ double Expression::getNumericalProperty(std::string prop) const noexcept {
     size_value = point_size.head().asNumber();
   }
   return size_value;
-}
-
-std::pair<double, double> Expression::getPointCoordinates() const noexcept {
-  double x = 0.0;
-  double y = 0.0;
-  
-  if (isPoint()) {
-    x = m_tail[0].head().asNumber();
-    y = m_tail[1].head().asNumber();
-  }
-
-  std::pair<double, double> result = {x, y};
-  return result;
 }
 
 void Expression::setLineThickness(double thique) noexcept{

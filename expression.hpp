@@ -72,6 +72,9 @@ public:
   /// return a pointer to the last expression in the tail, or nullptr
   Expression * tail();
 
+  /// return a vector of the items in the Expression's tail
+  std::vector<Expression> contents() const noexcept;
+
   /// return the number of items in the tail vector
   size_t tailLength() const noexcept;
 
@@ -106,15 +109,11 @@ public:
   bool operator==(const Expression & exp) const noexcept;
 
   /// helper methods for output widget
-  std::string toString() const noexcept;
-  std::string getProperties() const;
   bool isPoint() const noexcept;
   bool isLine() const noexcept;
   bool isText() const noexcept;
-  std::tuple<double, double, double, double, bool> getTextProperties() const noexcept;
-  std::vector<Expression> asVector() const noexcept;
-  double getNumericalProperty(std::string ) const noexcept;
-  std::pair<double, double> getPointCoordinates() const noexcept;
+  double getNumericalProperty(std::string) const noexcept;
+  std::tuple<double, double, double, double> getTextProperties() const noexcept;
   void setLineThickness(double ) noexcept;
   void setPointSize(double ) noexcept;
   void setTextPosition(Expression p , double r = 0) noexcept;
