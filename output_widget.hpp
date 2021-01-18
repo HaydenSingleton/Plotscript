@@ -8,7 +8,6 @@
 #include <QGraphicsItem>
 #include <QApplication>
 #include <QtMath>
-
 #include "interpreter.hpp"
 
 class OutputWidget: public QWidget {
@@ -26,16 +25,11 @@ class OutputWidget: public QWidget {
         QGraphicsView * view = new QGraphicsView(this);
         QGraphicsScene * scene = new QGraphicsScene(this);
         bool clear_on_print = true;
+
         void resizeEvent(QResizeEvent *event) override;
         void drawText(QString str, double sf = 1, double rot = 0, double x = 0, double y = 0);
         void drawLine(double, double, double, double, double);
         void drawPoint(double, double, double);
-
-        std::string removeQuotes(std::string s){
-            s.erase(s.begin());
-            s.erase(s.size()-1);
-            return s;
-        };
 };
 
 

@@ -13,26 +13,32 @@ void OutputWidget::catch_result(Expression e){
     }
 
     if(e.isPoint()) {
-        std::pair<double, double> coordinates = e.getPointCoordinates();
+        std::vector<Expression> coordinates = e.contents();
+        double x = coordinates[0].head().asNumber();
+        double y = coordinates[1].head().asNumber();
         double diam = e.getNumericalProperty("\"size\"");
         if(diam < 0){
             catch_failure("Error: in make-point call: diameter not positive");
             return;
         }
-        drawPoint(coordinates.first, coordinates.second, diam);
+        drawPoint(x, y, diam);
     }
     else if (e.isLine()) {
-        std::vector<Expression> vec = e.asVector();
-        Expression p1 = vec[0], p2 = vec[1];
+
+        Expression p1 = *e.tailConstBegin(), p2 = *e.tailConstEnd();
         if(p1.isPoint() && p2.isPoint()){
-            std::pair<double, double> X = p1.getPointCoordinates();
-            std::pair<double, double> Y = p2.getPointCoordinates();
+            std::vector<Expression> coordinates = e.contents();
+            double a, b, c, d;
+            a = coordinates[0].head().asNumber();
+            b = coordinates[1].head().asNumber();
+            c = coordinates[2].head().asNumber();
+            d = coordinates[3].head().asNumber();
             double thicc = e.getNumericalProperty("\"thickness\"");
             if(thicc < 0){
                 catch_failure("Error: in make-line call: thickness value not positive");
                 return;
             }
-            drawLine(X.first, X.second, Y.first, Y.second, thicc);
+            drawLine(a, b, c, d, thicc);
         }
         else {
             catch_failure("Error: argument to make-line not a point");
@@ -41,30 +47,29 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isText()) {
 
-        std::string repl = e.toString();
+        std::string repl = e.head().asString();
         std::string text_string = repl.substr(2, repl.length()-4);
-        double xcor, ycor, scaleFactor, rotationAngle; bool isValid;
-        std::tie(xcor, ycor, scaleFactor, rotationAngle, isValid) = e.getTextProperties();
+
+        double xcor, ycor, scaleFactor, rotationAngle;
+        std::tie(xcor, ycor, scaleFactor, rotationAngle) = e.getTextProperties();
         rotationAngle = rotationAngle * 180 / M_PI;
-        if(isValid) {
-            drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
-        }
-        else {
-            catch_failure("Error: in make-text: not a valid property in list for make-text");
-            return;
-        }
+        
+        drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
     }
     else if (e.isList()) {
         clear_on_print = false;
-        for(auto & e_part : e.asVector()){
-            catch_result(e_part);
+        for (auto &item = e.tailConstBegin(); item != e.tailConstEnd(); item++) {
+            catch_result(*item);
         }
         clear_on_print = true;
     }
     else if (e.isDP()) {
         clear_on_print = false;
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
-        std::vector<Expression> data = e.asVector();
+        std::vector<Expression> data;
+        // for (auto &item = e.tailConstBegin(); item != e.tailConstEnd(); item++) {
+        //     data.push_back(*item);
+        // }
 
         // Draw bounding box
         size_t pos = 0;
@@ -82,13 +87,14 @@ void OutputWidget::catch_result(Expression e){
             catch_result(item);
             pos++;
         }
+        return;
 
         // Draw AL AU OL OU
         std::string AL_s, AU_s, OL_s, OU_s;
-        AL_s = removeQuotes(data[pos++].head().asString());
-        AU_s = removeQuotes(data[pos++].head().asString());
-        OL_s = removeQuotes(data[pos++].head().asString());
-        OU_s = removeQuotes(data[pos++].head().asString());
+        AL_s = data[pos++].head().asSymbol();
+        AU_s = data[pos++].head().asSymbol();
+        OL_s = data[pos++].head().asSymbol();
+        OU_s = data[pos++].head().asSymbol();
         double AL = std::stod(AL_s);
         double AU = std::stod(AU_s);
         double OL = std::stod(OL_s);
@@ -99,8 +105,8 @@ void OutputWidget::catch_result(Expression e){
         OL *= yscale * -1;
         OU *= yscale * -1;
         double AM = (AU+AL)/2, OM = (OU+OL)/2;
-        // std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
-        // << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
+        std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
+        << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
 
         drawText(QString::fromStdString(AL_s), 1, 0, AL, OL+C);
         drawText(QString::fromStdString(AU_s), 1, 0, AU, OL+C);
@@ -108,9 +114,9 @@ void OutputWidget::catch_result(Expression e){
         drawText(QString::fromStdString(OU_s), 1, 0, AL-D, OU);
 
         // Graph options
-        std::string title = removeQuotes(data[pos++].head().asString());
-        std::string a_label = removeQuotes(data[pos++].head().asString());
-        std::string o_label = removeQuotes(data[pos++].head().asString());
+        std::string title = data[pos++].head().asSymbol();
+        std::string a_label = data[pos++].head().asSymbol();
+        std::string o_label = data[pos++].head().asSymbol();
 
         double textscale;
         if(data.size() > pos)
@@ -126,23 +132,12 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isCP()){
         clear_on_print = false;
-        std::vector<Expression> data = e.asVector();
-
-        for(auto & item : data){
-
-            if(item.isLine()){
-                item.setLineThickness(0);
-            }
-            else if (item.isPoint()){
-                item.setPointSize(0);
-            }
-            catch_result(item);
-        }
+        //TODO
         clear_on_print = true;
     }
     else if(!e.isLambda()) {
         // Not a special case or user-defined function, display normally
-        scene->addText(QString::fromStdString(e.toString()));
+        scene->addText(QString::fromStdString(e.head().asString()));
     }
 
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
