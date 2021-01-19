@@ -12,7 +12,8 @@ void OutputWidget::catch_result(Expression e){
         clear_screen();
     }
 
-    if(e.isPoint()) {
+    if(e.checkProperty("object-name", "point")) {
+
         std::vector<Expression> coordinates = e.contents();
         double x = coordinates[0].head().asNumber();
         double y = coordinates[1].head().asNumber();
@@ -23,14 +24,14 @@ void OutputWidget::catch_result(Expression e){
         }
         drawPoint(x, y, diam);
     }
-    else if (e.isLine()) {
+    else if (e.checkProperty("object-name", "line")) {
 
         Expression p1, p2;
         std::vector<Expression> list = e.contents();
         p1 = list[0];
         p2 = list[1];
 
-        if(p1.isPoint() && p2.isPoint()){
+        if(p1.checkProperty("object-name", "point") && p2.checkProperty("object-name", "point")){
             std::vector<Expression> coordinates = e.contents();
             double a, b, c, d;
             a = coordinates[0].head().asNumber();
@@ -49,7 +50,7 @@ void OutputWidget::catch_result(Expression e){
             return;
         }
     }
-    else if (e.isText()) {
+    else if (e.checkProperty("object-name", "text")) {
 
         std::string text_string = e.head().asSymbol();
 
@@ -68,6 +69,7 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isDP()) {
         clear_on_print = false;
+        
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
         std::vector<Expression> data = e.contents();
         int pos = 0;
@@ -117,7 +119,6 @@ void OutputWidget::catch_result(Expression e){
         drawText(QString::fromStdString(title), textscale, 0, AM, (OU-A));
         drawText(QString::fromStdString(a_label), textscale, 0, AM, (OL+A));
         drawText(QString::fromStdString(o_label), textscale, -90, (AL-B), OM);
-
 
         clear_on_print = true;
     }

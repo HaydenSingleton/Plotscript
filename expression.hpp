@@ -109,9 +109,7 @@ public:
   bool operator==(const Expression & exp) const noexcept;
 
   /// helper methods for output widget
-  bool isPoint() const noexcept;
-  bool isLine() const noexcept;
-  bool isText() const noexcept;
+  bool checkProperty(std::string key, std::string value) const noexcept;
   double getNumericalProperty(std::string) const noexcept;
   std::tuple<double, double, double, double> getTextProperties() const noexcept;
   void setLineThickness(double ) noexcept;
@@ -123,8 +121,6 @@ private:
   // the head of the expression
   Atom m_head;
 
-  // the tail list is expressed as a vector for access efficiency
-  // and cache coherence, at the cost of wasted memory.
   std::vector<Expression> m_tail;
 
   // state variable of the expression
@@ -149,6 +145,11 @@ private:
   Expression handle_get_property(Environment & env);
   Expression handle_discrete_plot(Environment & env);
   Expression handle_cont_plot(Environment & env);
+
+  /* Returns the matching Expression from the interal properties map
+  or the empty Expression if not found
+  @param key The string to search for */
+  Expression __getProperty(std::string key) const ;
 };
 
 /// Render expression to output stream

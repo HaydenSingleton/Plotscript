@@ -353,11 +353,7 @@ Expression Expression::handle_get_property(Environment & env){
     target = m_tail[1].eval(env);
     if(m_tail[0].head().isString()){
       std::string key = m_tail[0].head().asString();
-      if(target.m_properties.find(key) != target.m_properties.end()){
-        result = target.m_properties.at(key);
-        return result;
-      }
-      return Expression();
+      return target.__getProperty(key);
     }
     else{
       throw SemanticError("Error: first argument to get-property not a string.");
@@ -366,6 +362,14 @@ Expression Expression::handle_get_property(Environment & env){
   else{
     throw SemanticError("Error: invalid number of arguments for get-property.");
   }
+}
+
+Expression Expression::__getProperty(std::string key) const {
+
+  if(m_properties.find(key) != m_properties.end()){
+    return m_properties.at(key);
+  }
+  return Expression();
 }
 
 Expression Expression::handle_discrete_plot(Environment & env){
@@ -432,7 +436,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
   // Make an expression to hold each line of the bounding rect 
   Expression leftLine = apply(Atom("make-line"), {topLeft, botLeft}, env);
-  assert(leftLine.isLine());
+  assert(leftLine.checkProperty("object-name", "line"));
   result.push_back(leftLine);
   Expression rightLine = apply(Atom("make-line"), {topRight, botRight}, env);
   result.push_back(rightLine);
@@ -785,28 +789,10 @@ bool operator!=(const Expression & left, const Expression & right) noexcept{
   return !(left == right);
 }
 
-bool Expression::isPoint() const noexcept{
-  std::string target("object-name");
-  if (m_properties.find(target) != m_properties.end()) {
-    return m_properties.at(target) == Expression(Atom("\"point\""));
-  }
-  return false;
-}
-
-bool Expression::isLine() const noexcept{
-  std::string target("object-name");
-  if (m_properties.find(target) != m_properties.end()) {
-    return m_properties.at(target) == Expression(Atom("\"line\""));
-  }
-  return false;
-}
-
-bool Expression::isText() const noexcept{
-  std::string target("object-name");
-  if (m_properties.find(target) != m_properties.end()) {
-    return m_properties.at(target) == Expression(Atom("\"text\""));
-  }
-  return false;
+bool Expression::checkProperty(std::string key, std::string value) const noexcept {
+  std::string left = "\"" + key + "\"";
+  std::string right = "\"" + value + "\"";
+  return __getProperty(left) == Expression(Atom(right));
 }
 
 std::tuple<double, double, double, double> Expression::getTextProperties() const noexcept{
@@ -858,7 +844,7 @@ void Expression::setPointSize(double uWu) noexcept{
 
 void Expression::setTextPosition(Expression point, double rot) noexcept{
   if(m_properties.find("\"position\"")!=m_properties.end()){
-    assert(point.isPoint());
+    assert(point.checkProperty("object-name", "point"));
     m_properties["\"position\""] = point;
   }
   if(m_properties.find("\"text-rotation\"")!=m_properties.end()){
