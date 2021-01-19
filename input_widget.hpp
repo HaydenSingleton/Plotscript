@@ -19,7 +19,7 @@ class InputWidget: public QPlainTextEdit {
         // to store which keys have been pressed
         QSet<int> pressedKeys;
 
-        // to catch when users press SHIFT+ENTER
+        // to catch combinations of key presses
         bool eventFilter(QObject * obj, QEvent * event);
 };
 
