@@ -47,34 +47,29 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isText()) {
 
-        std::string repl = e.head().asString();
-        std::string text_string = repl.substr(2, repl.length()-4);
+        std::string text_string = e.head().asSymbol();
 
-        double xcor, ycor, scaleFactor, rotationAngle;
-        std::tie(xcor, ycor, scaleFactor, rotationAngle) = e.getTextProperties();
-        rotationAngle = rotationAngle * 180 / M_PI;
+        double xcor, ycor, scaleFactor, rotRads, rotDeg;
+        std::tie(xcor, ycor, scaleFactor, rotRads) = e.getTextProperties();
+        rotDeg = rotRads * (180 / std::atan2(0, -1));
         
-        drawText(QString::fromStdString(text_string), scaleFactor, rotationAngle, xcor, ycor);
+        drawText(QString::fromStdString(text_string), scaleFactor, rotDeg, xcor, ycor);
     }
     else if (e.isList()) {
         clear_on_print = false;
-        for (auto &item = e.tailConstBegin(); item != e.tailConstEnd(); item++) {
-            catch_result(*item);
+        for (auto &item: e.contents()) {
+            catch_result(item);
         }
         clear_on_print = true;
     }
     else if (e.isDP()) {
         clear_on_print = false;
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
-        std::vector<Expression> data;
-        // for (auto &item = e.tailConstBegin(); item != e.tailConstEnd(); item++) {
-        //     data.push_back(*item);
-        // }
-
+        std::vector<Expression> data = e.contents();
+    
         // Draw bounding box
         size_t pos = 0;
         for(auto & item : data){
-
             if(item.isLine()){
                 item.setLineThickness(0);
             }
@@ -85,9 +80,9 @@ void OutputWidget::catch_result(Expression e){
                 break;
             }
             catch_result(item);
+            return;
             pos++;
         }
-        return;
 
         // Draw AL AU OL OU
         std::string AL_s, AU_s, OL_s, OU_s;
@@ -174,15 +169,15 @@ void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAng
     font.setStyleHint(QFont::TypeWriter);
     font.setPointSize(1);
     text->setFont(font);
+
     QRectF rect = text->sceneBoundingRect();
     QPointF text_center = QPointF(X - rect.width()/2, Y - rect.height()/2);
     text->setPos(text_center);
 
     QPointF _center = text->boundingRect().center();
     text->setTransformOriginPoint(_center);
-
-    text->setScale(scaleFactor);
     text->setRotation(rotationAngle);
+    text->setScale(scaleFactor);
 }
 
 void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, double thicc){
@@ -190,8 +185,8 @@ void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, doub
     scene->addLine(line, QPen(QBrush(Qt::SolidLine), thicc));
 }
 
-void OutputWidget::drawPoint(double X, double Y, double D){
-    QRectF corners = QRectF(0, 0, D, D);
+void OutputWidget::drawPoint(double X, double Y, double Diam){
+    QRectF corners = QRectF(0, 0, Diam, Diam);
     corners.moveCenter(QPointF(X, Y));
     scene->addEllipse(corners, QPen(Qt::NoPen), QBrush(Qt::SolidPattern));
 }
