@@ -55,7 +55,7 @@ public:
   // Expression( );
 
   /// Constructor for plots
-  Expression(std::string type, const std::vector<Expression> & back);
+  Expression(std::string type, const std::vector<Expression> & back, size_t num);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);

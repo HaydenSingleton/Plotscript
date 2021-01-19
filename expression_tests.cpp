@@ -73,7 +73,7 @@ TEST_CASE( "Test constructor lambda", "[expression]") {
 
 TEST_CASE( "Test constructor plots", "[expression]") {
   std::vector<Expression> contents = {Expression(Atom("DATA"))};
-  Expression a("DP", contents);
+  Expression a("DP", contents, contents.size());
   REQUIRE(a.isDP());
 }
 

@@ -39,10 +39,11 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 }
 
 // Constructor for plots
-Expression::Expression(std::string type, const std::vector<Expression> & data) {
+Expression::Expression(std::string type, const std::vector<Expression> & data, size_t num) {
 
   m_type = ExpType::Plot;
-  m_head = Atom(type);
+  m_properties["type"] = Expression(Atom(type));
+  m_properties["length"] = Expression(Atom(num));
   m_tail = data;
 }
 
@@ -87,11 +88,22 @@ bool Expression::isEmpty() const noexcept {
 }
 
 bool Expression::isDP() const noexcept {
-  return m_type == ExpType::Plot && m_head.asString() == "DP";
+
+  std::string target = "type";
+  if (m_properties.find(target) != m_properties.end()) {
+    return m_properties.at(target) == Expression(Atom("DP"));
+  }
+
+  return m_type == ExpType::Plot;
 }
 
 bool Expression::isCP() const noexcept {
-  return m_type == ExpType::Plot && m_head.asString() == "CP";
+  for(auto &p : m_properties){
+    if(p.first.compare("type")){
+      return p.second == Expression(Atom("CP"));
+    }
+  }
+  return false;
 }
 
 void Expression::append(const Atom & a){
@@ -341,7 +353,7 @@ Expression Expression::handle_get_property(Environment & env){
     target = m_tail[1].eval(env);
     if(m_tail[0].head().isString()){
       std::string key = m_tail[0].head().asString();
-      if(target.m_properties.find(key)!= target.m_properties.end()){
+      if(target.m_properties.find(key) != target.m_properties.end()){
         result = target.m_properties.at(key);
         return result;
       }
@@ -369,6 +381,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
     throw SemanticError("Error: An argument to discrete-plot is not a list");
   }
   std::vector<Expression> result;
+
+  size_t numpoints = DATA.tailLength();
 
   // Constants used to create bounding box and graph
   double N = 20;
@@ -418,6 +432,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
   // Make an expression to hold each line of the bounding rect 
   Expression leftLine = apply(Atom("make-line"), {topLeft, botLeft}, env);
+  assert(leftLine.isLine());
   result.push_back(leftLine);
   Expression rightLine = apply(Atom("make-line"), {topRight, botRight}, env);
   result.push_back(rightLine);
@@ -427,7 +442,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
   result.push_back(botLine);
 
   // Add draw axis lines if either zero line is within the boundaries
-  if(0 < OU && 0 > OL){
+  if(0 < OU || 0 > OL){
     Expression xAxisStart, xAxisEnd, xaxis;
     xAxisStart = apply(Atom("make-point"), {Expression(xmax), Expression(0.0)}, env);
     xAxisEnd = apply(Atom("make-point"), {Expression(xmin), Expression(0.0)}, env);
@@ -435,7 +450,7 @@ Expression Expression::handle_discrete_plot(Environment & env){
     result.push_back(xaxis);
   }
 
-  if(0 < AU && 0 > AL){
+  if(0 < AU || 0 > AL){
     Expression yAxisStart, yAxisEnd, yaxis;
     yAxisStart = apply(Atom("make-point"), {Expression(0.0), Expression(ymax)}, env);
     yAxisEnd = apply(Atom("make-point"), {Expression(0.0), Expression(ymin)}, env);
@@ -458,10 +473,9 @@ Expression Expression::handle_discrete_plot(Environment & env){
     y = point.m_tail[1].head().asNumber() * yscale * -1;
 
     new_point = apply(Atom("make-point"), {Expression(x), Expression(y)}, env);
-
     stem_bottom = apply(Atom("make-point"), {Expression(x), Expression(stembottomy)}, env);
-    stemline = apply(Atom("make-line"), {new_point, stem_bottom}, env);
 
+    stemline = apply(Atom("make-line"), {new_point, stem_bottom}, env);
     result.push_back(new_point);
     result.push_back(stemline);
   }
@@ -476,7 +490,8 @@ Expression Expression::handle_discrete_plot(Environment & env){
   for(auto &opt : OPTIONS.m_tail){
     result.push_back(opt.m_tail[1]);
   }
-  return Expression("DP", result);
+
+  return Expression("DP", result, numpoints);
 }
 
 Expression Expression::handle_cont_plot(Environment & env){
@@ -548,7 +563,7 @@ Expression Expression::handle_cont_plot(Environment & env){
   result.push_back(botLine.eval(env));
 
   // Add draw axis lines if either zero line is within the boundaries
-  if(0 < OU && 0 > OL){
+  if(0 < OU || 0 > OL){
     Expression xAxisStart, xAxisEnd;
     xAxisStart = apply(Atom("make-point"), {Expression(xmax), Expression(0.0)}, env);
     xAxisEnd = apply(Atom("make-point"), {Expression(xmin), Expression(0.0)}, env);
@@ -556,7 +571,7 @@ Expression Expression::handle_cont_plot(Environment & env){
     result.push_back(xaxis.eval(env));
   }
 
-  if(0 < AU && 0 > AL){
+  if(0 < AU || 0 > AL){
     Expression yAxisStart, yAxisEnd;
     yAxisStart = apply(Atom("make-point"), {Expression(0.0), Expression(ymax)}, env);
     yAxisEnd = apply(Atom("make-point"), {Expression(0.0), Expression(ymin)}, env);
@@ -669,7 +684,7 @@ Expression Expression::handle_cont_plot(Environment & env){
 
   // }
 
-  return Expression("CP", result);
+  return Expression("CP", result, -1);
 }
 
 sig_atomic_t global_status_flag = 0;
@@ -771,29 +786,25 @@ bool operator!=(const Expression & left, const Expression & right) noexcept{
 }
 
 bool Expression::isPoint() const noexcept{
- for(auto &p : m_properties){
-    if(p.first.compare("object-name")){
-      return p.second == Expression(Atom("\"point\""));
-    }
+  std::string target("object-name");
+  if (m_properties.find(target) != m_properties.end()) {
+    return m_properties.at(target) == Expression(Atom("\"point\""));
   }
   return false;
 }
 
 bool Expression::isLine() const noexcept{
-  for(auto &p : m_properties){
-    if(p.first.compare("object-name")){
-      return p.second == Expression(Atom("\"line\""));
-    }
+  std::string target("object-name");
+  if (m_properties.find(target) != m_properties.end()) {
+    return m_properties.at(target) == Expression(Atom("\"line\""));
   }
   return false;
 }
 
 bool Expression::isText() const noexcept{
-  const std::string target_property("object-name");
-  for(auto &p : m_properties){
-    if(p.first.compare(target_property)){
-      return p.second == Expression(Atom("\"text\""));
-    }
+  std::string target("object-name");
+  if (m_properties.find(target) != m_properties.end()) {
+    return m_properties.at(target) == Expression(Atom("\"text\""));
   }
   return false;
 }
@@ -833,9 +844,9 @@ double Expression::getNumericalProperty(std::string prop) const noexcept {
   return size_value;
 }
 
-void Expression::setLineThickness(double thique) noexcept{
+void Expression::setLineThickness(double val) noexcept{
   if(m_properties.find("\"thickness\"")!=m_properties.end()){
-    m_properties["\"thickness\""] = Expression(thique);
+    m_properties["\"thickness\""] = Expression(Atom(val));
   }
 }
 

@@ -25,7 +25,11 @@ void OutputWidget::catch_result(Expression e){
     }
     else if (e.isLine()) {
 
-        Expression p1 = *e.tailConstBegin(), p2 = *e.tailConstEnd();
+        Expression p1, p2;
+        std::vector<Expression> list = e.contents();
+        p1 = list[0];
+        p2 = list[1];
+
         if(p1.isPoint() && p2.isPoint()){
             std::vector<Expression> coordinates = e.contents();
             double a, b, c, d;
@@ -66,25 +70,15 @@ void OutputWidget::catch_result(Expression e){
         clear_on_print = false;
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
         std::vector<Expression> data = e.contents();
+        int pos = 0;
     
         // Draw bounding box
-        size_t pos = 0;
-        for(auto & item : data){
-            if(item.isLine()){
-                item.setLineThickness(0);
-            }
-            else if (item.isPoint()){
-                item.setPointSize(P);
-            }
-            else {
-                break;
-            }
-            catch_result(item);
-            return;
+        for(int i = 0; i < 4; i++) {
+            catch_result(data[i]);
             pos++;
         }
-
-        // Draw AL AU OL OU
+        
+        // Draw AL AU OL OU (axis bound labels)
         std::string AL_s, AU_s, OL_s, OU_s;
         AL_s = data[pos++].head().asSymbol();
         AU_s = data[pos++].head().asSymbol();
@@ -99,9 +93,6 @@ void OutputWidget::catch_result(Expression e){
         AU *= xscale;
         OL *= yscale * -1;
         OU *= yscale * -1;
-        double AM = (AU+AL)/2, OM = (OU+OL)/2;
-        std::cout << "Xmin, Xmax: " << AL << " " << AU << "\nYmin, max: "
-        << OL << ", " << OU << "\nXmid, Ymid: " << AM << " " << OM << "\n\n";
 
         drawText(QString::fromStdString(AL_s), 1, 0, AL, OL+C);
         drawText(QString::fromStdString(AU_s), 1, 0, AU, OL+C);
@@ -119,10 +110,15 @@ void OutputWidget::catch_result(Expression e){
         else
             textscale = 1.0;
 
+        std::cout << "Text scale: " << textscale << std::endl;
+
         // Add the graph labels
+        double AM = (AU+AL)/2, OM = (OU+OL)/2;
         drawText(QString::fromStdString(title), textscale, 0, AM, (OU-A));
         drawText(QString::fromStdString(a_label), textscale, 0, AM, (OL+A));
         drawText(QString::fromStdString(o_label), textscale, -90, (AL-B), OM);
+
+
         clear_on_print = true;
     }
     else if (e.isCP()){
@@ -135,32 +131,22 @@ void OutputWidget::catch_result(Expression e){
         scene->addText(QString::fromStdString(e.head().asString()));
     }
 
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+    rescale();
 }
 
 void OutputWidget::catch_failure(std::string message) {
     QString msg = QString::fromStdString(message);
     drawText(msg);
-
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+    rescale();
 }
 
 void OutputWidget::clear_screen() {
     scene->clear();
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
 void OutputWidget::resizeEvent(QResizeEvent *event) {
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->fitInView(scene->itemsBoundingRect(), Qt::KeepAspectRatio);
     QWidget::resizeEvent(event);
+    rescale();
 }
 
 void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAngle, double X, double Y) {

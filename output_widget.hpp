@@ -30,6 +30,12 @@ class OutputWidget: public QWidget {
         void drawText(QString str, double sf = 1, double rot = 0, double x = 0, double y = 0);
         void drawLine(double, double, double, double, double);
         void drawPoint(double, double, double);
+
+        void rescale() {
+            view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+            view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+        };
 };
 
 

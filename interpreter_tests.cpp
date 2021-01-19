@@ -527,7 +527,7 @@ TEST_CASE("Test handle get/set property", "[expression]"){
 
 TEST_CASE("Test output widget helper functions", "[expression]") {
 
-  std::string program = "(define a (make-point 2 2))";
+  std::string program = "(make-point 2 2)";
 
   Expression e = run(program);
   REQUIRE(e.isPoint());

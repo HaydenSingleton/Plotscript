@@ -90,6 +90,7 @@ private slots:
   void initTestCase();
   void testInputWidget();
   void testOutputWidget();
+  void testDataProcedures();
   void testDiscretePlotLayout();
   void testContinuousPlotLayout();
   void testGetPropertyErrors();
@@ -126,25 +127,40 @@ void NotebookTest::testInputWidget() {
   auto scene = view->scene();
   auto items = scene->items();
   QCOMPARE(items.size(), 1);
-  input->clear();
 }
 
 void NotebookTest::testOutputWidget(){
 
-  QTest::keyClicks(input, "(set-property \"size\" 0.5 (make-point 0 0))");
-  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
-
+  input->clear();
   auto view = output->findChild<QGraphicsView *>();
   QVERIFY2(view, "Could not find QGraphicsView as child of OutputWidget");
-
   auto scene = view->scene();
   auto items = scene->items();
-  QCOMPARE(items.size(), 1);
+  QCOMPARE(items.size(), 0);
 
   input->clear();
   QTest::keyClicks(input, "fdasfdsaf");
   QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
   QCOMPARE(findText(scene, QPointF(0, 0), 0, QString("Error: Invalid Expression. Could not parse.")), 1);
+  QCOMPARE(items.size(), 1);
+}
+
+void NotebookTest::testDataProcedures(){
+
+
+  auto view = output->findChild<QGraphicsView *>();
+  auto scene = view->scene();
+  auto items = scene->items();
+
+  input->clear();
+  QTest::keyClicks(input, "(set-property \"size\" 0.5 (make-point 0 0))");
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+  QCOMPARE(findPoints(scene, QPointF(0, 0), 0.5), 1);
+
+  input->clear();
+  QTest::keyClicks(input, "(make-line (make-point 0 0) (make-point 0 1))");
+  QTest::keyClick(input, Qt::Key_Return, Qt::ShiftModifier, 10);
+
   QCOMPARE(items.size(), 1);
 
   input->clear();
@@ -177,7 +193,6 @@ void NotebookTest::testDiscretePlotLayout() {
   // first check total number of items
   // 8 lines + 2 points + 7 text = 17
   auto items = scene->items();
-
 
   QCOMPARE(items.size(), 17);
 
