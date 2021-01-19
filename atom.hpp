@@ -64,7 +64,7 @@ public:
   double asNumber() const noexcept;
 
   /// string value of Atom (with quotes removed), returns empty-string if not a Symbol
-  std::string asSymbol() noexcept;
+  std::string asSymbol() const noexcept;
 
   /// value inside Atom as a String, returns empty-string if NoneKind
   std::string asString() const noexcept;

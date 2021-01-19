@@ -125,7 +125,7 @@ double Atom::asNumber() const noexcept{
 }
 
 
-std::string Atom::asSymbol() noexcept{
+std::string Atom::asSymbol() const noexcept{
 
   std::string s;
 
