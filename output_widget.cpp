@@ -175,5 +175,5 @@ void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, doub
 void OutputWidget::drawPoint(double X, double Y, double Diam){
     QRectF corners = QRectF(0, 0, Diam, Diam);
     corners.moveCenter(QPointF(X, Y));
-    scene->addEllipse(corners, QPen(Qt::NoPen), QBrush(Qt::SolidPattern));
+    scene->addEllipse(corners, QPen(1), QBrush());
 }
