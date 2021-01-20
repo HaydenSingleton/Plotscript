@@ -61,87 +61,27 @@ void OutputWidget::catch_result(Expression e){
     else if (e.isList()) {
         clear_on_print = false;
         for (auto &item: e.contents()) {
-            catch_result(item);
+            drawListItem(item);
         }
         clear_on_print = true;
     }
     else if (e.isDP()) {
         clear_on_print = false;
-        
-        double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
-        std::vector<Expression> data = e.contents();
-        std::cout << data.size() << std::endl;
-        int pos = 0;
-    
-        // Draw bounding box
-        for(size_t i = 0; i < 4; i++) {
-            std::cout << data[i] << std::endl;
-            catch_result(data[i]);
-            pos++;
-        }
-        std::cout << std::endl;
-
-        size_t num = (int)e.getProperty("numpoints").asNumber();
-
-        for (size_t i = pos; i < (num + pos); i++) {
-            std::cout << data[i];
-            catch_result(data[i]);
-            pos++;
-        }
-        
-        // Draw AL AU OL OU (axis bound labels)
-        std::string AL_s, AU_s, OL_s, OU_s;
-        AL_s = data[pos++].head().asString();
-        AU_s = data[pos++].head().asString();
-        OL_s = data[pos++].head().asString();
-        OU_s = data[pos++].head().asString();
-
-        double AL = std::stod(AL_s);
-        double AU = std::stod(AU_s);
-        double OL = std::stod(OL_s);
-        double OU = std::stod(OU_s);
-        double xscale = N/(AU-AL), yscale = N/(OU-OL);
-        AL *= xscale;
-        AU *= xscale;
-        OL *= yscale * -1;
-        OU *= yscale * -1;
-
-        drawText(QString::fromStdString(AL_s), 1, 0, AL, OL+C);
-        drawText(QString::fromStdString(AU_s), 1, 0, AU, OL+C);
-        drawText(QString::fromStdString(OL_s), 1, 0, AL-D, OL);
-        drawText(QString::fromStdString(OU_s), 1, 0, AL-D, OU);
-
-        // Graph options
-        std::string title = data[pos++].head().asSymbol();
-        std::string a_label = data[pos++].head().asSymbol();
-        std::string o_label = data[pos++].head().asSymbol();
-
-        double textscale;
-        if(data.size() > pos)
-            textscale = data[pos++].head().asNumber();
-        else
-            textscale = 1.0;
-
-        std::cout << "Text scale: " << textscale << std::endl;
-
-        // Add the graph labels
-        double AM = (AU+AL)/2, OM = (OU+OL)/2;
-        drawText(QString::fromStdString(title), textscale, 0, AM, (OU-A));
-        drawText(QString::fromStdString(a_label), textscale, 0, AM, (OL+A));
-        drawText(QString::fromStdString(o_label), textscale, -90, (AL-B), OM);
-
-        clear_on_print = true;
+        drawDP(e);
     }
     else if (e.isCP()){
         clear_on_print = false;
         //TODO
-        clear_on_print = true;
     }
-    else if(!e.isLambda()) {
-        // Not a special case or user-defined function, display normally
-        scene->addText(QString::fromStdString(e.head().asString()));
+    else if(e.isLambda()) {
+        return;
     }
-
+    else{
+        std::ostringstream os;
+        os << e;
+        scene->addText(QString::fromStdString(os.str()));
+    }
+    clear_on_print = true;
     rescale();
 }
 
@@ -158,6 +98,12 @@ void OutputWidget::clear_screen() {
 void OutputWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
     rescale();
+}
+
+void OutputWidget::rescale() {
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
 void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAngle, double X, double Y) {
@@ -188,3 +134,78 @@ void OutputWidget::drawPoint(double X, double Y, double Diam){
     corners.moveCenter(QPointF(X, Y));
     scene->addEllipse(corners, QPen(Qt::PenStyle::NoPen), QBrush(Qt::BrushStyle::SolidPattern));
 }
+
+void OutputWidget::drawListItem(Expression e) {
+    if (!e.isNone()) {
+        catch_result(e);
+    }
+    std::string val;
+    std::ostringstream os;
+    os << e;
+    val = os.str();
+    QString qstr = QString::fromStdString(val.substr(1, val.size() - 2));
+    scene->addText(qstr);
+}
+
+void OutputWidget::drawDP(Expression e) {
+
+    // Graph constants
+    double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
+
+    std::vector<Expression> data = e.contents();
+    int i = 0;
+
+    // Draw bounding box lines
+    for(i; i < 4; i++) {
+        catch_result(data[i]);
+    }
+
+    // Draw axis bounds and labels
+    Atom ALa = data[i++].head();
+    Atom AUa = data[i++].head();
+    Atom OLa = data[i++].head();
+    Atom OUa = data[i++].head();
+    double AL = ALa.asNumber();
+    double AU = AUa.asNumber();
+    double OL = OLa.asNumber();
+    double OU = OUa.asNumber();
+    double xscale = N/(AU-AL), yscale = N/(OU-OL);
+    AL *= xscale;
+    AU *= xscale;
+    OL *= yscale * -1;
+    OU *= yscale * -1;
+    drawText(QString::fromStdString(ALa.asString()), 1, 0, AL, OL+C);
+    drawText(QString::fromStdString(AUa.asString()), 1, 0, AU, OL+C);
+    drawText(QString::fromStdString(OLa.asString()), 1, 0, AL-D, OL);
+    drawText(QString::fromStdString(OUa.asString()), 1, 0, AL-D, OU);
+
+    size_t num_opt = (int)e.getProperty("numoptions").asNumber();
+    for (i; i < 11; i++) {
+        catch_result(data[i]);
+    }
+    double text_scale = 1;
+    if (num_opt == 4) {
+        text_scale = data[i++].head().asNumber();
+    }
+
+
+    size_t num_data = (int)e.getProperty("numpoints").asNumber();
+    for (i; i < 15; i++) {
+        catch_result(data[i]);
+    }
+
+    // Draw data points and stem lines
+    for(i; i < num_data; i++) {
+        catch_result(data[i]);
+    }
+
+    // Draw x axis if needed
+    if (i < data.size()) {
+        catch_result(data[i++]);
+    }
+    // Draw y axis if needed
+    if (i < data.size()) {
+        catch_result(data[i++]);
+    }
+
+} 
