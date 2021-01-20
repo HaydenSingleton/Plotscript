@@ -43,7 +43,7 @@ Expression::Expression(std::string type, const std::vector<Expression> & data, s
 
   m_type = ExpType::Plot;
   m_properties["type"] = Expression(Atom(type));
-  m_properties["length"] = Expression(Atom(num));
+  m_properties["numpoints"] = Expression(Atom(num));
   m_tail = data;
 }
 

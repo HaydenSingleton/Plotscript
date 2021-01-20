@@ -112,6 +112,13 @@ public:
   bool checkProperty(std::string key, std::string value) const noexcept;
   double getNumericalProperty(std::string) const noexcept;
   std::tuple<double, double, double, double> getTextProperties() const noexcept;
+  Atom getProperty(std::string p) {
+    if (m_properties.find(p) != m_properties.end()) {
+      return m_properties.at(p).head();
+    }
+    return Atom();
+  };
+
   void setLineThickness(double ) noexcept;
   void setPointSize(double ) noexcept;
   void setTextPosition(Expression p , double r = 0) noexcept;
