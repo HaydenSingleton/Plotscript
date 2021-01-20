@@ -39,11 +39,10 @@ Expression::Expression(const std::vector<Expression> & args, Expression & func) 
 }
 
 // Constructor for plots
-Expression::Expression(std::string type, const std::vector<Expression> & data, size_t num) {
+Expression::Expression(std::string type, const std::vector<Expression> & data) {
 
   m_type = ExpType::Plot;
   m_properties["type"] = Expression(Atom(type));
-  m_properties["numpoints"] = Expression(Atom(num));
   m_tail = data;
 }
 
@@ -384,41 +383,28 @@ Expression Expression::handle_discrete_plot(Environment & env){
   if (! DATA.isList() || ! OPTIONS.isList() ) {
     throw SemanticError("Error: An argument to discrete-plot is not a list");
   }
+  
   std::vector<Expression> result;
-
   size_t numpoints = DATA.tailLength();
 
-  // Constants used to create bounding box and graph
-  double N = 20;
-
   // Find the max and min values of x and y inside DATA
-  double xmax = -999, xmin = 999, ymax = -999, ymin = 999;
-  double xval, yval;
-  for(auto & point : DATA.m_tail){
+  double xmax = -999, xmin = 999, ymax = -999, ymin = 999, xval, yval;
+  for(auto & p : DATA.m_tail){
 
-    xval = point.m_tail[0].head().asNumber();
-    yval = point.m_tail[1].head().asNumber();
+    xval = p.m_tail[0].head().asNumber();
+    xmax = std::max(xval, xmax);
+    xmin = std::min(xval, xmin);
 
-    if(xval > xmax)
-      xmax = xval;
-    if(xval < xmin)
-      xmin = xval;
-
-    if(yval > ymax)
-      ymax = yval;
-    if(yval < ymin)
-      ymin = yval;
+    yval = p.m_tail[1].head().asNumber();
+    ymax = std::max(yval, ymax);
+    ymin = std::min(yval, ymin);
   }
 
   // Create scale factors using the max and min edges of the data
-  double xscale = N/(xmax-xmin), yscale = N/(ymax-ymin);
-  double AL = xmin, AU = xmax, OL = ymin, OU = ymax;
+  // double xscale = 20/(xmax-xmin), yscale = 20/(ymax-ymin);
+  // Scale bounds of the box ??
 
-  // Scale bounds of the box
-  xmin *= xscale;
-  ymin *= yscale * -1;
-  xmax *= xscale;
-  ymax *= yscale * -1;
+  double AL = xmin, AU = xmax, OL = ymin, OU = ymax;
   double xmiddle = (xmax+xmin)/2;
   double ymiddle = (ymin-ymax)/2;
 
@@ -436,14 +422,47 @@ Expression Expression::handle_discrete_plot(Environment & env){
 
   // Make an expression to hold each line of the bounding rect 
   Expression leftLine = apply(Atom("make-line"), {topLeft, botLeft}, env);
-  assert(leftLine.checkProperty("object-name", "line"));
-  result.push_back(leftLine);
   Expression rightLine = apply(Atom("make-line"), {topRight, botRight}, env);
-  result.push_back(rightLine);
   Expression topLine = apply(Atom("make-line"), {topLeft, topRight}, env);
-  result.push_back(topLine);
   Expression botLine = apply(Atom("make-line"), {botLeft, botRight}, env);
+  assert(leftLine.checkProperty("object-name", "line"));
+
+  // Add bounding box lines to the resulting expression
+  result.push_back(leftLine);
+  result.push_back(rightLine);
+  result.push_back(topLine);
   result.push_back(botLine);
+
+  // Add the x and y bound labels
+  result.push_back(Expression(Atom("\""+ std::to_string(AL) +"\"")));
+  result.push_back(Expression(Atom("\""+ std::to_string(AU) +"\"")));
+  result.push_back(Expression(Atom("\""+ std::to_string(OL) +"\"")));
+  result.push_back(Expression(Atom("\""+ std::to_string(OU) +"\"")));
+
+  // Add each option to the output
+  for(auto &opt : OPTIONS.m_tail){
+    result.push_back(opt.m_tail[1]);
+  }
+  size_t numoptions = OPTIONS.tailLength();
+
+  // Add all data points and stem lines
+  Expression new_point, stem_bottom, stemline; 
+
+  /* If the bottom of the graph is above the orign,
+  draw the stemlines down to the bottom line only */
+  double stembottomy = std::max(0.0, ymin) * -1;
+
+  for(auto & point : DATA.m_tail){
+    double x = point.m_tail[0].head().asNumber();
+    double y = point.m_tail[1].head().asNumber() * -1;
+
+    new_point = apply(Atom("make-point"), {Expression(x), Expression(y)}, env);
+    stem_bottom = apply(Atom("make-point"), {Expression(x), Expression(stembottomy)}, env);
+
+    stemline = apply(Atom("make-line"), {new_point, stem_bottom}, env);
+    result.push_back(new_point);
+    result.push_back(stemline);
+  }
 
   // Add draw axis lines if either zero line is within the boundaries
   if(0 < OU || 0 > OL){
@@ -463,39 +482,10 @@ Expression Expression::handle_discrete_plot(Environment & env){
     result.push_back(yaxis);
   }
 
-  // Add all data points and stem lines
-  Expression new_point, stem_bottom, stemline; 
-  double x,y; 
-  std::vector<Expression> p1p2;
-
-  /* If the bottom of the graph is above the orign,
-  draw the stemlines down to the bottom line only */
-  double stembottomy = std::max(0.0, OL) * yscale * -1;
-
-  for(auto & point : DATA.m_tail){
-    x = point.m_tail[0].head().asNumber() * xscale;
-    y = point.m_tail[1].head().asNumber() * yscale * -1;
-
-    new_point = apply(Atom("make-point"), {Expression(x), Expression(y)}, env);
-    stem_bottom = apply(Atom("make-point"), {Expression(x), Expression(stembottomy)}, env);
-
-    stemline = apply(Atom("make-line"), {new_point, stem_bottom}, env);
-    result.push_back(new_point);
-    result.push_back(stemline);
-  }
-
-  // Add the bounds of the data as strings
-  result.push_back(Expression(Atom("\""+Atom(AL).asString()+"\"")));
-  result.push_back(Expression(Atom("\""+Atom(AU).asString()+"\"")));
-  result.push_back(Expression(Atom("\""+Atom(OL).asString()+"\"")));
-  result.push_back(Expression(Atom("\""+Atom(OU).asString()+"\"")));
-
-  // Add each option to the output
-  for(auto &opt : OPTIONS.m_tail){
-    result.push_back(opt.m_tail[1]);
-  }
-
-  return Expression("DP", result, numpoints);
+  Expression dp = Expression("DP", result);
+  dp.m_properties["numpoints"] = Expression(Atom(numpoints));
+  dp.m_properties["numoptions"] = Expression(Atom(numoptions));
+  return dp;
 }
 
 Expression Expression::handle_cont_plot(Environment & env){
@@ -517,140 +507,141 @@ Expression Expression::handle_cont_plot(Environment & env){
     throw SemanticError("Error: third argument to continuous plot not a list");
   }
 
-  std::vector<Expression> x_bounds, y_bounds;
-  x_bounds = BOUNDS.eval(env).m_tail;
-  y_bounds = apply(Atom("map"), {FUNC, BOUNDS}, env).m_tail;
+  return Expression();
+  // std::vector<Expression> x_bounds, y_bounds;
+  // x_bounds = BOUNDS.eval(env).m_tail;
+  // y_bounds = apply(Atom("map"), {FUNC, BOUNDS}, env).m_tail;
 
-  double N = 20, A = 3, B = 3, C = 2, D = 2;
-  double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
+  // double N = 20, A = 3, B = 3, C = 2, D = 2;
+  // double xscale, yscale, AL, AU, OL, OU, xmin, xmax, ymin, ymax;
 
-  AL = std::min(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
-  AU = std::max(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
+  // AL = std::min(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
+  // AU = std::max(x_bounds.begin()->head().asNumber(), (x_bounds.end()-1)->head().asNumber());
 
-  OL = std::min(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
-  OU = std::max(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
+  // OL = std::min(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
+  // OU = std::max(y_bounds.begin()->head().asNumber(), (y_bounds.end()-1)->head().asNumber());
 
-  // // Create scale factors using the max and min edges of the data
-  xscale = N/(AU-AL);
-  yscale = N/(OU-OL)  * -1;
+  // // // Create scale factors using the max and min edges of the data
+  // xscale = N/(AU-AL);
+  // yscale = N/(OU-OL)  * -1;
 
-  // // Scale bounds of the box
-  xmin = AL * xscale;
-  xmax = AU * xscale;
-  ymin = OL * yscale;
-  ymax = OU  * yscale;
+  // // // Scale bounds of the box
+  // xmin = AL * xscale;
+  // xmax = AU * xscale;
+  // ymin = OL * yscale;
+  // ymax = OU  * yscale;
 
-  double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
+  // double xmiddle = (xmax+xmin)/2, ymiddle = (ymin+ymax)/2;
 
-  // Make an expression for each point of the bounding box
-  Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
-  topLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymax)}, env);
-  topMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymax)}, env);
-  topRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymax)}, env);
-  midLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymiddle)}, env);
-  midMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymiddle)}, env);
-  midRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymiddle)}, env);
-  botLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymin)}, env);
-  botMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymin)}, env);
-  botRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymin)}, env);
+  // // Make an expression for each point of the bounding box
+  // Expression topLeft, topMid, topRight, midLeft, midMid, midRight, botLeft, botMid, botRight;
+  // topLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymax)}, env);
+  // topMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymax)}, env);
+  // topRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymax)}, env);
+  // midLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymiddle)}, env);
+  // midMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymiddle)}, env);
+  // midRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymiddle)}, env);
+  // botLeft = apply(Atom("make-point"), {Expression(xmin), Expression(ymin)}, env);
+  // botMid = apply(Atom("make-point"), {Expression(xmiddle), Expression(ymin)}, env);
+  // botRight = apply(Atom("make-point"), {Expression(xmax), Expression(ymin)}, env);
 
-  // Make an expression to hold each line of the bounding rect
-  Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
-  leftLine = apply(Atom("make-line"), {topLeft, botLeft}, env);
-  rightLine = apply(Atom("make-line"), {topRight, botRight}, env);
-  topLine = apply(Atom("make-line"), {topLeft, topRight}, env);
-  botLine = apply(Atom("make-line"), {botLeft, botRight}, env);
+  // // Make an expression to hold each line of the bounding rect
+  // Expression leftLine, topLine, rightLine, botLine, xaxis, yaxis;
+  // leftLine = apply(Atom("make-line"), {topLeft, botLeft}, env);
+  // rightLine = apply(Atom("make-line"), {topRight, botRight}, env);
+  // topLine = apply(Atom("make-line"), {topLeft, topRight}, env);
+  // botLine = apply(Atom("make-line"), {botLeft, botRight}, env);
 
-  result.push_back(leftLine.eval(env));
-  result.push_back(rightLine.eval(env));
-  result.push_back(topLine.eval(env));
-  result.push_back(botLine.eval(env));
+  // result.push_back(leftLine.eval(env));
+  // result.push_back(rightLine.eval(env));
+  // result.push_back(topLine.eval(env));
+  // result.push_back(botLine.eval(env));
 
-  // Add draw axis lines if either zero line is within the boundaries
-  if(0 < OU || 0 > OL){
-    Expression xAxisStart, xAxisEnd;
-    xAxisStart = apply(Atom("make-point"), {Expression(xmax), Expression(0.0)}, env);
-    xAxisEnd = apply(Atom("make-point"), {Expression(xmin), Expression(0.0)}, env);
-    xaxis = apply(Atom("make-line"), {xAxisStart, xAxisEnd}, env);
-    result.push_back(xaxis.eval(env));
-  }
+  // // Add draw axis lines if either zero line is within the boundaries
+  // if(0 < OU || 0 > OL){
+  //   Expression xAxisStart, xAxisEnd;
+  //   xAxisStart = apply(Atom("make-point"), {Expression(xmax), Expression(0.0)}, env);
+  //   xAxisEnd = apply(Atom("make-point"), {Expression(xmin), Expression(0.0)}, env);
+  //   xaxis = apply(Atom("make-line"), {xAxisStart, xAxisEnd}, env);
+  //   result.push_back(xaxis.eval(env));
+  // }
 
-  if(0 < AU || 0 > AL){
-    Expression yAxisStart, yAxisEnd;
-    yAxisStart = apply(Atom("make-point"), {Expression(0.0), Expression(ymax)}, env);
-    yAxisEnd = apply(Atom("make-point"), {Expression(0.0), Expression(ymin)}, env);
+  // if(0 < AU || 0 > AL){
+  //   Expression yAxisStart, yAxisEnd;
+  //   yAxisStart = apply(Atom("make-point"), {Expression(0.0), Expression(ymax)}, env);
+  //   yAxisEnd = apply(Atom("make-point"), {Expression(0.0), Expression(ymin)}, env);
 
-    yaxis = apply(Atom("make-line"), {yAxisStart, yAxisEnd}, env);
-    result.push_back(yaxis.eval(env));
-  }
+  //   yaxis = apply(Atom("make-line"), {yAxisStart, yAxisEnd}, env);
+  //   result.push_back(yaxis.eval(env));
+  // }
 
-  // Number of data points for a continuous plot
-  size_t M = 50;
+  // // Number of data points for a continuous plot
+  // size_t M = 50;
 
-  double stepsize = (AU-AL)/M;
+  // double stepsize = (AU-AL)/M;
 
-  std::vector<double> domain, range;
-  std::vector<Expression> domain_exp, range_exp;
+  // std::vector<double> domain, range;
+  // std::vector<Expression> domain_exp, range_exp;
 
-  for(double x = AL; x <= AU+stepsize; x+=stepsize){
-    domain.emplace_back(x);
-    domain_exp.emplace_back(Expression(x));
-  }
+  // for(double x = AL; x <= AU+stepsize; x+=stepsize){
+  //   domain.emplace_back(x);
+  //   domain_exp.emplace_back(Expression(x));
+  // }
 
-  range_exp = apply(Atom("map"), {FUNC, Expression(domain_exp)}, env).m_tail;
+  // range_exp = apply(Atom("map"), {FUNC, Expression(domain_exp)}, env).m_tail;
 
-  Expression point;
-  std::vector<Expression> points;
-  size_t pos = 0;
+  // Expression point;
+  // std::vector<Expression> points;
+  // size_t pos = 0;
 
 
-  for(auto _ : range_exp){
-    range.push_back(range_exp[pos].head().asNumber());
-    pos++;
-  }
+  // for(auto _ : range_exp){
+  //   range.push_back(range_exp[pos].head().asNumber());
+  //   pos++;
+  // }
 
-  pos = 0;
-  double scaled_X = 0, scaled_Y = 0;
-  for(auto _ : range_exp){
-    scaled_X = domain[pos] * xscale;
-    scaled_Y = range[pos] * yscale;
-    if(scaled_X < 0.001 && scaled_X > -0.001)
-      scaled_X = 0.0;
-    if(scaled_Y < 0.001 && scaled_Y > -0.001)
-      scaled_Y = 0.0;
+  // pos = 0;
+  // double scaled_X = 0, scaled_Y = 0;
+  // for(auto _ : range_exp){
+  //   scaled_X = domain[pos] * xscale;
+  //   scaled_Y = range[pos] * yscale;
+  //   if(scaled_X < 0.001 && scaled_X > -0.001)
+  //     scaled_X = 0.0;
+  //   if(scaled_Y < 0.001 && scaled_Y > -0.001)
+  //     scaled_Y = 0.0;
 
-    point = apply(Atom("make-point"), {Expression(scaled_X), Expression(scaled_Y)}, env);
-    points.push_back(point);
-    pos++;
-  }
+  //   point = apply(Atom("make-point"), {Expression(scaled_X), Expression(scaled_Y)}, env);
+  //   points.push_back(point);
+  //   pos++;
+  // }
 
-  Expression line;
-  for(size_t i = 1; i < points.size(); i++){
-    line = apply(Atom("make-line"), {points[i-1], points[i]}, env);
-    result.push_back(line);
-  }
+  // Expression line;
+  // for(size_t i = 1; i < points.size(); i++){
+  //   line = apply(Atom("make-line"), {points[i-1], points[i]}, env);
+  //   result.push_back(line);
+  // }
 
-  // Add the bounds of the data as strings for making labels
-  Expression boundLabel, boundPos;
-  boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(AL).asString()+"\""))}, env);
-  boundPos = apply(Atom("make-point"), {Expression(xmin), Expression(ymin + C)}, env);
-  boundLabel.setTextPosition(boundPos);
-  result.push_back(boundLabel);
+  // // Add the bounds of the data as strings for making labels
+  // Expression boundLabel, boundPos;
+  // boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(AL).asString()+"\""))}, env);
+  // boundPos = apply(Atom("make-point"), {Expression(xmin), Expression(ymin + C)}, env);
+  // boundLabel.setTextPosition(boundPos);
+  // result.push_back(boundLabel);
 
-  boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(AU).asString()+"\""))}, env);
-  boundPos = apply(Atom("make-point"), {Expression(xmax), Expression(ymin + C)}, env);
-  boundLabel.setTextPosition(boundPos);
-  result.push_back(boundLabel);
+  // boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(AU).asString()+"\""))}, env);
+  // boundPos = apply(Atom("make-point"), {Expression(xmax), Expression(ymin + C)}, env);
+  // boundLabel.setTextPosition(boundPos);
+  // result.push_back(boundLabel);
 
-  boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(OL).asString()+"\""))}, env);
-  boundPos = apply(Atom("make-point"), {Expression(xmin-D), Expression(ymin)}, env);
-  boundLabel.setTextPosition(boundPos);
-  result.push_back(boundLabel);
+  // boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(OL).asString()+"\""))}, env);
+  // boundPos = apply(Atom("make-point"), {Expression(xmin-D), Expression(ymin)}, env);
+  // boundLabel.setTextPosition(boundPos);
+  // result.push_back(boundLabel);
 
-  boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(OU).asString()+"\""))}, env);
-  boundPos = apply(Atom("make-point"), {Expression(xmin-D), Expression(ymax)}, env);
-  boundLabel.setTextPosition(boundPos);
-  result.push_back(boundLabel);
+  // boundLabel = apply(Atom("make-text"), {Expression(Atom("\""+Atom(OU).asString()+"\""))}, env);
+  // boundPos = apply(Atom("make-point"), {Expression(xmin-D), Expression(ymax)}, env);
+  // boundLabel.setTextPosition(boundPos);
+  // result.push_back(boundLabel);
 
   // if(m_tail.size() == 3){
   //   Expression OPTIONS = m_tail[2];
@@ -688,7 +679,7 @@ Expression Expression::handle_cont_plot(Environment & env){
 
   // }
 
-  return Expression("CP", result, -1);
+  // return Expression("CP", result, M);
 }
 
 sig_atomic_t global_status_flag = 0;

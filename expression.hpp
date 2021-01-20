@@ -51,11 +51,8 @@ public:
   /// constructor for lambda functions
   Expression(const std::vector<Expression> & args, Expression & func);
 
-  /// constructor for graphics items
-  // Expression( );
-
   /// Constructor for plots
-  Expression(std::string type, const std::vector<Expression> & back, size_t num);
+  Expression(std::string type, const std::vector<Expression> & back);
 
   /// deep-copy assign an expression  (recursive)
   Expression & operator=(const Expression & a);
