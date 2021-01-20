@@ -21,7 +21,9 @@ set(interpreter_src
 # EDIT
 # add any files you create related to interpreter unit testing here
 set(unittest_src
-  catch.hpp
+  catch.hpp  interpreter.hpp interpreter.cpp
+  interpreter.hpp interpreter.cpp
+
   atom_tests.cpp
   environment_tests.cpp
   expression_tests.cpp
@@ -36,15 +38,18 @@ set(unittest_src
 # EDIT
 # add source for any TUI modules here
 set(tui_src
-
+  interpreter.hpp interpreter.cpp
+  plotscript.cpp
+  catch.hpp
+  semantic_error.hpp
   )
 
 # EDIT
 # add source for any GUI modules here
 set(gui_src
-    notebook_app.hpp input_widget.hpp output_widget.hpp
+  notebook_app.hpp input_widget.hpp output_widget.hpp
 	notebook_app.cpp input_widget.cpp output_widget.cpp
-  )
+)
 
 # EDIT
 # add source for any GUI tests here
@@ -137,14 +142,14 @@ if (Qt5Widgets_FOUND AND Qt5Test_FOUND)
     target_link_libraries(notebook interpreter Qt5::Widgets)
   endif()
 
-  add_executable(notebook_test ${gui_test_src} ${gui_src})
+  add_executable(notebook_tests ${gui_test_src} ${gui_src})
   if(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
-    target_link_libraries(notebook_test interpreter Qt5::Widgets Qt5::Test pthread gcov)
+    target_link_libraries(notebook_tests interpreter Qt5::Widgets Qt5::Test pthread gcov)
   else(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
-    target_link_libraries(notebook_test interpreter Qt5::Widgets Qt5::Test)
+    target_link_libraries(notebook_tests interpreter Qt5::Widgets Qt5::Test)
   endif()
 
-  add_test(notebook_test notebook_test)
+  add_test(notebook_tests notebook_tests)
 
 else (Qt5Widgets_FOUND AND Qt5Test_FOUND)
   message("Qt >= 5.9  needs to be installed to build the notebook interface and related tests.")
