@@ -32,10 +32,7 @@ inline void install_handler() { SetConsoleCtrlHandler(interrupt_handler, TRUE); 
 
 void interrupt_handler(int signal_num) {
   if(signal_num == SIGINT){
-    if (global_status_flag > 0) {
-      exit(EXIT_FAILURE);
-    }
-    ++global_status_flag;
+    global_status_flag = 1;
   }
 }
 
@@ -119,6 +116,7 @@ class Consumer {
         oqueue->push(output);
       }
     }
+
     bool isRunning(){
       return running;
     }
@@ -154,8 +152,8 @@ std::string readline(){
   std::string line;
   std::getline(std::cin, line);
   if (std::cin.fail() || std::cin.eof()) {
-    std::cin.clear(); // reset cin state
-    line.clear(); //clear input string
+    std::cin.clear();
+    line.clear();
   }
   return line;
 }
@@ -225,7 +223,6 @@ void repl(Interpreter &interp){
       input->clear();
       output->clear();
     }
-
     global_status_flag = 0;
 
     copy = interp;
@@ -255,14 +252,14 @@ void repl(Interpreter &interp){
       p1(line);
 
       while(output->empty()){
-      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (global_status_flag > 0) {
           std::cerr << "\nError: interpreter kernel interrupted [1]\n";
-          // c1.resetThread(copy);
+          c1.resetThread(copy);
           break;
         }
       }
-      //If the operation was NOT interupted, get the result. OTHERWISE prompt repl again
+
       if(global_status_flag == 0){
         output->try_pop(result);
         if(std::get<2>(result)) {
