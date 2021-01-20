@@ -32,12 +32,10 @@ void OutputWidget::catch_result(Expression e){
         p2 = list[1];
 
         if(p1.checkProperty("object-name", "point") && p2.checkProperty("object-name", "point")){
-            std::vector<Expression> coordinates = e.contents();
-            double a, b, c, d;
-            a = coordinates[0].head().asNumber();
-            b = coordinates[1].head().asNumber();
-            c = coordinates[2].head().asNumber();
-            d = coordinates[3].head().asNumber();
+            double a = p1.tailConstBegin()->head().asNumber();
+            double b = p1.tailConstEnd()->head().asNumber();
+            double c = p2.tailConstBegin()->head().asNumber();
+            double d = p2.tailConstEnd()->head().asNumber();
             double thicc = e.getNumericalProperty("\"thickness\"");
             if(thicc < 0){
                 catch_failure("Error: in make-line call: thickness value not positive");
@@ -72,20 +70,32 @@ void OutputWidget::catch_result(Expression e){
         
         double N = 20, A = 3, B = 3, C = 2, D = 2, P = 0.5;
         std::vector<Expression> data = e.contents();
+        std::cout << data.size() << std::endl;
         int pos = 0;
     
         // Draw bounding box
-        for(int i = 0; i < 4; i++) {
+        for(size_t i = 0; i < 4; i++) {
+            std::cout << data[i] << std::endl;
+            catch_result(data[i]);
+            pos++;
+        }
+        std::cout << std::endl;
+
+        size_t num = (int)e.getProperty("numpoints").asNumber();
+
+        for (size_t i = pos; i < (num + pos); i++) {
+            std::cout << data[i];
             catch_result(data[i]);
             pos++;
         }
         
         // Draw AL AU OL OU (axis bound labels)
         std::string AL_s, AU_s, OL_s, OU_s;
-        AL_s = data[pos++].head().asSymbol();
-        AU_s = data[pos++].head().asSymbol();
-        OL_s = data[pos++].head().asSymbol();
-        OU_s = data[pos++].head().asSymbol();
+        AL_s = data[pos++].head().asString();
+        AU_s = data[pos++].head().asString();
+        OL_s = data[pos++].head().asString();
+        OU_s = data[pos++].head().asString();
+
         double AL = std::stod(AL_s);
         double AU = std::stod(AU_s);
         double OL = std::stod(OL_s);
@@ -167,13 +177,14 @@ void OutputWidget::drawText(QString qstr, double scaleFactor, double rotationAng
     text->setScale(scaleFactor);
 }
 
-void OutputWidget::drawLine(double P1x, double P1y, double P2x, double P2y, double thicc){
-    QLineF line = QLineF(QPointF(P1x, P1y), QPointF(P2x, P2y));
-    scene->addLine(line, QPen(QBrush(Qt::SolidLine), thicc));
+void OutputWidget::drawLine(double x1, double y1, double x2, double y2, double thicc){
+
+    QGraphicsLineItem *line = scene->addLine(x1, y1, x2, y2);
+    line->setPen(QPen(QBrush(), thicc));
 }
 
 void OutputWidget::drawPoint(double X, double Y, double Diam){
-    QRectF corners = QRectF(0, 0, Diam, Diam);
+    QRectF corners = QRectF(X, Y, Diam, Diam);
     corners.moveCenter(QPointF(X, Y));
-    scene->addEllipse(corners, QPen(1), QBrush());
+    scene->addEllipse(corners, QPen(Qt::PenStyle::NoPen), QBrush(Qt::BrushStyle::SolidPattern));
 }
