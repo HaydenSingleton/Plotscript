@@ -22,7 +22,7 @@
 				"type": "shell",
 				"command": "./build/unit_tests",
 				"problemMatcher": [],
-				"dependsOn":["build all"],
+				"dependsOn":["build unit_tests"],
 				"group": "test"
 			},
 			{
@@ -30,13 +30,14 @@
 				"type": "shell",
 				"command": "./build/notebook_test",
 				"problemMatcher": [],
-				"dependsOn":["build all"],
+				"dependsOn":["build notebook", "build notebook_test"],
 				"group": "test"
 			},
 			{
 				"label": "Plotscript",
 				"type": "shell",
 				"command": "./build/plotscript",
+				"dependsOn": ["build tui"],
 				"problemMatcher": [],
 				"group": "test"
 			},
@@ -44,9 +45,39 @@
 				"label": "Notebook",
 				"type": "shell",
 				"command": "./build/notebook",
+				"dependsOn": ["build notebook"],
 				"problemMatcher": [],
 				"group": "test"
+			},
+			{
+				"label": "build tui",
+				"type": "shell",
+				"command": "cmake --build ./build --target plotscript",
+				"problemMatcher": [],
+			},
+			{
+				"label": "build unit_tests",
+				"type": "shell",
+				"command": "cmake --build ./build --target unit_tests",
+				"problemMatcher": [],
+			},
+			{
+				"label": "build notebook",
+				"type": "shell",
+				"command": "cmake --build ./build --target target notebook",
+				"problemMatcher": [],
+			},
+			{
+				"label": "build notebook_test",
+				"type": "shell",
+				"command": "cmake --build ./build --target target notebook_test",
+				"problemMatcher": [],
 			}
 		]
+	},
+	"settings": {
+		"files.associations": {
+			"typeinfo": "cpp"
+		}
 	}
 }
