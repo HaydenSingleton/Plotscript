@@ -12,9 +12,6 @@ set (TESTDIR "tests")
 add_subdirectory (${SOURCEDIR})
 add_subdirectory (${TESTDIR})
 
-set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/startup.script)
-configure_file(
-	${CMAKE_SOURCE_DIR}/${SOURCEDIR}/startup_config.h.in
-	${CMAKE_BINARY_DIR}/startup_config.h
-)
+set(STARTUP_FILE ${SOURCEDIR}/startup.script)
+configure_file(${SOURCEDIR}/startup_config.h.in ${CMAKE_BINARY_DIR}/startup_config.h)
 include_directories(${CMAKE_BINARY_DIR})
