@@ -1,21 +1,5 @@
-.vagrant
-.vs/ProjectSettings.json
-.vs/VSWorkspaceState.json
-.vs/slnx.sqlite
-.vs/plotscript-HaydenSingleton/v15/*
 .vscode
 build/*
-html/*
-latex/*
-doc/*
 Coverage_Report/*
-Vagrantfile
 CMakeSettings.json
-.vs/CMake Overview
-.vs/Plotscript/v16/.suo
-.vs/Plotscript/v16/Browse.VC.db
-.vs/Plotscript/v16/ipch/AutoPCH/63e7a543e89e502a/EXPRESSION.ipch
-.vs/Plotscript/v16/ipch/AutoPCH/6d4d8a8e05518db/ENVIRONMENT.ipch
-.vs/Plotscript/v16/ipch/AutoPCH/8e451d338e910cf2/EXPRESSION.ipch
-/.vs/Plotscript/v16
-/out/build/x64-Debug (default)
+CMakePresets.json
