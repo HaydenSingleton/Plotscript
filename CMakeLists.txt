@@ -1,9 +1,9 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 
-project ("ProjectScript")
+project ("ProjectScript" VERSION 1.3 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
 
 set (SOURCEDIR "app")
 set (TESTDIR "tests")
