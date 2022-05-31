@@ -69,13 +69,14 @@ void Expression::setProperty(std::string name, Expression value)
 	if (m_properties.find(name) != m_properties.end())
 		m_properties.erase(name);
 
-	m_properties.emplace(name, value);
+	auto p = new Expression(value);
+	m_properties.emplace(name, p);
 }
 
 Expression Expression::getProperty(std::string name)
 {
 	if (m_properties.find(name) != m_properties.end())
-		return m_properties.at(name);
+		return *m_properties.at(name);
 	else
 		return Expression();
 }
@@ -237,7 +238,7 @@ Expression Expression::eval(Environment& env)
 	}
 	else {
 		std::vector<Expression> args;
-		for (auto &it = m_tail.begin(); it != m_tail.end(); it++) {
+		for (Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
 			args.push_back(it->eval(env));
 		}
 		return apply(m_head, args, env);
@@ -269,7 +270,7 @@ std::string Expression::toString() const {
 		
 		if (head == "lambda") {
 
-			for (auto& arg = m_tail[0].tailConstBegin(); arg != m_tail[0].tailConstEnd(); arg++) {
+			for (auto arg = m_tail[0].tailConstBegin(); arg != m_tail[0].tailConstEnd(); arg++) {
 				out << *arg;
 				if (arg + 1 == m_tail[0].tailConstEnd())
 					out << ")";
@@ -279,7 +280,7 @@ std::string Expression::toString() const {
 
 			out << " (" << m_tail[1].head() << " ";
 		
-			for (auto& arg = m_tail[1].tailConstBegin(); arg != m_tail[1].tailConstEnd(); arg++) {
+			for (auto arg = m_tail[1].tailConstBegin(); arg != m_tail[1].tailConstEnd(); arg++) {
 				out << *arg;
 
 				if (arg + 1 != m_tail[1].tailConstEnd())
@@ -293,11 +294,11 @@ std::string Expression::toString() const {
 			if (head != "list")
 				out << m_head;
 
-			for (auto& it = tailConstBegin(); it != tailConstEnd(); it++) {
+			for (auto e = tailConstBegin(); e != tailConstEnd(); e++) {
 
-				out << *it;
+				out << *e;
 
-				if (it + 1 != tailConstEnd())
+				if (e + 1 != tailConstEnd())
 					out << " ";
 			}
 		}

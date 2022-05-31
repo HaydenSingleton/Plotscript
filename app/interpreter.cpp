@@ -1,16 +1,19 @@
 #include "interpreter.h"
+#include "../build/startup_config.h"
+
 
 Interpreter::Interpreter()
 {
 	env = Environment();
 
-	if (parseStream(std::ifstream(STARTUP_FILE)))
+	auto stream = std::ifstream(STARTUP_FILE);
+	if (parseStream(stream))
 		evaluate();
 	else
 		std::cerr << "Invalid starting file." << std::endl;
 }
 
-bool Interpreter::parseStream(std::istream& text) noexcept {
+bool Interpreter::parseStream(std::istream& text) {
 	TokenSequence tokens = tokenize(text);
 	ast = parse(tokens);
 	return (ast != Expression());

@@ -1,7 +1,8 @@
 #pragma once
 #include <csignal>
+#include <signal.h>
 
-extern sig_atomic_t global_status_flag = 0;
+sig_atomic_t global_status_flag = 0;
 
 #if defined(_WIN64) || defined(_WIN32)
 #include <windows.h>
