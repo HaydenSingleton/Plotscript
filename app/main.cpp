@@ -1,6 +1,9 @@
 #include "interpreter.h"
 #include "interrupt_handler.h"
 
+extern sig_atomic_t global_status_flag;
+
+
 std::string readline() {
     std::string line;
     std::getline(std::cin, line);

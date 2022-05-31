@@ -14,11 +14,12 @@ set(interpreter_files
 	interrupt_handler.h
 )
 add_library(interpreter ${interpreter_files})
-target_compile_options(interpreter PRIVATE /Wall)
 
 # Add source to this project's executable.
 add_executable (plotscript "main.cpp")
 target_link_libraries(plotscript interpreter)
+
+
 
 
 install(TARGETS plotscript RUNTIME DESTINATION bin)

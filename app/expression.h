@@ -46,7 +46,7 @@ private:
 	Expression handle_lookup(const Atom&, const Environment&);
 	Expression handle_begin(Environment&);
 	Expression handle_define(Environment&);
-	Expression handle_lambda(Environment&);
+	Expression handle_lambda();
 	Expression handle_proc_to_list(Environment&);
 
 	typedef std::vector<Expression>::iterator IteratorType;

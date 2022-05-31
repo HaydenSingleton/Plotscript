@@ -2,16 +2,17 @@
 # and include sub-projects here.
 #
 cmake_minimum_required (VERSION 3.12)
+set(CMAKE_CXX_STANDARD 17)
 
 project ("ProjectScript" VERSION 1.3 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
 
-set (SOURCEDIR "app")
-set (TESTDIR "tests")
-
 # Include sub-projects.
-add_subdirectory (${SOURCEDIR})
-add_subdirectory (${TESTDIR})
+add_subdirectory ("app")
+add_subdirectory ("tests")
 
-set(STARTUP_FILE ${SOURCEDIR}/startup.script)
-configure_file(${SOURCEDIR}/startup_config.h.in ${CMAKE_BINARY_DIR}/startup_config.h)
+# Generate and include start up plotscript lambdas
+set(STARTUP_FILE app/startup.script)
+configure_file(
+	${CMAKE_SOURCE_DIR}/app/startup_config.h.in ${CMAKE_BINARY_DIR}/startup_config.h
+)
 include_directories(${CMAKE_BINARY_DIR})

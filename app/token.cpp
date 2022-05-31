@@ -3,7 +3,7 @@
 Token::Token(TType type) : m_type(type)
 {}
 
-Token::Token(const std::string& str) : m_value(str), m_type(STRING)
+Token::Token(const std::string& str) : m_type(STRING), m_value(str)
 {}
 
 Token::TType Token::type() const
@@ -31,21 +31,20 @@ void save_token(std::string& token, TokenSequence& seq)
 	}
 }
 
-TokenSequence tokenize(std::istream& seq) 
-{
+TokenSequence tokenize(std::istream& seq) {
 	TokenSequence tokens;
 	std::string token;
 
 	while (true)
 	{
-		char c = seq.get();
+		char c = (char) seq.get();
 		if (seq.eof())
 			break;
 
 		if (c == COMMENTCHAR) {
 			// chomp until the end of the line
 			while ((!seq.eof()) && (c != '\n')) {
-				c = seq.get();
+				c = (char) seq.get();
 			}
 			if (seq.eof()) 
 				break;
@@ -61,10 +60,10 @@ TokenSequence tokenize(std::istream& seq)
 		}
 		else if (c == QUOTECHAR) {
 			token.push_back(QUOTECHAR);
-			c = seq.get();
+			c = (char) seq.get();
 			while (!seq.eof() && c != QUOTECHAR) {
 				token.push_back(c);
-				c = seq.get();
+				c = (char) seq.get();
 			}
 			if (seq.eof()) {
 				break;

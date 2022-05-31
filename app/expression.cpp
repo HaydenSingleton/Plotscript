@@ -14,14 +14,15 @@ Expression::Expression(const Atom& a, const std::vector<Expression>& items) {
 	m_tail = items;
 }
 
-Expression& Expression::operator=(const Expression& e) {
+Expression& Expression::operator=(const Expression& exp) {
 
-	if (this != &e) {
-		m_head = e.m_head;
+	if (this != &exp) {
+		m_head = exp.m_head;
 		m_tail.clear();
-		for (auto e : e.m_tail)
+		for (auto e : exp.m_tail)
 			m_tail.push_back(e);
-		m_properties = e.m_properties;
+
+		m_properties = exp.m_properties;
 	}
 
 	return *this;
@@ -126,7 +127,7 @@ Expression Expression::handle_define(Environment& env) {
 	return value;
 }
 
-Expression Expression::handle_lambda(Environment& env) {
+Expression Expression::handle_lambda() {
 
 	std::vector<Expression> lambda;
 
@@ -225,7 +226,7 @@ Expression Expression::eval(Environment& env)
 		return handle_define(env);;
 	}
 	else if (cmd == "lambda") {
-		return handle_lambda(env);
+		return handle_lambda();
 	}
 	else if (m_tail.empty()) {
 		if (env.is_proc(m_head))

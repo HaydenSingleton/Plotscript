@@ -10,10 +10,12 @@ Interpreter::Interpreter()
 	if (parseStream(stream))
 		evaluate();
 	else
-		std::cerr << "Invalid starting file." << std::endl;
+		std::cerr << "Invalid starting file: " << STARTUP_FILE << std::endl;
 }
 
 bool Interpreter::parseStream(std::istream& text) {
+	if (text.bad()) return false;
+
 	TokenSequence tokens = tokenize(text);
 	ast = parse(tokens);
 	return (ast != Expression());
