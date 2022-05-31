@@ -78,11 +78,14 @@ int main(int argc, char* argv[])
     Interpreter start;
 
     if (argc == 2) {
-        return eval_from_file(argv[1], start);
+        return eval_from_command(argv[1], start);
     }
     else if (argc == 3) {
         if (std::string(argv[1]) == "-e") {
             return eval_from_command(argv[2], start);
+        }
+        else if (std::string(argv[1]) == "-f") {
+            return eval_from_file(argv[2], start);
         }
     }
     else if (argc > 3) {
