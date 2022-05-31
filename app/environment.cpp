@@ -385,16 +385,15 @@ Expression join(const std::vector<Expression>& args) {
 }
 
 Expression range(const std::vector<Expression>& args) {
+    double start, stop, step;
 
-    if (args.size() < 2 || args.size() > 3)
+    if (args.size() < 2)
         throw SemanticError("Error: number of args to range");
 
     for (auto arg : args) {
         if (!arg.head().isNumber())
             throw SemanticError("Error: argument to range was not a number");
     }
-
-    double start, stop, step;
 
     start = args[0].head().asNumber();
     stop = args[1].head().asNumber();
