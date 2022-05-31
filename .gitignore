@@ -1,6 +1,7 @@
-.vscode
-build/*
-out/*
+.vscode/
+.vs/
+build/
+out/
 Coverage_Report/*
 CMakeSettings.json
 CMakePresets.json
