@@ -48,7 +48,7 @@ void repl(Interpreter& interp) {
 
     while (!std::cin.eof() && global_status_flag == 0) {
 
-        std::cout << "prompt> ";
+        std::cout << "plotscript> ";
         std::string line = readline();
 
         if (line.empty()) continue;
