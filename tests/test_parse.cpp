@@ -56,10 +56,13 @@ TEST_CASE("Parser") {
 
 		std::string program = "(\"this string is unbalanced)";
 		std::istringstream iss(program);
+		REQUIRE(iss.good());
 
 		TokenSequence tokens = tokenize(iss);
+		CHECK(tokens.size() > 0);
+
 		Expression out = parse(tokens);
-		CHECK_EQ(out, Expression());
+		CHECK_EQ(out.toString(), "NONE");
 	}
 
 	SUBCASE("Test closed quotes") {
