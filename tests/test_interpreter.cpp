@@ -9,7 +9,7 @@ TEST_CASE("Interpreter tests") {
 	
 	SUBCASE("string input") {
 		std::string valid = "(+ 1 2)";
-		CHECK(in.parseStream(valid));
+		CHECK(in.parseString(valid));
 	}
 
 	

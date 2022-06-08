@@ -8,7 +8,7 @@ TEST_CASE("Math functions") {
 	SUBCASE("Addition") {
 		std::string expr("(+ 2 3)");
 		INFO(expr);
-		CHECK(calc.parseStream(expr));
+		CHECK(calc.parseString(expr));
 		std::string result = calc.evaluate().toString();
 		INFO(result);
 		CHECK_EQ(result, "(5)");

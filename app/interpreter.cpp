@@ -21,6 +21,12 @@ bool Interpreter::parseStream(std::istream& text) {
 	return (ast != Expression());
 }
 
+bool Interpreter::parseString(std::string text) {
+
+	auto stream = std::istringstream(text);
+	return parseStream(stream);
+}
+
 Expression Interpreter::evaluate() {
 	return ast.eval(env);
 }

@@ -15,6 +15,8 @@ public:
 	Interpreter();
 
 	bool parseStream(std::istream& text);
+	bool parseString(std::string text);
+
 	Expression evaluate();
 private:
 	Environment env;
