@@ -92,18 +92,30 @@ Procedure Environment::get_proc(const Atom& sym) const {
 
 Expression add(const std::vector<Expression>& args) {
 
-    std::complex<double> result;
+    double result = 0;
+    double complex_part = 0;
 
     for (auto& a : args) {
         Atom arg = a.head();
-        if (arg.isNumber() || arg.isComplex()) {
-            result += arg.asComplex();
+
+        if (arg.isNumber()) {
+            result += arg.asNumber();
+        }
+        else if (arg.isComplex()) {
+            result += arg.asNumber();
+            complex_part += arg.asComplex().imag();
         }
         else {
             throw SemanticError("Error in add: argument was NAN");
         }
     }
-    return Expression(result);
+
+    if (complex_part == 0)
+        return Expression(result);
+    else
+        return Expression(std::complex<double>(result, complex_part));
+
+    
 }
 
 Expression subneg(const std::vector<Expression>& args) {
@@ -455,8 +467,9 @@ void Environment::reset()
 
     envmap.emplace(Atom("pi"), EnvResult(ExpressionType, Expression(std::atan2(0, -1))));
     envmap.emplace(Atom("e"), EnvResult(ExpressionType, Expression(std::exp(1))));
-    envmap.emplace(Atom("I"), EnvResult(ExpressionType, Expression(number(0, 1))));
-    envmap.emplace(Atom("-I"), EnvResult(ExpressionType, Expression(number(0, -1))));
+    Atom atomI(std::complex<double>(0, 1));
+    envmap.emplace(Atom("I"), EnvResult(ExpressionType, Expression(atomI)));
+    envmap.emplace(Atom("-I"), EnvResult(ExpressionType, Expression(std::complex<double>(0, -1))));
 
     envmap.emplace(Atom("+"), EnvResult(ProcedureType, add));
     envmap.emplace(Atom("-"), EnvResult(ProcedureType, subneg));

@@ -263,7 +263,7 @@ std::string Expression::toString() const {
 	std::ostringstream out;
 	std::string head(m_head.toString());
 
-	if (head == "") {
+	if (head == "" && m_tail.size() == 0) {
 		out << "NONE";
 	}
 	else {

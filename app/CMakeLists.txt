@@ -20,7 +20,4 @@ add_executable (plotscript "main.cpp")
 target_link_libraries(plotscript interpreter)
 
 
-
-
 install(TARGETS plotscript RUNTIME DESTINATION bin)
-

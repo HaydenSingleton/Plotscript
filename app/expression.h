@@ -12,9 +12,9 @@ class Environment;
 class Expression {
 public:
 	Expression();
+	Expression(const Atom&);
 	Expression(const Atom&, const std::vector<Expression>& items);
 
-	Expression(const Atom&);
 	Expression& operator=(const Expression& e);
 	~Expression();
 

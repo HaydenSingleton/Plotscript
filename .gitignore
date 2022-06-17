@@ -1,5 +1,5 @@
 .vscode/
-.vs/
+.vs/*
 build/
 out/
 Coverage_Report/*

@@ -2,7 +2,7 @@
 # and include sub-projects here.
 #
 cmake_minimum_required (VERSION 3.12)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 project ("ProjectScript" VERSION 1.3 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
 

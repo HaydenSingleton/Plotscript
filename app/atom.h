@@ -6,16 +6,14 @@
 #include <sstream>
 #include <complex>
 
-typedef std::complex<double> number;
-
 class Atom {
 public:
 	Atom();
 
 	Atom(const Token& t);
 	Atom(const std::string& str);
-	Atom(number n);
 	Atom(double n);
+	Atom(std::complex<double> n);
 
 	Atom(const Atom& copy);
 	Atom& operator=(const Atom& other);
@@ -27,9 +25,9 @@ public:
 	bool isComplex() const;
 	bool isString() const;
 
-	double asNumber() const noexcept;
 	std::string asSymbol() const noexcept;
-	number asComplex() const noexcept;
+	double asNumber() const noexcept;
+	std::complex<double> asComplex() const noexcept;
 
 	std::string toString() const noexcept;
 	
@@ -38,16 +36,18 @@ public:
 	bool operator<(const Atom& other) const noexcept;
 
 private:
-	enum Type {None, Number, Symbol};
+	enum Type {None, Real, Complex, Symbol};
 
 	Type m_type;
 
 	union {
 		std::string m_symbol;
-		number m_number;
+		double m_number;
+		std::complex<double> m_complex;
 	};
 	
-	void setNumber(const number d);
+	void setComplex(const std::complex<double> d);
+	void setNumber(const double d);
 	void setSymbol(const std::string &s);
 };
 

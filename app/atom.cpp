@@ -1,6 +1,5 @@
 #include "atom.h"
 
-
 Atom::Atom() : m_type(None), m_symbol(std::string()) {}
 
 Atom::Atom(const Token& token) : Atom() {
@@ -16,30 +15,27 @@ Atom::Atom(const Token& token) : Atom() {
 	}
 }
 
-
 Atom::Atom(const std::string& str) : Atom() {
 	setSymbol(str);
 }
 
-
 Atom::Atom(double n) : Atom() {
-	m_type = Number;
-	m_number = number(n, 0);
+	m_type = Real;
+	m_number = n;
 
 	if (fabs(n) < std::numeric_limits<double>::epsilon() * 2)
-		m_number = number(0, 0);
+		m_number = 0;
 }
 
-Atom::Atom(number complex) : Atom() {
-	m_type = Number;
-	m_number = complex;
+Atom::Atom(std::complex<double> complex) : Atom() {
+	m_type = Complex;
+	m_complex = complex;
 
 	if (fabs(complex.real()) < std::numeric_limits<double>::epsilon() * 2)
-		m_number = number(0, m_number.imag());
+		m_complex = std::complex<double>(0, m_complex.imag());
 	if (fabs(complex.imag()) < std::numeric_limits<double>::epsilon() * 2)
-		m_number = number(m_number.real(), 0);
+		m_complex = std::complex<double>(m_complex.real(), 0);
 }
-
 
 Atom::Atom(const Atom& copy) {
 	if (copy.isNumber()) {
@@ -58,70 +54,63 @@ Atom::Atom(const Atom& copy) {
 	}
 }
 
-
 Atom& Atom::operator=(const Atom& other) {
 
 	if (this != &other) {
 		if (other.m_type == None) {
 			m_type = None;
 		}
-		else if (other.m_type == Number) {
+		else if (other.m_type == Real) {
 			setNumber(other.m_number);
 		}
 		else if (other.m_type == Symbol) {
 			setSymbol(other.m_symbol);
+		}
+		else {
+			setComplex(other.m_complex);
 		}
 	}
 
 	return *this;
 }
 
-
 Atom::~Atom() {
 	if (m_type == Symbol)
 		m_symbol.~basic_string();
 }
 
-
 bool Atom::isNone() const {
 	return m_type == None;
 }
 
-
 bool Atom::isNumber() const {
-	return m_type == Number;
+	return m_type == Real;
 }
-
 
 bool Atom::isSymbol() const {
 	return m_type == Symbol;
 }
 
-
 bool Atom::isString() const {
 	return m_type == Symbol && !m_symbol.empty() && m_symbol.front() == '\"' && m_symbol.back() == '\"';
 }
 
-
 bool Atom::isComplex() const
 {
-	return m_type == Number && m_number.imag() != 0;
+	return m_type == Complex;
 }
-
 
 double Atom::asNumber() const noexcept {
-	return m_type == Number ? m_number.real() : 0;
+	return m_type == Real ? m_number : m_type == Complex ? m_complex.real() : 0;
 }
 
-number Atom::asComplex() const noexcept {
-	return m_type == Number ? m_number : 0;
+std::complex<double> Atom::asComplex() const noexcept {
+	return m_type == Real ? std::complex<double>(m_number, 0) : m_type == Complex ? m_complex : 0;
 }
-
 
 std::string Atom::asSymbol() const noexcept {
 	return m_type == Symbol ? m_symbol : "_";
 }
-
 
 std::string Atom::toString() const noexcept {
 	std::ostringstream os;
@@ -131,15 +120,24 @@ std::string Atom::toString() const noexcept {
 	return os.str();
 }
 
-void Atom::setNumber(const number n) {
-
-	m_type = Number;
-	m_number = n;
+void Atom::setComplex(const std::complex<double> n) {
+	m_type = Complex;
+	m_complex = n;
 
 	if (fabs(n.real()) < std::numeric_limits<double>::epsilon() * 2)
-		m_number = number(0, m_number.imag());
+		m_complex = std::complex<double>(0, m_complex.imag());
 	if (fabs(n.imag()) < std::numeric_limits<double>::epsilon() * 2)
-		m_number = number(m_number.real(), 0);
+		m_complex = std::complex<double>(m_complex.real(), 0);
+}
+
+
+void Atom::setNumber(const double n) {
+
+	m_type = Real;
+	m_number = n;
+
+	if (fabs(m_number) < std::numeric_limits<double>::epsilon() * 2)
+		m_number = 0;
 }
 
 void Atom::setSymbol(const std::string &str) {
@@ -152,20 +150,19 @@ void Atom::setSymbol(const std::string &str) {
 	new (&m_symbol) std::string(str);
 }
 
-
 bool Atom::operator==(const Atom& other) const noexcept {
 	if (m_type != other.m_type)
 		return false;
 
 	switch (m_type) {
 		double diff;
-		case Number:
-			diff = fabs(m_number.imag() - other.m_number.imag());
-			if (isComplex() && other.isComplex() && std::isnan(diff) || (std::numeric_limits<double>::epsilon() * 2) < diff ) {
-				return true;
-			}
-			diff = fabs(m_number.real() - other.m_number.real());
+		case Real:
+			diff = fabs(m_number - other.m_number);
 			return diff < std::numeric_limits<double>::epsilon() * 2;
+			break;
+		case Complex:
+			diff = fabs(m_complex.imag() - other.m_complex.imag());
+			return !std::isnan(diff) && (std::numeric_limits<double>::epsilon() * 2) < diff;
 			break;
 		case Symbol:
 			return m_symbol == other.m_symbol;
@@ -186,20 +183,14 @@ bool Atom::operator<(const Atom& other) const noexcept
 {
 
 	switch (m_type) {
-		case Number:
-			if (other.m_type == Number) {
-				double diff = fabs(m_number.imag() - other.m_number.imag());
-				if (isComplex() && other.isComplex() && std::isnan(diff) || (std::numeric_limits<double>::epsilon() * 2) < diff) {
-					return diff > 0;
-				}
-				diff = fabs(m_number.real() - other.m_number.real());
-				return diff > std::numeric_limits<double>::epsilon() * 2;
-			}
-			else if (other.m_type == Symbol) {
-				return false;
-			}
-			else
-				return false;
+		case Real:
+			return m_number < other.m_number;
+			break;
+		case Complex:
+			if (m_complex.real() < other.m_complex.real())
+				if (m_complex.imag() < other.m_complex.imag())
+					return true;
+			return false;
 			break;
 		case Symbol:
 			if (other.m_type == Symbol) {
@@ -218,13 +209,12 @@ bool Atom::operator<(const Atom& other) const noexcept
 
 
 std::ostream& operator<<(std::ostream& out, const Atom& a) {
-
 	
 	if (a.isNumber()) {
 		out << a.asNumber();
 	}
-	if (a.isComplex()) {
-		out << ", " << a.asComplex().imag();
+	else if (a.isComplex()) {
+		out << a.asComplex().real() << ", " << a.asComplex().imag();
 	}
 	else if (a.isSymbol()) {
 		out << a.asSymbol();
