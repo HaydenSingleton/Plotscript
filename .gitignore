@@ -1,7 +1,7 @@
 .vscode/
 .vs/*
-build/
-out/
+build/*
+
 Coverage_Report/*
 CMakeSettings.json
 CMakePresets.json
