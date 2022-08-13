@@ -13,6 +13,7 @@ add_subdirectory ("tests")
 # Generate and include start up plotscript lambdas
 set(STARTUP_FILE app/startup.script)
 configure_file(
-	${CMAKE_SOURCE_DIR}/app/startup_config.h.in ${CMAKE_BINARY_DIR}/startup_config.h
+	${CMAKE_SOURCE_DIR}/app/startup_config.h.in
+	${CMAKE_SOURCE_DIR}/app/startup_config.h
 )
 include_directories(${CMAKE_BINARY_DIR})

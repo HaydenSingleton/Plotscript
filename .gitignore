@@ -5,3 +5,4 @@ build/*
 Coverage_Report/*
 CMakeSettings.json
 CMakePresets.json
+/cmake-build-debug/
