@@ -2,8 +2,7 @@
 #include "environment.h"
 #include "semantic_error.h"
 
-
-Expression::Expression() {}
+Expression::Expression() = default;
 
 Expression::Expression(const Atom& a) {
 	m_head = a;
@@ -19,7 +18,7 @@ Expression& Expression::operator=(const Expression& exp) {
 	if (this != &exp) {
 		m_head = exp.m_head;
 		m_tail.clear();
-		for (auto e : exp.m_tail)
+		for (const auto& e : exp.m_tail)
 			m_tail.push_back(e);
 
 		m_properties = exp.m_properties;
@@ -28,17 +27,13 @@ Expression& Expression::operator=(const Expression& exp) {
 	return *this;
 }
 
-Expression::~Expression() {
-	m_head.~Atom();
-}
-
 Atom Expression::head() const {
 	return m_head;
 }
 
 Expression* Expression::tail() {
 	Expression* tail = nullptr;
-	if (m_tail.size() > 0)
+	if (!m_tail.empty())
 		tail = &m_tail.back();
 	return tail;
 }
@@ -47,25 +42,21 @@ void Expression::setHead(const Atom& a) {
 	m_head = a;
 }
 
-void Expression::appendExp(const Expression& e) {
-	m_tail.emplace_back(e);
-}
-
 void Expression::append(const Atom& a) {
 	m_tail.emplace_back(a);
 }
 
-Expression::ConstIteratorType Expression::tailConstBegin() const
+std::vector<Expression>::const_iterator Expression::tailConstBegin() const
 {
 	return m_tail.cbegin();
 }
 
-Expression::ConstIteratorType Expression::tailConstEnd() const
+std::vector<Expression>::const_iterator Expression::tailConstEnd() const
 {
 	return m_tail.cend();
 }
 
-void Expression::setProperty(std::string name, Expression value)
+void Expression::setProperty(const std::string& name, const Expression& value)
 {
 	if (m_properties.find(name) != m_properties.end())
 		m_properties.erase(name);
@@ -74,12 +65,12 @@ void Expression::setProperty(std::string name, Expression value)
 	m_properties.emplace(name, p);
 }
 
-Expression Expression::getProperty(std::string name)
+Expression Expression::getProperty(const std::string& name)
 {
 	if (m_properties.find(name) != m_properties.end())
 		return *m_properties.at(name);
 	else
-		return Expression();
+		return {};
 }
 
 Expression Expression::handle_lookup(const Atom& a, const Environment& env)
@@ -87,8 +78,9 @@ Expression Expression::handle_lookup(const Atom& a, const Environment& env)
 	if (env.is_exp(a)) {
 		return env.get_exp(a);
 	}
+
 	if (a.isString() || a.isNumber()) {
-			return Expression(a);
+			return { a };
 	}
 
 	throw SemanticError("Unknown symbol: " + a.toString());
@@ -137,10 +129,10 @@ Expression Expression::handle_lambda() {
 		args.emplace_back(Expression(*e));
 	}
 
-	lambda.push_back(Expression(Atom("list"), args));
-	lambda.push_back(m_tail[1]);
+	lambda.emplace_back(Atom("list"), args);
+	lambda.emplace_back(m_tail[1]);
 
-	return Expression(Atom("lambda"), lambda);
+	return { Atom("lambda"), lambda };
 }
 
 Expression evaluate_lambda(const Atom& op, const std::vector<Expression>& args, const Environment& env) {
@@ -207,7 +199,7 @@ Expression Expression::handle_proc_to_list(Environment& env) {
 			throw SemanticError("Unsupported operation");
 		}
 	}
-	catch (SemanticError err) {
+	catch (SemanticError& err) {
 		std::string msg("Error during apply: ");
 		msg += err.what();
 		throw SemanticError(msg);
@@ -223,7 +215,7 @@ Expression Expression::eval(Environment& env)
 		return handle_begin(env);
 	}
 	else if (cmd == "define") {
-		return handle_define(env);;
+		return handle_define(env);
 	}
 	else if (cmd == "lambda") {
 		return handle_lambda();
@@ -239,8 +231,8 @@ Expression Expression::eval(Environment& env)
 	}
 	else {
 		std::vector<Expression> args;
-		for (Expression::IteratorType it = m_tail.begin(); it != m_tail.end(); ++it){
-			args.push_back(it->eval(env));
+		for (auto & it : m_tail){
+			args.push_back(it.eval(env));
 		}
 		return apply(m_head, args, env);
 	}
@@ -263,56 +255,43 @@ std::string Expression::toString() const {
 	std::ostringstream out;
 	std::string head(m_head.toString());
 
-	if (head == "" && m_tail.size() == 0) {
-		out << "NONE";
-	}
-	else {
-		out << "(";
-		
-		if (head == "lambda") {
+    if (head == "lambda") {
 
-			for (auto arg = m_tail[0].tailConstBegin(); arg != m_tail[0].tailConstEnd(); arg++) {
-				out << *arg;
-				if (arg + 1 == m_tail[0].tailConstEnd())
-					out << ")";
-				else
-					out << " ";
-			}
+        for (auto arg = m_tail[0].tailConstBegin(); arg != m_tail[0].tailConstEnd(); arg++) {
+            out << *arg;
+            if (arg + 1 == m_tail[0].tailConstEnd())
+                out << ")";
+            else
+                out << " ";
+        }
 
-			out << " (" << m_tail[1].head() << " ";
-		
-			for (auto arg = m_tail[1].tailConstBegin(); arg != m_tail[1].tailConstEnd(); arg++) {
-				out << *arg;
+        out << " (" << m_tail[1].head() << " ";
 
-				if (arg + 1 != m_tail[1].tailConstEnd())
-					out << " ";
-				else
-					out << ")";
-			}
-		}
-		else {
+        for (auto arg = m_tail[1].tailConstBegin(); arg != m_tail[1].tailConstEnd(); arg++) {
+            out << *arg;
 
-			if (head != "list")
-				out << m_head;
-
-			for (auto e = tailConstBegin(); e != tailConstEnd(); e++) {
-
-				out << *e;
-
-				if (e + 1 != tailConstEnd())
-					out << " ";
-			}
-		}
-
-		out << ")";
-	}
+            if (arg + 1 != m_tail[1].tailConstEnd())
+                out << " ";
+            else
+                out << ")";
+        }
+    }
+    else {
+        if (head != "list" )
+            out << m_head;
+        for (const auto& e : m_tail) {
+            out << e;
+            if (e != m_tail.back())
+                out << " ";
+        }
+    }
 
 	return out.str();
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 
-	return out << exp.toString();
+	return out << "(" << exp.toString() << ")";
 }
 
 bool Expression::operator==(const Expression& exp) const noexcept {
@@ -322,17 +301,18 @@ bool Expression::operator==(const Expression& exp) const noexcept {
 	result = result && (m_tail.size() == exp.m_tail.size());
 
 	if (result) {
-		for (auto lefte = m_tail.begin(), righte = exp.m_tail.begin();
-			(lefte != m_tail.end()) && (righte != exp.m_tail.end());
-			++lefte, ++righte) {
-			result = result && (*lefte == *righte);
+		for (int i = 0 ; i < m_tail.size(); i++) {
+			result &= (m_tail[i] == exp.m_tail[i]);
 		}
 	}
 
 	return result;
 }
 
-bool operator!=(const Expression& left, const Expression& right) noexcept
-{
+bool Expression::isEmpty() const noexcept {
+    return m_head.isNone() && m_tail.empty();
+}
+
+bool operator!=(const Expression& left, const Expression& right) noexcept {
 	return !(left == right);
 }

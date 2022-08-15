@@ -18,26 +18,13 @@ TEST_CASE("Test atom constructors") {
 		CHECK(!a.isComplex());
 	}
 	SUBCASE("Symbol constructor") {
-		Atom a(Token("+/-"));
+		Atom a("+/-");
 		CHECK(a.isSymbol());
-		CHECK_EQ(a, Atom(Token("+/-")));
+		CHECK_EQ(a, Atom("+/-"));
 		Atom b = a;
 		CHECK_EQ(a, b);
 		CHECK(b.isSymbol());
 		CHECK(b.asNumber() == 0);
-	}
-	SUBCASE("Token Constructor") {
-		Token t("hi");
-		Atom a(t);
-
-        CHECK(!a.isNone());
-        CHECK(!a.isNumber());
-        CHECK(a.isSymbol());
-
-		Atom b(a);
-        CHECK(!b.isNone());
-        CHECK(!b.isNumber());
-        CHECK(b.isSymbol());
 	}
 }
 

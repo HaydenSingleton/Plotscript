@@ -15,7 +15,7 @@ TEST_CASE("Expression constructors") {
 
 	SUBCASE("Value constructor") {
 		Expression e(1.01);
-		Expression s(Token("*"));
+		Expression s(Atom("*"));
 
 		CHECK(e.head().asNumber() == 1.01);
 		CHECK(!e.head().isComplex());

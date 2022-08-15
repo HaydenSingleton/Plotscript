@@ -3,7 +3,7 @@
 Token::Token(TType type) : m_type(type)
 {}
 
-Token::Token(const std::string& str) : m_type(STRING), m_value(str)
+Token::Token(std::string  str) : m_type(STRING), m_value(std::move(str))
 {}
 
 Token::TType Token::type() const
@@ -41,7 +41,7 @@ TokenSequence tokenize(std::istream& seq) {
 		if (seq.eof())
 			break;
 
-		if (c == COMMENTCHAR) {
+		if (c == COMMENT_CHAR) {
 			// chomp until the end of the line
 			while ((!seq.eof()) && (c != '\n')) {
 				c = (char) seq.get();
@@ -50,25 +50,25 @@ TokenSequence tokenize(std::istream& seq) {
 				break;
 		}
 
-		if (c == OPENCHAR) {
+		if (c == OPEN_CHAR) {
 			save_token(token, tokens);
-			tokens.push_back(Token::TType::OPEN);
+			tokens.emplace_back(Token::TType::OPEN);
 		}
-		else if (c == CLOSECHAR) {
+		else if (c == CLOSE_CHAR) {
 			save_token(token, tokens);
-			tokens.push_back(Token::TType::CLOSE);
+			tokens.emplace_back(Token::TType::CLOSE);
 		}
-		else if (c == QUOTECHAR) {
-			token.push_back(QUOTECHAR);
+		else if (c == QUOTE_CHAR) {
+			token.push_back(QUOTE_CHAR);
 			c = (char) seq.get();
-			while (!seq.eof() && c != QUOTECHAR) {
+			while (!seq.eof() && c != QUOTE_CHAR) {
 				token.push_back(c);
 				c = (char) seq.get();
 			}
 			if (seq.eof()) {
 				break;
 			}
-			token.push_back(QUOTECHAR);
+			token.push_back(QUOTE_CHAR);
 			save_token(token, tokens);
 		}
 		else if (isspace(c)) {

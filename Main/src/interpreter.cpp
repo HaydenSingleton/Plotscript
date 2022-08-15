@@ -1,6 +1,5 @@
 #include "interpreter.h"
-#include "../build/startup_config.h"
-
+#include "startup_config.h"
 
 Interpreter::Interpreter()
 {
@@ -17,11 +16,12 @@ bool Interpreter::parseStream(std::istream& text) {
 	if (text.bad()) return false;
 
 	TokenSequence tokens = tokenize(text);
+
 	ast = parse(tokens);
 	return (ast != Expression());
 }
 
-bool Interpreter::parseString(std::string text) {
+bool Interpreter::interpret(std::string& text) {
 
 	auto stream = std::istringstream(text);
 	return parseStream(stream);

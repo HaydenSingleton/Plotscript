@@ -1,19 +1,11 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
+# and inc sub-projects here.
 #
 cmake_minimum_required (VERSION 3.12)
 set(CMAKE_CXX_STANDARD 20)
 
-project ("ProjectScript" VERSION 1.3 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
+project ("Plotscript" VERSION 1.4 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
 
 # Include sub-projects.
-add_subdirectory ("app")
-add_subdirectory ("tests")
-
-# Generate and include start up plotscript lambdas
-set(STARTUP_FILE app/startup.script)
-configure_file(
-	${CMAKE_SOURCE_DIR}/app/startup_config.h.in
-	${CMAKE_SOURCE_DIR}/app/startup_config.h
-)
-include_directories(${CMAKE_BINARY_DIR})
+add_subdirectory ("Main")
+add_subdirectory ("Tests")

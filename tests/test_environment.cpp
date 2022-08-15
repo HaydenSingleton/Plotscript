@@ -5,8 +5,8 @@ TEST_CASE("Environment default state") {
 
 	Environment env;
 
-	Atom PI(Token("pi"));
-	Atom PIE(Token("pie"));
+	Atom PI("pi");
+	Atom PIE("pie");
 
 	CHECK(env.is_known(PI));
 	CHECK(env.is_exp(PI));
@@ -14,15 +14,14 @@ TEST_CASE("Environment default state") {
 
 	CHECK(env.is_proc(Atom("+")));
 	CHECK(env.is_proc(Atom("-")));
-	CHECK(env.is_proc(Atom(Token("*"))));
-	CHECK(env.is_proc(Atom(Token("/"))));
-	CHECK(!env.is_proc(Atom(Token("op"))));
+	CHECK(env.is_proc(Atom("*")));
+	CHECK(env.is_proc(Atom("/")));
+	CHECK(!env.is_proc(Atom("op")));
 
 	SUBCASE("get helper function") {
 		CHECK(env.get_exp(PI).head().asNumber() == std::atan2(0, -1));
 		CHECK(env.get_exp(PI) == Expression(std::atan2(0, -1)));
 
-		Atom PIE(Token("pie"));
 		Expression result = env.get_exp(PIE);
 
 		CHECK(result == Expression());
@@ -32,7 +31,7 @@ TEST_CASE("Environment default state") {
 	SUBCASE("add helper function") {
 
 		Expression exp(Atom(1.0));
-		Atom sym(Token("one"));
+		Atom sym("one");
 		
 		CHECK(!env.is_known(sym));
 		env.add_exp(sym, exp);

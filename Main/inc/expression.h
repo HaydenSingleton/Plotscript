@@ -12,44 +12,40 @@ class Environment;
 class Expression {
 public:
 	Expression();
-	Expression(const Atom&);
+	/* Implicit */ Expression(const Atom&); //NOLINT
 	Expression(const Atom&, const std::vector<Expression>& items);
 
 	Expression& operator=(const Expression& e);
-	~Expression();
 
 	Atom head() const;
-	void setHead(const Atom& a);
-
-	typedef std::vector<Expression>::const_iterator ConstIteratorType;
-
 	Expression* tail();
-	void appendExp(const Expression&);
-	void append(const Atom&);
 
-	ConstIteratorType tailConstBegin() const;
-	ConstIteratorType tailConstEnd() const;
+    void setHead(const Atom &a);
+    void append(const Atom &a);
+
+    std::vector<Expression>::const_iterator tailConstBegin() const;
+    std::vector<Expression>::const_iterator tailConstEnd() const;
 
 	Expression eval(Environment& env);
-	Expression apply(const Atom& op, const std::vector<Expression>& args, const Environment& env);
+	static Expression apply(const Atom& op, const std::vector<Expression>& args, const Environment& env);
 
 	bool operator==(const Expression& exp) const noexcept;
 	std::string toString() const;
-	void setProperty(std::string, Expression);
-	Expression getProperty(std::string);
+	void setProperty(const std::string&, const Expression&);
+	Expression getProperty(const std::string&);
+
+    bool isEmpty() const noexcept;
 
 private:
 	Atom m_head;
 	std::vector<Expression> m_tail;
 	std::unordered_map<std::string, Expression*> m_properties;
 
-	Expression handle_lookup(const Atom&, const Environment&);
+	static Expression handle_lookup(const Atom&, const Environment&);
 	Expression handle_begin(Environment&);
 	Expression handle_define(Environment&);
 	Expression handle_lambda();
 	Expression handle_proc_to_list(Environment&);
-
-	typedef std::vector<Expression>::iterator IteratorType;
 };
 
 std::ostream& operator<<(std::ostream&, const Expression&);

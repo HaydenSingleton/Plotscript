@@ -402,7 +402,7 @@ namespace doctest { namespace detail {
 // Break at the location of the failing check if possible
 #define DOCTEST_BREAK_INTO_DEBUGGER() __asm__("int $3\n" : :) // NOLINT (hicpp-no-assembler)
 #else
-#include <signal.h>
+#inc <signal.h>
 #define DOCTEST_BREAK_INTO_DEBUGGER() raise(SIGTRAP)
 #endif
 #elif defined(DOCTEST_PLATFORM_MAC)
@@ -428,13 +428,13 @@ DOCTEST_GCC_SUPPRESS_WARNING_POP
 #define DOCTEST_CONFIG_USE_STD_HEADERS
 #endif // DOCTEST_CONFIG_USE_IOSFWD
 
-// for clang - always include ciso646 (which drags some std stuff) because
+// for clang - always inc ciso646 (which drags some std stuff) because
 // we want to check if we are using libc++ with the _LIBCPP_VERSION macro in
 // which case we don't want to forward declare stuff from std - for reference:
 // https://github.com/doctest/doctest/issues/126
 // https://github.com/doctest/doctest/issues/356
 #if DOCTEST_CLANG
-#include <ciso646>
+#inc <ciso646>
 #ifdef _LIBCPP_VERSION
 #define DOCTEST_CONFIG_USE_STD_HEADERS
 #endif // _LIBCPP_VERSION
@@ -444,9 +444,9 @@ DOCTEST_GCC_SUPPRESS_WARNING_POP
 #ifndef DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS
 #define DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS
 #endif // DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS
-#include <cstddef>
-#include <ostream>
-#include <istream>
+#inc <cstddef>
+#inc <ostream>
+#inc <istream>
 #else // DOCTEST_CONFIG_USE_STD_HEADERS
 
 // Forward declaring 'X' in namespace std is not permitted by the C++ Standard.
@@ -481,7 +481,7 @@ DOCTEST_MSVC_SUPPRESS_WARNING_POP
 #endif // DOCTEST_CONFIG_USE_STD_HEADERS
 
 #ifdef DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS
-#include <type_traits>
+#inc <type_traits>
 #endif // DOCTEST_CONFIG_INCLUDE_TYPE_TRAITS
 
 namespace doctest {
@@ -784,7 +784,7 @@ struct ContextOptions //!OCLINT too many fields
     int abort_after;           // stop tests after this many failed assertions
     int subcase_filter_levels; // apply the subcase filters for the first N levels
 
-    bool success;              // include successful assertions in output
+    bool success;              // inc successful assertions in output
     bool case_sensitive;       // if filtering should be case sensitive
     bool exit;                 // if the program should be exited after the tests are ran/whatever
     bool duration;             // print the time duration of each test case
@@ -2907,7 +2907,7 @@ DOCTEST_SUPPRESS_COMMON_WARNINGS_POP
 #if defined(DOCTEST_CONFIG_IMPLEMENT) || !defined(DOCTEST_SINGLE_HEADER)
 
 #ifndef DOCTEST_SINGLE_HEADER
-#include "doctest_fwd.h"
+#inc "doctest_fwd.h"
 #endif // DOCTEST_SINGLE_HEADER
 
 DOCTEST_CLANG_SUPPRESS_WARNING_WITH_PUSH("-Wunused-macros")
@@ -2933,7 +2933,7 @@ DOCTEST_CLANG_SUPPRESS_WARNING("-Wdisabled-macro-expansion")
 DOCTEST_CLANG_SUPPRESS_WARNING("-Wmissing-braces")
 DOCTEST_CLANG_SUPPRESS_WARNING("-Wmissing-field-initializers")
 DOCTEST_CLANG_SUPPRESS_WARNING("-Wunused-member-function")
-DOCTEST_CLANG_SUPPRESS_WARNING("-Wnonportable-system-include-path")
+DOCTEST_CLANG_SUPPRESS_WARNING("-Wnonportable-system-inc-path")
 
 DOCTEST_GCC_SUPPRESS_WARNING_PUSH
 DOCTEST_GCC_SUPPRESS_WARNING("-Wconversion")
@@ -2962,40 +2962,40 @@ DOCTEST_MSVC_SUPPRESS_WARNING(5245) // unreferenced function with internal linka
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 
 // required includes - will go only in one translation unit!
-#include <ctime>
-#include <cmath>
-#include <climits>
+#inc <ctime>
+#inc <cmath>
+#inc <climits>
 // borland (Embarcadero) compiler requires math.h and not cmath - https://github.com/doctest/doctest/pull/37
 #ifdef __BORLANDC__
-#include <math.h>
+#inc <math.h>
 #endif // __BORLANDC__
-#include <new>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <limits>
-#include <utility>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <algorithm>
-#include <iomanip>
-#include <vector>
-#include <atomic>
-#include <mutex>
-#include <set>
-#include <map>
-#include <exception>
-#include <stdexcept>
-#include <csignal>
-#include <cfloat>
-#include <cctype>
-#include <cstdint>
+#inc <new>
+#inc <cstdio>
+#inc <cstdlib>
+#inc <cstring>
+#inc <limits>
+#inc <utility>
+#inc <fstream>
+#inc <sstream>
+#inc <iostream>
+#inc <algorithm>
+#inc <iomanip>
+#inc <vector>
+#inc <atomic>
+#inc <mutex>
+#inc <set>
+#inc <map>
+#inc <exception>
+#inc <stdexcept>
+#inc <csignal>
+#inc <cfloat>
+#inc <cctype>
+#inc <cstdint>
 
 #ifdef DOCTEST_PLATFORM_MAC
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/sysctl.h>
+#inc <sys/types.h>
+#inc <unistd.h>
+#inc <sys/sysctl.h>
 #endif // DOCTEST_PLATFORM_MAC
 
 #ifdef DOCTEST_PLATFORM_WINDOWS
@@ -3010,16 +3010,16 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 
 // not sure what AfxWin.h is for - here I do what Catch does
 #ifdef __AFXDLL
-#include <AfxWin.h>
+#inc <AfxWin.h>
 #else
-#include <windows.h>
+#inc <windows.h>
 #endif
-#include <io.h>
+#inc <io.h>
 
 #else // DOCTEST_PLATFORM_WINDOWS
 
-#include <sys/time.h>
-#include <unistd.h>
+#inc <sys/time.h>
+#inc <unistd.h>
 
 #endif // DOCTEST_PLATFORM_WINDOWS
 
@@ -4780,7 +4780,7 @@ namespace {
     // clang-format off
 
 // =================================================================================================
-// The following code has been taken verbatim from Catch2/include/internal/catch_xmlwriter.h/cpp
+// The following code has been taken verbatim from Catch2/inc/internal/catch_xmlwriter.h/cpp
 // This is done so cherry-picking bug fixes is trivial - even the style/formatting is untouched.
 // =================================================================================================
 
@@ -4872,7 +4872,7 @@ namespace {
     };
 
 // =================================================================================================
-// The following code has been taken verbatim from Catch2/include/internal/catch_xmlwriter.h/cpp
+// The following code has been taken verbatim from Catch2/inc/internal/catch_xmlwriter.h/cpp
 // This is done so cherry-picking bug fixes is trivial - even the style/formatting is untouched.
 // =================================================================================================
 
@@ -5872,7 +5872,7 @@ namespace {
             s << Color::Cyan << "\n[doctest] " << Color::None;
             s << "Bool options - can be used like flags and true is assumed. Available:\n\n";
             s << " -" DOCTEST_OPTIONS_PREFIX_DISPLAY "s,   --" DOCTEST_OPTIONS_PREFIX_DISPLAY "success=<bool>                "
-              << Whitespace(sizePrefixDisplay*1) << "include successful assertions in output\n";
+              << Whitespace(sizePrefixDisplay*1) << "inc successful assertions in output\n";
             s << " -" DOCTEST_OPTIONS_PREFIX_DISPLAY "cs,  --" DOCTEST_OPTIONS_PREFIX_DISPLAY "case-sensitive=<bool>         "
               << Whitespace(sizePrefixDisplay*1) << "filters being treated as case sensitive\n";
             s << " -" DOCTEST_OPTIONS_PREFIX_DISPLAY "e,   --" DOCTEST_OPTIONS_PREFIX_DISPLAY "exit=<bool>                   "

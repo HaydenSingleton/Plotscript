@@ -59,7 +59,7 @@ TEST_CASE("Parser") {
 		REQUIRE(iss.good());
 
 		TokenSequence tokens = tokenize(iss);
-		CHECK(tokens.size() > 0);
+		CHECK(tokens.empty());
 
 		Expression out = parse(tokens);
 		CHECK_EQ(out.toString(), "NONE");

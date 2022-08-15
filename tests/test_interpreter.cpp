@@ -8,9 +8,10 @@ TEST_CASE("Interpreter tests") {
 	INFO("Interpreter parseStream tests");
 	
 	SUBCASE("string input") {
-		std::string valid = "(+ 1 2)";
-		CHECK(in.parseString(valid));
-	}
+		std::string text = "(+ 1 2)";
 
-	
+		auto stream = std::istringstream(text);
+		CHECK(in.parseStream(stream));
+	}
+		
 }

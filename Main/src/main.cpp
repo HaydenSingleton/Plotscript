@@ -1,9 +1,6 @@
 #include "interpreter.h"
 #include "interrupt_handler.h"
 
-extern sig_atomic_t global_status_flag;
-
-
 std::string readline() {
     std::string line;
     std::getline(std::cin, line);
@@ -23,14 +20,14 @@ int eval_from_stream(std::istream& stream, Interpreter& interp) {
     try {
         std::cout << interp.evaluate() << "\n";
     }
-    catch (SemanticError e) {
-        std::cerr << e.what();
+    catch (SemanticError& e) {
+        std::cerr << "Evaluation error: " << e.what();
     }
 
     return EXIT_SUCCESS;
 }
 
-int eval_from_file(std::string filename, Interpreter& interp) {
+int eval_from_file(const std::string& filename, Interpreter& interp) {
 
     std::ifstream ifs(filename);
 
@@ -42,9 +39,9 @@ int eval_from_file(std::string filename, Interpreter& interp) {
     return eval_from_stream(ifs, interp);
 }
 
-int eval_from_command(std::string argexp, Interpreter& interp) {
-    std::istringstream expression(argexp);
-    return eval_from_stream(expression, interp);;
+int eval_from_command(const std::string& arg_exp, Interpreter& interp) {
+    std::istringstream expression(arg_exp);
+    return eval_from_stream(expression, interp);
 }
 
 void repl(Interpreter& interp) {
@@ -59,25 +56,22 @@ void repl(Interpreter& interp) {
         if (line == "quit")
             exit(EXIT_SUCCESS);
 
-        std::istringstream expression(line);
-
-        if (!interp.parseStream(expression)) {
-            std::cerr << ("Invalid Expression. Could not parse.") << std::endl;;
+        if (!interp.interpret(line)) {
+            std::cerr << ("Invalid Expression. Could not parse.") << std::endl;
         }
         else {
             try {
                 std::cout << interp.evaluate();
             }
-            catch (SemanticError e) {
-                 std::cerr << e.what() << "\n";
+            catch (SemanticError& e) {
+                 std::cerr << "REPL Error: " << e.what() << "\n";
             }
             std::cout << std::endl;
         }
     }
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     Interpreter start;
 
     if (argc == 2) {
@@ -92,13 +86,12 @@ int main(int argc, char* argv[])
         }
     }
     else if (argc > 3) {
-        std::cerr << "Enter filename or -e \"EXPR\" to evaluate, or no args for repl.\n";
+        std::cerr << "Enter a filename to evaluate, or -e <expression>, or use no args for a repl.\n";
         return EXIT_FAILURE;
     }
     else {
         repl(start);
     }
-
 }
 
 

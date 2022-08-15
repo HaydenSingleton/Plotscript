@@ -1,27 +1,23 @@
 #include "parse.h"
 #include <stack>
 
-
-bool setHead(Expression& exp, const Token& token) {
-    Atom a(token);
-
-    exp.setHead(a);
-
-    return !a.isNone();
-}
-
-bool append(Expression *exp, const Token& token) {
-    Atom a(token);
-
-    exp->append(a);
-
-    return !a.isNone();
+Atom createAtom(const Token& t) {
+    std::istringstream iss(t.toString());
+    double number;
+    Atom a;
+    if (iss >> number) {
+        if (iss.rdbuf()->in_avail() == 0)
+            a = Atom(number);
+    }
+    else
+        a = Atom(t.toString());
+    return a;
 }
 
 Expression parse(const TokenSequence& tokens) noexcept
 {
     Expression ast;
-    bool athead = false;
+    bool at_head = false;
 
     std::stack<Expression*> stack;
     std::size_t num_tokens_seen = 0;
@@ -29,11 +25,11 @@ Expression parse(const TokenSequence& tokens) noexcept
     for (auto& t : tokens) {
 
         if (t.type() == Token::OPEN) {
-            athead = true;
+            at_head = true;
         }
         else if (t.type() == Token::CLOSE) {
             if (stack.empty()) {
-                return Expression();
+                return {};
             }
             stack.pop();
 
@@ -43,33 +39,25 @@ Expression parse(const TokenSequence& tokens) noexcept
             }
         }
         else {
-            if (athead) {
+            if (at_head) {
                 if (stack.empty()) {
-                    if (!setHead(ast, t)) {
-                        return Expression();
-                    }
+                    ast.setHead(createAtom(t));
                     stack.push(&ast);
                 }
                 else {
                     if (stack.empty()) {
-                        return Expression();
+                        return {};
                     }
-
-                    if (!append(stack.top(), t)) {
-                        return Expression();
-                    }
+                    stack.top()->append(createAtom(t));
                     stack.push(stack.top()->tail());
                 }
-                athead = false;
+                at_head = false;
             }
             else {
                 if (stack.empty()) {
-                    return Expression();
+                    return {};
                 }
-
-                if (!append(stack.top(), t)) {
-                    return Expression();
-                }
+                stack.top()->append(createAtom(t));
             }
         }
         num_tokens_seen += 1;
@@ -79,5 +67,5 @@ Expression parse(const TokenSequence& tokens) noexcept
         return ast;
     }
 
-    return Expression();
-};
+    return {};
+}

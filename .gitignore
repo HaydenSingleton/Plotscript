@@ -1,8 +1,8 @@
 .vscode/
-.vs/*
-build/*
+.vs/
+.idea/
+build/
+cmake-build-debug/*
 
-Coverage_Report/*
 CMakeSettings.json
 CMakePresets.json
-/cmake-build-debug/

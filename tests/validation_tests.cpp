@@ -7,12 +7,13 @@ TEST_CASE("Math functions") {
 
 	SUBCASE("Addition") {
 		std::string expr("(+ 2 3)");
-		CHECK(calc.parseString(expr));
+		auto stream = std::istringstream(expr);
+
+		CHECK(calc.parseStream(stream));
 		std::string result = calc.evaluate().toString();
 		CHECK_EQ(result, "(5)");
 		
-		auto stream = std::istringstream(std::string("(+ 2 I)"));
-		INFO(stream);
+		stream = std::istringstream(std::string("(+ 2 I)"));
 		CHECK(calc.parseStream(stream));
 		CHECK_EQ(calc.evaluate().toString(), "(2, 1)");
 		

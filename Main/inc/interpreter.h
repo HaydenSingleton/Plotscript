@@ -13,10 +13,8 @@ class Interpreter
 {
 public:
 	Interpreter();
-
 	bool parseStream(std::istream& text);
-	bool parseString(std::string text);
-
+	bool interpret(std::string& text);
 	Expression evaluate();
 private:
 	Environment env;
