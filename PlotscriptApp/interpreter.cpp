@@ -1,11 +1,14 @@
 #include "interpreter.h"
-#include "startup_config.h"
+#include "includes/startup_config.h"
 
 Interpreter::Interpreter()
 {
 	env = Environment();
 
 	auto stream = std::ifstream(STARTUP_FILE);
+    if (!stream.is_open())
+        throw(std::runtime_error("Could not open start up file."));
+
 	if (parseStream(stream))
 		evaluate();
 	else

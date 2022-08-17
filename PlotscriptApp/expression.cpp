@@ -8,7 +8,7 @@ Expression::Expression(const Atom& a) {
 
 Expression::Expression() {
 	m_head = Atom();
-};
+}
 
 Expression::Expression(const Atom& a, const std::vector<Expression>& items) {
 	m_head = a;
@@ -57,16 +57,18 @@ std::vector<Expression>::const_iterator Expression::tailConstEnd() const
 
 void Expression::setProperty(const std::string& name, const Expression& value)
 {
-	if (m_properties.find(name) != m_properties.end())
-		m_properties.erase(name);
+	if (m_properties.find(name) != m_properties.end()) {
+        auto data = m_properties.at(name);
+        m_properties.erase(name);
+    }
 
-	m_properties.emplace(name, Expression(value));
+	m_properties.emplace(name, new Expression(value));
 }
 
 Expression Expression::getProperty(const std::string& name)
 {
 	if (m_properties.find(name) != m_properties.end())
-		return m_properties.at(name);
+		return *m_properties.at(name);
 	else
 		return {};
 }
@@ -250,6 +252,10 @@ Expression Expression::apply(const Atom& op, const std::vector<Expression>& args
 }
 
 std::string Expression::toString() const {
+    if (isEmpty()) {
+        return "NONE";
+    }
+
 	std::ostringstream out;
 	std::string head(m_head.toString());
 

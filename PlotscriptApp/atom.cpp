@@ -32,9 +32,13 @@ double Atom::asNumber() const noexcept {
 std::complex<double> Atom::asComplex() const noexcept {
 	
 	if (isComplex())
-		return std::complex<double>(std::get<double>(m_data), m_imag);
-	else
-		return isNumber() ? std::complex<double>(std::get<double>(m_data), 0) : 0;
+		return { std::get<double>(m_data), m_imag };
+	else {
+        if (isNumber())
+            return { std::get<double>(m_data), 0 };
+    }
+
+    return 0;
 }
 
 std::string Atom::asSymbol() const noexcept {
@@ -54,7 +58,7 @@ bool Atom::isSymbol() const {
 }
 
 bool Atom::isString() const {
-    return isSymbol() && std::get<std::string>(m_data).starts_with('"') && std::get<std::string>(m_data).ends_with('"');
+    return isSymbol() && std::get_if<std::string>(&m_data)->starts_with('"');
 }
 
 bool Atom::isComplex() const {

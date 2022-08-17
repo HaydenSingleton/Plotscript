@@ -36,11 +36,13 @@ int eval_from_command(const std::string& arg_exp, Interpreter& interp) {
 }
 
 void repl(Interpreter& interp) {
+    std::string line;
 
     while (!std::cin.eof() && global_status_flag == 0) {
 
         std::cout << "plotscript> ";
-        std::string line;
+        std::cout.flush();
+
         std::getline(std::cin, line);
         if (std::cin.fail() || std::cin.eof()) {
             std::cin.clear();
@@ -48,11 +50,12 @@ void repl(Interpreter& interp) {
         }
         if (line.empty()) continue;
 
+
         if (line == "quit")
             exit(EXIT_SUCCESS);
 
         if (!interp.interpret(line)) {
-            std::cerr << ("Invalid Expression. Could not parse.") << std::endl;
+            std::cout << "Invalid Expression. Could not parse.";
         }
         else {
             try {
@@ -61,14 +64,17 @@ void repl(Interpreter& interp) {
             catch (SemanticError& e) {
                  std::cerr << e.what();
             }
-            std::cout << std::endl;
         }
+        std::cout << std::endl;
     }
 }
 
 int main(int argc, char* argv[]) {
     Interpreter start;
 
+    if (argc == 1) {
+        repl(start);
+    }
     if (argc == 2) {
         return eval_from_command(argv[1], start);
     }
@@ -80,12 +86,9 @@ int main(int argc, char* argv[]) {
             return eval_from_file(argv[2], start);
         }
     }
-    else if (argc > 3) {
+    else {
         std::cerr << "Enter a filename to evaluate, or -e <expression>, or use no args for a repl.\n";
         return EXIT_FAILURE;
-    }
-    else {
-        repl(start);
     }
 }
 

@@ -3,6 +3,13 @@
 #
 cmake_minimum_required (VERSION 3.12)
 
+# Generate start up script file
+set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/PlotscriptApp/includes/startup.script)
+configure_file(
+		${CMAKE_SOURCE_DIR}/PlotscriptApp/includes/startup_config.h.in
+		${CMAKE_SOURCE_DIR}/PlotscriptApp/includes/startup_config.h
+)
+
 # build interpreter library
 set(interpreter_src
 	token.cpp
@@ -19,10 +26,3 @@ add_library(interpreter ${interpreter_src})
 add_executable (plotscript "main.cpp")
 target_link_libraries(plotscript interpreter)
 install(TARGETS plotscript RUNTIME DESTINATION bin)
-
-# Generate and inc start up plotscript lambdas
-set(STARTUP_FILE "includes/startup.script")
-configure_file(
-	includes/startup_config.h.in
-	includes/startup_config.h
-)

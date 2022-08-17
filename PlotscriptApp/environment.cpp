@@ -8,43 +8,39 @@ Environment::Environment() {
 bool Environment::is_known(const Atom& sym) const
 {   
     if (!sym.isSymbol()) return false;
-    return envmap.find(sym) != envmap.end();
+    return env.find(sym) != env.end();
 }
 
 bool Environment::is_exp(const Atom& sym) const {
     if (!sym.isSymbol()) return false;
 
-    auto result = envmap.find(sym);
-    return (result != envmap.end()) && (result->second.type == ExpressionType);
+    auto result = env.find(sym);
+    return (result != env.end()) && (result->second.type == ExpressionType);
 }
 
 bool Environment::is_proc(const Atom& sym) const {
     if (!sym.isSymbol()) return false;
 
-    auto result = envmap.find(sym);
-    return (result != envmap.end()) && (result->second.type == ProcedureType);
+    auto result = env.find(sym);
+    return (result != env.end()) && (result->second.type == ProcedureType);
 }
 
 bool Environment::is_lambda(const Atom& sym) const {
     if (!sym.isSymbol()) return false;
 
-    auto result = envmap.find(sym);
-    if (result != envmap.end()) {
+    auto result = env.find(sym);
+    if (result != env.end()) {
         return result->second.exp.head().toString() == "lambda";
     }
 
     return false;
 }
 
-Expression Environment::evaluate_an_exp(Expression& e) {
-    return e.eval(*this);
-}
-
 Expression Environment::get_exp(const Atom& sym) const {
 
     if (sym.isSymbol()) {
-        auto result = envmap.find(sym);
-        if ((result != envmap.end()) && (result->second.type == ExpressionType)) {
+        auto result = env.find(sym);
+        if ((result != env.end()) && (result->second.type == ExpressionType)) {
             return result->second.exp;
         }
     }
@@ -67,10 +63,10 @@ void Environment::add_exp(const Atom& sym, const Expression& value) {
         throw SemanticError("Error during add_exp: attempt to redefine a built-in procedure");
     }
 
-    if (envmap.find(sym) != envmap.end())
-        envmap.erase(sym);
+    if (env.find(sym) != env.end())
+        env.erase(sym);
 
-    envmap.emplace(sym, EnvResult(ExpressionType, value));
+    env.emplace(sym, EnvResult(ExpressionType, value));
 }
 
 Expression nop(const std::vector<Expression>& args) {
@@ -81,8 +77,8 @@ Expression nop(const std::vector<Expression>& args) {
 Procedure Environment::get_proc(const Atom& sym) const {
 
     if (sym.isSymbol()) {
-        auto result = envmap.find(sym);
-        if ((result != envmap.end()) && (result->second.type == ProcedureType)) {
+        auto result = env.find(sym);
+        if ((result != env.end()) && (result->second.type == ProcedureType)) {
             return result->second.proc;
         }
     }
@@ -109,10 +105,10 @@ Expression add(const std::vector<Expression>& args) {
     return { std::complex<double>(result, complex_part) };
 }
 
-Expression subneg(const std::vector<Expression>& args) {
+Expression sub_neg(const std::vector<Expression>& args) {
 
     if (args.size() != 1 && args.size() != 2) {
-        throw SemanticError("Error: in call to subneg: invalid number of arguments.");
+        throw SemanticError("Error: in call to sub_neg: invalid number of arguments.");
     }
 
     double r = args[0].head().asNumber();
@@ -160,7 +156,7 @@ Expression div(const std::vector<Expression>& args) {
         second = args[1].head().asComplex();
         first = args[0].head().asComplex();
         result = first / second;
-        if (second.real() == 0 && isnan(result.real()))
+        if (second.real() == 0 && std::isnan(result.real()))
             throw SemanticError("Error: div by zero");
     }
     else {
@@ -463,40 +459,40 @@ Expression get_prop(const std::vector<Expression>& args) {
 
 void Environment::reset()
 {
-    envmap.clear();
+    env.clear();
 
-    envmap.emplace(Atom("pi"), EnvResult(ExpressionType, Expression(std::atan2(0, -1))));
-    envmap.emplace(Atom("e"), EnvResult(ExpressionType, Expression(std::exp(1))));
-    envmap.emplace(Atom("I"), EnvResult(ExpressionType, Expression(std::complex<double>(0, 1))));
-    envmap.emplace(Atom("-I"), EnvResult(ExpressionType, Expression(std::complex<double>(0, -1))));
+    env.emplace(Atom("pi"), EnvResult(ExpressionType, Expression(std::atan2(0, -1))));
+    env.emplace(Atom("e"), EnvResult(ExpressionType, Expression(std::exp(1))));
+    env.emplace(Atom("I"), EnvResult(ExpressionType, Expression(std::complex<double>(0, 1))));
+    env.emplace(Atom("-I"), EnvResult(ExpressionType, Expression(std::complex<double>(0, -1))));
 
-    envmap.emplace(Atom("+"), EnvResult(ProcedureType, add));
-    envmap.emplace(Atom("-"), EnvResult(ProcedureType, subneg));
-    envmap.emplace(Atom("*"), EnvResult(ProcedureType, mul));
-    envmap.emplace(Atom("/"), EnvResult(ProcedureType, div));
+    env.emplace(Atom("+"), EnvResult(ProcedureType, add));
+    env.emplace(Atom("-"), EnvResult(ProcedureType, sub_neg));
+    env.emplace(Atom("*"), EnvResult(ProcedureType, mul));
+    env.emplace(Atom("/"), EnvResult(ProcedureType, div));
 
-    envmap.emplace(Atom("sqrt"), EnvResult(ProcedureType, root));
-    envmap.emplace(Atom("^"), EnvResult(ProcedureType, pow));
-    envmap.emplace(Atom("pow"), EnvResult(ProcedureType, pow));
-    envmap.emplace(Atom("ln"), EnvResult(ProcedureType, ln));
-    envmap.emplace(Atom("log"), EnvResult(ProcedureType, log));
-    envmap.emplace(Atom("sin"), EnvResult(ProcedureType, sin));
-    envmap.emplace(Atom("cos"), EnvResult(ProcedureType, cos));
-    envmap.emplace(Atom("tan"), EnvResult(ProcedureType, tan));
-    envmap.emplace(Atom("real"), EnvResult(ProcedureType, real));
-    envmap.emplace(Atom("imag"), EnvResult(ProcedureType, imag));
+    env.emplace(Atom("sqrt"), EnvResult(ProcedureType, root));
+    env.emplace(Atom("^"), EnvResult(ProcedureType, pow));
+    env.emplace(Atom("pow"), EnvResult(ProcedureType, pow));
+    env.emplace(Atom("ln"), EnvResult(ProcedureType, ln));
+    env.emplace(Atom("log"), EnvResult(ProcedureType, log));
+    env.emplace(Atom("sin"), EnvResult(ProcedureType, sin));
+    env.emplace(Atom("cos"), EnvResult(ProcedureType, cos));
+    env.emplace(Atom("tan"), EnvResult(ProcedureType, tan));
+    env.emplace(Atom("real"), EnvResult(ProcedureType, real));
+    env.emplace(Atom("imag"), EnvResult(ProcedureType, imag));
 
-    envmap.emplace(Atom("list"), EnvResult(ProcedureType, list));
-    envmap.emplace(Atom("first"), EnvResult(ProcedureType, first));
-    envmap.emplace(Atom("rest"), EnvResult(ProcedureType, rest));
-    envmap.emplace(Atom("length"), EnvResult(ProcedureType, length));
-    envmap.emplace(Atom("append"), EnvResult(ProcedureType, append));
-    envmap.emplace(Atom("join"), EnvResult(ProcedureType, join));
-    envmap.emplace(Atom("range"), EnvResult(ProcedureType, range));
+    env.emplace(Atom("list"), EnvResult(ProcedureType, list));
+    env.emplace(Atom("first"), EnvResult(ProcedureType, first));
+    env.emplace(Atom("rest"), EnvResult(ProcedureType, rest));
+    env.emplace(Atom("length"), EnvResult(ProcedureType, length));
+    env.emplace(Atom("append"), EnvResult(ProcedureType, append));
+    env.emplace(Atom("join"), EnvResult(ProcedureType, join));
+    env.emplace(Atom("range"), EnvResult(ProcedureType, range));
     
-    envmap.emplace(Atom("apply"), EnvResult(ProcedureType, nop));
-    envmap.emplace(Atom("map"), EnvResult(ProcedureType, nop));
+    env.emplace(Atom("apply"), EnvResult(ProcedureType, nop));
+    env.emplace(Atom("map"), EnvResult(ProcedureType, nop));
 
-    envmap.emplace(Atom("set-property"), EnvResult(ProcedureType, set_prop));
-    envmap.emplace(Atom("get-property"), EnvResult(ProcedureType, get_prop));
+    env.emplace(Atom("set-property"), EnvResult(ProcedureType, set_prop));
+    env.emplace(Atom("get-property"), EnvResult(ProcedureType, get_prop));
 }

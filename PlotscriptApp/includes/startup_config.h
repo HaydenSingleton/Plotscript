@@ -3,6 +3,6 @@
 
 #include <string>
 
-const std::string STARTUP_FILE = "C:/Users/Hayde/Projects/Plotscript/Main/inc/startup.script";
+const std::string STARTUP_FILE = "C:/Users/Hayde/Projects/Plotscript/PlotscriptApp/includes/startup.script";
 
 #endif
