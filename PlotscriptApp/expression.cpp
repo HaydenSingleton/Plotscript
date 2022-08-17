@@ -2,11 +2,13 @@
 #include "environment.h"
 #include "semantic_error.h"
 
-Expression::Expression() = default;
-
 Expression::Expression(const Atom& a) {
 	m_head = a;
 }
+
+Expression::Expression() {
+	m_head = Atom();
+};
 
 Expression::Expression(const Atom& a, const std::vector<Expression>& items) {
 	m_head = a;
@@ -32,10 +34,7 @@ Atom Expression::head() const {
 }
 
 Expression* Expression::tail() {
-	Expression* tail = nullptr;
-	if (!m_tail.empty())
-		tail = &m_tail.back();
-	return tail;
+	return m_tail.empty() ? nullptr : &m_tail.back();
 }
 
 void Expression::setHead(const Atom& a) {
@@ -61,14 +60,13 @@ void Expression::setProperty(const std::string& name, const Expression& value)
 	if (m_properties.find(name) != m_properties.end())
 		m_properties.erase(name);
 
-	auto p = new Expression(value);
-	m_properties.emplace(name, p);
+	m_properties.emplace(name, Expression(value));
 }
 
 Expression Expression::getProperty(const std::string& name)
 {
 	if (m_properties.find(name) != m_properties.end())
-		return *m_properties.at(name);
+		return m_properties.at(name);
 	else
 		return {};
 }
@@ -255,6 +253,8 @@ std::string Expression::toString() const {
 	std::ostringstream out;
 	std::string head(m_head.toString());
 
+	out << "(";
+
     if (head == "lambda") {
 
         for (auto arg = m_tail[0].tailConstBegin(); arg != m_tail[0].tailConstEnd(); arg++) {
@@ -279,19 +279,21 @@ std::string Expression::toString() const {
     else {
         if (head != "list" )
             out << m_head;
+
         for (const auto& e : m_tail) {
             out << e;
             if (e != m_tail.back())
                 out << " ";
         }
     }
+	out << ")";
 
 	return out.str();
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 
-	return out << "(" << exp.toString() << ")";
+	return out << exp.toString();
 }
 
 bool Expression::operator==(const Expression& exp) const noexcept {

@@ -1,15 +1,6 @@
 #include "interpreter.h"
 #include "interrupt_handler.h"
 
-std::string readline() {
-    std::string line;
-    std::getline(std::cin, line);
-    if (std::cin.fail() || std::cin.eof()) {
-        std::cin.clear();
-        line.clear();
-    }
-    return line;
-}
 
 int eval_from_stream(std::istream& stream, Interpreter& interp) {
 
@@ -21,7 +12,7 @@ int eval_from_stream(std::istream& stream, Interpreter& interp) {
         std::cout << interp.evaluate() << "\n";
     }
     catch (SemanticError& e) {
-        std::cerr << "Evaluation error: " << e.what();
+        std::cerr << e.what();
     }
 
     return EXIT_SUCCESS;
@@ -49,8 +40,12 @@ void repl(Interpreter& interp) {
     while (!std::cin.eof() && global_status_flag == 0) {
 
         std::cout << "plotscript> ";
-        std::string line = readline();
-
+        std::string line;
+        std::getline(std::cin, line);
+        if (std::cin.fail() || std::cin.eof()) {
+            std::cin.clear();
+            line.clear();
+        }
         if (line.empty()) continue;
 
         if (line == "quit")
@@ -64,7 +59,7 @@ void repl(Interpreter& interp) {
                 std::cout << interp.evaluate();
             }
             catch (SemanticError& e) {
-                 std::cerr << "REPL Error: " << e.what() << "\n";
+                 std::cerr << e.what();
             }
             std::cout << std::endl;
         }

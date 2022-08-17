@@ -4,8 +4,8 @@
 cmake_minimum_required (VERSION 3.12)
 set(CMAKE_CXX_STANDARD 20)
 
-project ("Plotscript" VERSION 1.4 HOMEPAGE_URL "https://github.com/HaydenSingleton/Plotscript")
+project ("Plotscript" VERSION 1.4)
 
 # Include sub-projects.
-add_subdirectory ("Main")
+add_subdirectory ("PlotscriptApp")
 add_subdirectory ("Tests")

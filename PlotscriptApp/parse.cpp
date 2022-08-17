@@ -41,14 +41,20 @@ Expression parse(const TokenSequence& tokens) noexcept
         else {
             if (at_head) {
                 if (stack.empty()) {
-                    ast.setHead(createAtom(t));
+                    Atom next = createAtom(t);
+                    if (next.isNone())
+                        return {};
+                    ast.setHead(next);
                     stack.push(&ast);
                 }
                 else {
                     if (stack.empty()) {
                         return {};
                     }
-                    stack.top()->append(createAtom(t));
+                    Atom next = createAtom(t);
+                    if (next.isNone())
+                        return {};
+                    stack.top()->append(next);
                     stack.push(stack.top()->tail());
                 }
                 at_head = false;
@@ -57,7 +63,10 @@ Expression parse(const TokenSequence& tokens) noexcept
                 if (stack.empty()) {
                     return {};
                 }
-                stack.top()->append(createAtom(t));
+                Atom next = createAtom(t);
+                if (next.isNone())
+                    return {};
+                stack.top()->append(next);
             }
         }
         num_tokens_seen += 1;

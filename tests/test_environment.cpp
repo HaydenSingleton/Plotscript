@@ -23,9 +23,8 @@ TEST_CASE("Environment default state") {
 		CHECK(env.get_exp(PI) == Expression(std::atan2(0, -1)));
 
 		Expression result = env.get_exp(PIE);
-
 		CHECK(result == Expression());
-		CHECK(result.head().isSymbol());
+		CHECK(result.head().isNone());
 	}
 
 	SUBCASE("add helper function") {

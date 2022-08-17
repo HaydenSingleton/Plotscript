@@ -59,10 +59,11 @@ TEST_CASE("Parser") {
 		REQUIRE(iss.good());
 
 		TokenSequence tokens = tokenize(iss);
-		CHECK(tokens.empty());
+		CHECK_FALSE(tokens.empty());
 
 		Expression out = parse(tokens);
-		CHECK_EQ(out.toString(), "NONE");
+		INFO(out.toString());
+		CHECK_EQ(out.toString(), "()");
 	}
 
 	SUBCASE("Test closed quotes") {

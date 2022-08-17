@@ -12,7 +12,7 @@ set(interpreter_src
 	parse.cpp
 	interpreter.cpp
 )
-include_directories(${CMAKE_SOURCE_DIR}/Main/inc)
+include_directories("includes")
 add_library(interpreter ${interpreter_src})
 
 # Add source to this project's executable.
@@ -21,8 +21,8 @@ target_link_libraries(plotscript interpreter)
 install(TARGETS plotscript RUNTIME DESTINATION bin)
 
 # Generate and inc start up plotscript lambdas
-set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/Main/inc/startup.script)
+set(STARTUP_FILE "includes/startup.script")
 configure_file(
-	${CMAKE_SOURCE_DIR}/Main/inc/startup_config.h.in
-	${CMAKE_SOURCE_DIR}/Main/inc/startup_config.h
+	includes/startup_config.h.in
+	includes/startup_config.h
 )

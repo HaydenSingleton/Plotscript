@@ -54,7 +54,7 @@ bool Atom::isSymbol() const {
 }
 
 bool Atom::isString() const {
-    return m_type == Type::Symbol && std::get<std::string>(m_data).starts_with('"');
+    return isSymbol() && std::get<std::string>(m_data).starts_with('"') && std::get<std::string>(m_data).ends_with('"');
 }
 
 bool Atom::isComplex() const {
@@ -77,7 +77,7 @@ bool Atom::operator==(const Atom& other) const noexcept {
 		case Type::Symbol:
 			return asSymbol() == other.asSymbol();
 		default:
-			return false;
+			return true;
 	}
 }
 
@@ -99,7 +99,7 @@ bool Atom::operator<(const Atom& other) const noexcept
 			else
 				return false;
 		default:
-			return false;
+			return true;
 	}
 }
 
