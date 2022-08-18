@@ -63,7 +63,7 @@ TEST_CASE("Parser") {
 
 		Expression out = parse(tokens);
 		INFO(out.toString());
-		CHECK_EQ(out.toString(), "()");
+		CHECK_EQ(out.toString(), "NONE");
 	}
 
 	SUBCASE("Test closed quotes") {

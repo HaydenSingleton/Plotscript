@@ -4,7 +4,7 @@
 #include <utility>
 #include <iostream>
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 class Environment;
 
@@ -38,7 +38,7 @@ public:
 private:
 	Atom m_head;
 	std::vector<Expression> m_tail;
-	std::unordered_map<std::string, Expression*> m_properties;
+	std::map<std::string, Expression*> m_properties;
 
 	static Expression handle_lookup(const Atom&, const Environment&);
 	Expression handle_begin(Environment&);

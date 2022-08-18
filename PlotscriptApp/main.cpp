@@ -62,7 +62,7 @@ void repl(Interpreter& interp) {
                 std::cout << interp.evaluate();
             }
             catch (SemanticError& e) {
-                 std::cerr << e.what();
+                 std::cout << e.what();
             }
         }
         std::cout << std::endl;
