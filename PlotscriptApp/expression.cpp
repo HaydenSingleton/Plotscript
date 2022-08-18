@@ -221,10 +221,7 @@ Expression Expression::eval(Environment& env)
 		return handle_lambda();
 	}
 	else if (m_tail.empty()) {
-		if (env.is_proc(m_head))
-			return env.get_proc(m_head)(m_tail);
-		else
-			return handle_lookup(m_head, env);
+		return handle_lookup(m_head, env);
 	}
 	if (cmd == "apply" || cmd == "map") {
 		return handle_proc_to_list(env);
@@ -288,7 +285,7 @@ std::string Expression::toString() const {
 
         for (const auto& e : m_tail) {
             out << e;
-            if (e != m_tail.back())
+            if (&e != &m_tail.back())
                 out << " ";
         }
     }
