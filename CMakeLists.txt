@@ -2,7 +2,7 @@
 # and inc sub-projects here.
 #
 cmake_minimum_required (VERSION 3.12)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 project ("Plotscript" VERSION 1.4)
 
 # Include sub-projects.
