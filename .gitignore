@@ -7,3 +7,4 @@ out/*
 
 CMakeSettings.json
 CMakePresets.json
+PlotscriptApp/includes/startup_config.h
