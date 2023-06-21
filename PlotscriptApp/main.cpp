@@ -38,6 +38,9 @@ int eval_from_command(const std::string& arg_exp, Interpreter& interp) {
 void repl(Interpreter& interp) {
     std::string line;
 
+    std::cout << "Press Ctrl+C or type `exit` to close the REPL.\n";
+    std::cout << std::endl;
+
     while (!std::cin.eof() && global_status_flag == 0) {
 
         std::cout << "plotscript> ";
@@ -48,10 +51,11 @@ void repl(Interpreter& interp) {
             std::cin.clear();
             line.clear();
         }
-        if (line.empty()) continue;
+        if (line.empty()) 
+		continue;
 
 
-        if (line == "quit")
+        if (line == "exit")
             exit(EXIT_SUCCESS);
 
         if (!interp.interpret(line)) {

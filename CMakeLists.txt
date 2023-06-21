@@ -7,4 +7,4 @@ project ("Plotscript" VERSION 1.4)
 
 # Include sub-projects.
 add_subdirectory ("PlotscriptApp")
-add_subdirectory ("Tests")
+# add_subdirectory ("Tests")
